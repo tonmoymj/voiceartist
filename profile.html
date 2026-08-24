@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -180,51 +180,220 @@
 </div>
 
 <script>
-  function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
+  function seededRandom(seed){ let s = seed; return function(){ s = (s*9301+49297)%233280; return s/233280; }; }
+
+  // ── Per-artist fallback data ──────────────────────────────────────────────────
+  const profileFallback = {
+    maya: {
+      name:"Maya Okonkwo", loc:"Lagos, Nigeria", rating:"4.9", reviews:128,
+      years:15, projects:"340+", avail:true, whatsapp:"8801700000001",
+      bio:"Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads. Trusted by top brands for their Bangla dubbing needs.",
+      langs:["Bengali","English"], categories:["Commercial","Audiobook","E-Learning"],
+      samples:[
+        { title:"Commercial Demo — FMCG Brand",    duration:"0:45", seed:11 },
+        { title:"Audiobook Chapter Excerpt",        duration:"1:20", seed:22 },
+        { title:"E-Learning Module Intro",          duration:"0:35", seed:33 },
+      ]
+    },
+    rafiq: {
+      name:"Rafiq Hasan", loc:"Dhaka, Bangladesh", rating:"4.8", reviews:96,
+      years:8, projects:"210+", avail:true, whatsapp:"8801700000002",
+      bio:"Documentary and e-learning specialist with a calm, authoritative voice that builds trust with every word.",
+      langs:["Bengali","Sylheti"], categories:["Documentary","E-Learning","IVR / Phone Systems"],
+      samples:[
+        { title:"Documentary Narration — Heritage Series", duration:"1:10", seed:44 },
+        { title:"Corporate E-Learning Module",             duration:"0:50", seed:55 },
+        { title:"IVR System Demo",                         duration:"0:30", seed:66 },
+      ]
+    },
+    nusrat: {
+      name:"Nusrat Jahan", loc:"Chattogram, Bangladesh", rating:"5.0", reviews:74,
+      years:6, projects:"180+", avail:false, whatsapp:"8801700000003",
+      bio:"Character voice specialist with an incredible range — from playful animation to serious drama. Perfect for dubbing and animation projects.",
+      langs:["Bengali","English"], categories:["Character / Animation","Commercial"],
+      samples:[
+        { title:"Animation Character — Kids Show", duration:"0:40", seed:77 },
+        { title:"Dramatic Reading",                duration:"1:05", seed:88 },
+        { title:"Commercial — Fashion Brand",      duration:"0:30", seed:99 },
+      ]
+    },
+    tanvir: {
+      name:"Tanvir Ahmed", loc:"Sylhet, Bangladesh", rating:"4.7", reviews:52,
+      years:5, projects:"130+", avail:true, whatsapp:"8801700000004",
+      bio:"Deep, resonant voice perfect for commercials and audiobooks. Specialises in Bangla with a clean, neutral accent.",
+      langs:["Bengali"], categories:["Commercial","Audiobook"],
+      samples:[
+        { title:"Radio Commercial — Telecom Brand", duration:"0:35", seed:12 },
+        { title:"Audiobook — Travel Memoir",        duration:"1:15", seed:24 },
+      ]
+    },
+    farhana: {
+      name:"Farhana Islam", loc:"Dhaka, Bangladesh", rating:"4.9", reviews:110,
+      years:10, projects:"280+", avail:true, whatsapp:"8801700000005",
+      bio:"Warm and versatile voice artist with experience across e-learning, commercial, and audiobook projects for both Bangla and English audiences.",
+      langs:["Bengali","English"], categories:["Commercial","E-Learning","Audiobook"],
+      samples:[
+        { title:"E-Learning — Medical Training Module", duration:"1:00", seed:36 },
+        { title:"Commercial — Food & Beverage",         duration:"0:45", seed:48 },
+        { title:"Audiobook — Literary Fiction",         duration:"1:30", seed:60 },
+      ]
+    },
+    carlos: {
+      name:"Carlos Reyes", loc:"Madrid, Spain", rating:"4.6", reviews:41,
+      years:7, projects:"160+", avail:false, whatsapp:"8801700000006",
+      bio:"International voice artist with a neutral English accent and growing Bangla capabilities. Ideal for global brands entering the South Asian market.",
+      langs:["English","Bengali"], categories:["Commercial","Dubbing"],
+      samples:[
+        { title:"Global Brand Commercial",      duration:"0:45", seed:72 },
+        { title:"Dubbing Demo — Action Series", duration:"0:55", seed:84 },
+      ]
+    }
+  };
+
+  // ── Voice Sample Player ───────────────────────────────────────────────────────
+  let currentlyPlaying = null;
+
+  function renderSamples(samples) {
+    const list = document.getElementById('samplesList');
+    list.innerHTML = samples.map((s, i) => `
+      <div class="sample-row">
+        <div class="sample-index">0${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="sample-top">
+            <span class="sample-title">${s.title}</span>
+            <span class="sample-time">${s.duration}</span>
+          </div>
+          <div class="sample-controls">
+            <button class="play-btn" data-idx="${i}" aria-label="Play sample">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
+            </button>
+            <div class="waveform" data-seed="${s.seed}" data-idx="${i}"></div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Build waveforms
+    list.querySelectorAll('.waveform').forEach(wf => {
+      const rand = seededRandom(parseInt(wf.dataset.seed, 10) || 1);
+      for(let i = 0; i < 40; i++) {
+        const b = document.createElement('div');
+        b.className = 'bar';
+        b.style.height = (3 + Math.round(rand() * 18)) + 'px';
+        wf.appendChild(b);
+      }
+    });
+
+    // Play button handlers
+    list.querySelectorAll('.play-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        if(currentlyPlaying === idx) {
+          stopSample(idx);
+          return;
+        }
+        if(currentlyPlaying !== null) stopSample(currentlyPlaying);
+        playSample(idx, btn);
+      });
+    });
+  }
+
+  function playSample(idx, btn) {
+    currentlyPlaying = idx;
+    btn.classList.add('playing');
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    const wf = document.querySelector(`.waveform[data-idx="${idx}"]`);
+    const bars = wf.querySelectorAll('.bar');
+    let progress = 0;
+    const timer = setInterval(() => {
+      if(progress < bars.length) {
+        bars[progress].classList.add('played');
+        progress++;
+      } else {
+        clearInterval(timer);
+        setTimeout(() => { stopSample(idx); }, 500);
+      }
+    }, 40);
+    btn._timer = timer;
+  }
+
+  function stopSample(idx) {
+    currentlyPlaying = null;
+    const btn = document.querySelector(`.play-btn[data-idx="${idx}"]`);
+    if(btn) {
+      btn.classList.remove('playing');
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>';
+      if(btn._timer) clearInterval(btn._timer);
+    }
+    const wf = document.querySelector(`.waveform[data-idx="${idx}"]`);
+    if(wf) wf.querySelectorAll('.bar').forEach(b => b.classList.remove('played'));
+  }
+
+  // ── Profile Loader ────────────────────────────────────────────────────────────
+  function applyProfile(p) {
+    document.getElementById('artistName').textContent    = p.name;
+    document.getElementById('artistAvatar').textContent  = p.name[0];
+    document.getElementById('artistLoc').textContent     = p.loc;
+    document.getElementById('artistBio').textContent     = p.bio;
+    document.getElementById('statYears').textContent     = p.years;
+    document.getElementById('statProjects').textContent  = p.projects;
+    document.getElementById('statReviews').textContent   = p.reviews;
+    document.getElementById('artistRating').innerHTML    = `<span class="stars">★★★★★</span> ${p.rating} (${p.reviews})`;
+    document.getElementById('whatsappBtn').href          = `https://wa.me/${p.whatsapp}`;
+
+    if(!p.avail) {
+      const dot = document.querySelector('.avail-dot');
+      if(dot) { dot.style.background = '#6E8177'; dot.style.boxShadow = 'none'; }
+      document.getElementById('availLine').innerHTML = '<span class="avail-dot" style="background:#6E8177"></span>Not currently available';
+    }
+
+    document.getElementById('languagesList').innerHTML   = p.langs.map(l => `<span class="tag lang">${l}</span>`).join('');
+    document.getElementById('specialtiesList').innerHTML = p.categories.map(c => `<span class="tag">${c}</span>`).join('');
+
+    renderSamples(p.samples);
   }
 
   async function loadProfile() {
-    const artistId = getQueryParam('id');
-    if(!artistId || artistId === 'maya') return; // default template
+    const artistId = (new URLSearchParams(window.location.search).get('id') || 'maya').toLowerCase();
 
+    // First apply fallback (instant render)
+    const fallback = profileFallback[artistId] || profileFallback.maya;
+    applyProfile(fallback);
+    document.title = fallback.name + ' — VoiceCast';
+
+    // Then try Supabase for real data
     try {
-      const supabaseClient = window.supabase || (window.supabaseJs ? supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
-      if(supabaseClient) {
-        const { data, error } = await supabaseClient
+      const db = window._supabase;
+      if(db && artistId && !Object.keys(profileFallback).includes(artistId)) {
+        const { data, error } = await db
           .from('profiles')
           .select('*, artist_details(*), voice_samples(*), reviews(*)')
           .eq('id', artistId)
           .single();
 
         if(!error && data) {
-          document.getElementById('artistName').textContent = data.full_name || 'Voice Artist';
-          document.getElementById('artistAvatar').textContent = (data.full_name || 'A')[0];
-          document.getElementById('artistLoc').textContent = data.location || 'Bangladesh';
-          if(data.bio) document.getElementById('artistBio').textContent = data.bio;
-          
-          if(data.whatsapp) {
-            document.getElementById('whatsappBtn').href = 'https://wa.me/' + data.whatsapp.replace(/[^0-9]/g, '');
-          }
-
-          if(data.artist_details) {
-            document.getElementById('statYears').textContent = data.artist_details.experience_years || '5';
-            document.getElementById('statProjects').textContent = (data.artist_details.projects_count || '50') + '+';
-            
-            if(data.artist_details.languages) {
-              const langBox = document.getElementById('languagesList');
-              langBox.innerHTML = data.artist_details.languages.map(l => `<span class="tag lang">${l}</span>`).join('');
-            }
-            if(data.artist_details.categories) {
-              const specBox = document.getElementById('specialtiesList');
-              specBox.innerHTML = data.artist_details.categories.map(c => `<span class="tag">${c}</span>`).join('');
-            }
-          }
+          const real = {
+            name:       data.full_name || fallback.name,
+            loc:        data.location  || fallback.loc,
+            rating:     fallback.rating,
+            reviews:    data.reviews?.length || fallback.reviews,
+            years:      data.artist_details?.experience_years || fallback.years,
+            projects:   (data.artist_details?.projects_count  || fallback.projects) + '+',
+            avail:      data.is_available ?? fallback.avail,
+            whatsapp:   data.whatsapp || fallback.whatsapp,
+            bio:        data.bio      || fallback.bio,
+            langs:      data.artist_details?.languages   || fallback.langs,
+            categories: data.artist_details?.categories || fallback.categories,
+            samples:    (data.voice_samples || []).map((s, i) => ({
+              title: s.title || `Sample ${i+1}`, duration: s.duration || '1:00', seed: i * 13 + 7
+            })) || fallback.samples
+          };
+          applyProfile(real);
+          document.title = real.name + ' — VoiceCast';
         }
       }
     } catch(err) {
-      console.log('Error loading dynamic profile:', err);
+      console.log('Using fallback profile data', err);
     }
   }
 

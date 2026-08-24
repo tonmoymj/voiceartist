@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoiceCast — Find the Perfect Voice</title>
+<meta name="description" content="Bangladesh's voice talent network — browse verified Bangla & English speaking voice artists, listen to real samples, and connect directly.">
+<meta property="og:title" content="VoiceCast — Find the Perfect Voice">
+<meta property="og:description" content="Browse verified Bangla & English speaking voice artists, listen to real samples, and connect directly — no middleman, no waiting.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://voiceartist.vercel.app">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="VoiceCast — Find the Perfect Voice">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -48,6 +55,19 @@
   .btn-grad{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:600; font-size:0.86rem; padding:10px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; box-shadow:0 4px 18px rgba(139,92,246,0.3); }
 
   @media (max-width:820px){ .nav-links{ display:none; } }
+
+  /* Mobile Hamburger */
+  .hamburger{ display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
+  .hamburger span{ display:block; width:22px; height:2px; background:var(--text-muted); border-radius:2px; transition:transform 0.2s ease, opacity 0.2s ease; }
+  .hamburger.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2){ opacity:0; }
+  .hamburger.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+  @media (max-width:820px){ .hamburger{ display:flex; } }
+  .mobile-nav{ display:none; background:var(--bg-2); border-bottom:1px solid var(--border-soft); padding:12px 24px 20px; }
+  .mobile-nav.open{ display:block; }
+  .mobile-nav a{ display:block; padding:12px 0; color:var(--text-muted); text-decoration:none; font-size:0.9rem; border-bottom:1px solid var(--border-soft); }
+  .mobile-nav a:last-of-type{ border-bottom:none; }
+  .mobile-nav .mob-cta{ display:flex; gap:10px; margin-top:14px; }
 
   /* Hero */
   .hero{ position:relative; padding:96px 0 84px; overflow:hidden; }
@@ -176,9 +196,20 @@
       <button class="lang-toggle">EN | বাং</button>
       <a class="btn-outline" href="signup.html">Log in</a>
       <a class="btn-grad" href="signup.html">Join as Artist</a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
   </div>
 </nav>
+
+<div class="mobile-nav" id="mobileNav">
+  <a href="search.html">Browse Artists</a>
+  <a href="#">Categories</a>
+  <a href="#">How it works</a>
+  <div class="mob-cta">
+    <a class="btn-outline" href="signup.html">Log in</a>
+    <a class="btn-grad" href="signup.html">Join as Artist</a>
+  </div>
+</div>
 
 <section class="hero">
   <div class="glow glow-1"></div>
@@ -460,6 +491,24 @@
         wf.querySelectorAll('.b').forEach(b => b.style.background = '');
       }, 26 * 25 + 400);
     });
+  });
+
+  // Hero search → redirect to search.html
+  function doSearch() {
+    const q = document.querySelector('.search-bar input').value.trim();
+    window.location.href = 'search.html' + (q ? '?q=' + encodeURIComponent(q) : '');
+  }
+  document.querySelector('.search-bar button').addEventListener('click', doSearch);
+  document.querySelector('.search-bar input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // Mobile hamburger
+  const hamburger = document.getElementById('hamburger');
+  const mobileNav = document.getElementById('mobileNav');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileNav.classList.toggle('open');
   });
 </script>
 

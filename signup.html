@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -102,7 +102,7 @@
     <div class="step-line"></div>
     <div class="step-dot"></div>
   </div>
-  <div class="step-caption" id="stepCaption">STEP 1 OF 1 · ACCOUNT DETAILS</div>
+  <div class="step-caption" id="stepCaption">STEP 1 OF 4 · ACCOUNT DETAILS</div>
 
   <div class="head">
     <h1 class="display">Create your account</h1>
@@ -221,7 +221,8 @@
     submitBtn.textContent = 'Processing...';
 
     try {
-      const supabaseClient = window.supabase || supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabaseClient = window._supabase;
+      if(!supabaseClient) throw new Error('Auth service unavailable. Please try again.');
       
       if (isLogin) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -235,7 +236,7 @@
           options: { data: { full_name: fullName, role: selectedRole } }
         });
         if (error) throw error;
-        showMsg('Account created successfully! Check your email.');
+        showMsg('Account created! Check your email to verify.');
       }
     } catch (err) {
       showMsg(err.message || 'Authentication failed', true);
@@ -247,7 +248,8 @@
 
   googleBtn.addEventListener('click', async () => {
     try {
-      const supabaseClient = window.supabase || supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabaseClient = window._supabase;
+      if(!supabaseClient) throw new Error('Auth service unavailable.');
       const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin + '/index.html' }

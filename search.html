@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -229,27 +229,31 @@
   function seededRandom(seed){ let s = seed; return function(){ s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
 
   const fallbackArtists = [
-    { id:"maya", name:"Maya Okonkwo", loc:"Lagos, Nigeria", langs:["Bengali","English"], rating:"4.9", reviews:128, avail:true, seed:11, rate: 1500 },
-    { id:"rafiq", name:"Rafiq Hasan", loc:"Dhaka, Bangladesh", langs:["Bengali","Sylheti"], rating:"4.8", reviews:96, avail:true, seed:22, rate: 1200 },
-    { id:"nusrat", name:"Nusrat Jahan", loc:"Chattogram, Bangladesh", langs:["Bengali","English"], rating:"5.0", reviews:74, avail:false, seed:33, rate: 2000 },
-    { id:"tanvir", name:"Tanvir Ahmed", loc:"Sylhet, Bangladesh", langs:["Bengali"], rating:"4.7", reviews:52, avail:true, seed:44, rate: 1000 },
-    { id:"farhana", name:"Farhana Islam", loc:"Dhaka, Bangladesh", langs:["Bengali","English"], rating:"4.9", reviews:110, avail:true, seed:55, rate: 1800 },
-    { id:"carlos", name:"Carlos Reyes", loc:"Madrid, Spain", langs:["English","Bengali"], rating:"4.6", reviews:41, avail:false, seed:66, rate: 1500 },
+    { id:"maya",    name:"Maya Okonkwo",    loc:"Lagos, Nigeria",          langs:["Bengali","English"],          cats:["Commercial","Audiobook","E-Learning"],             gender:"Female", rating:"4.9", reviews:128, avail:true,  seed:11, rate:1500 },
+    { id:"rafiq",   name:"Rafiq Hasan",     loc:"Dhaka, Bangladesh",       langs:["Bengali","Sylheti"],           cats:["Documentary","E-Learning","IVR / Phone Systems"],  gender:"Male",   rating:"4.8", reviews:96,  avail:true,  seed:22, rate:1200 },
+    { id:"nusrat",  name:"Nusrat Jahan",    loc:"Chattogram, Bangladesh",  langs:["Bengali","English"],          cats:["Character / Animation","Commercial"],              gender:"Female", rating:"5.0", reviews:74,  avail:false, seed:33, rate:2000 },
+    { id:"tanvir",  name:"Tanvir Ahmed",    loc:"Sylhet, Bangladesh",      langs:["Bengali"],                    cats:["Commercial","Audiobook"],                          gender:"Male",   rating:"4.7", reviews:52,  avail:true,  seed:44, rate:1000 },
+    { id:"farhana", name:"Farhana Islam",   loc:"Dhaka, Bangladesh",       langs:["Bengali","English"],          cats:["Commercial","E-Learning","Audiobook"],             gender:"Female", rating:"4.9", reviews:110, avail:true,  seed:55, rate:1800 },
+    { id:"carlos",  name:"Carlos Reyes",    loc:"Madrid, Spain",           langs:["English","Bengali"],          cats:["Commercial","Dubbing"],                            gender:"Male",   rating:"4.6", reviews:41,  avail:false, seed:66, rate:1500 },
   ];
 
+  const PAGE_SIZE = 6;
   let currentArtists = [...fallbackArtists];
+  let displayedCount = PAGE_SIZE;
 
   async function loadArtistsFromSupabase() {
     try {
-      const supabaseClient = window.supabase || (window.supabaseJs ? supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
-      if(supabaseClient) {
-        const { data, error } = await supabaseClient.from('profiles').select('*, artist_details(*), reviews(*)').eq('role', 'artist');
+      const db = window._supabase;
+      if(db) {
+        const { data, error } = await db.from('profiles').select('*, artist_details(*), reviews(*)').eq('role', 'artist');
         if(!error && data && data.length > 0) {
           currentArtists = data.map(a => ({
             id: a.id,
             name: a.full_name || 'Artist',
             loc: a.location || 'Bangladesh',
             langs: a.artist_details?.languages || ['Bengali'],
+            cats: a.artist_details?.categories || [],
+            gender: a.artist_details?.gender || '',
             rating: (a.reviews?.length > 0 ? (a.reviews.reduce((s,r)=>s+r.rating,0)/a.reviews.length).toFixed(1) : "5.0"),
             reviews: a.reviews?.length || 0,
             avail: a.is_available ?? true,
@@ -261,7 +265,7 @@
     } catch(e) {
       console.log('Using local fallback data', e);
     }
-    renderGrid(currentArtists);
+    applyFilters();
   }
 
   function renderGrid(list) {
@@ -270,11 +274,13 @@
     document.getElementById('artistCount').textContent = list.length;
 
     if(list.length === 0) {
-      grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-faint);">No artists found matching your filters.</div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-faint);">No artists found matching your filters.</div>';
+      updateLoadMore(0, 0);
       return;
     }
 
-    list.forEach(a => {
+    const toShow = list.slice(0, displayedCount);
+    toShow.forEach(a => {
       const card = document.createElement('div');
       card.className = 'artist-card';
       card.innerHTML = `
@@ -291,7 +297,7 @@
             <div class="artist-loc">${a.loc}</div>
           </div>
         </div>
-        <div class="artist-langs">${a.langs.map(l => `<span class="lang-chip">${l}</span>`).join('')}</div>
+        <div class="artist-langs">${a.langs.map(l=>`<span class="lang-chip">${l}</span>`).join('')}</div>
         <div class="artist-waveform">
           <button class="mini-play" aria-label="Play sample">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
@@ -321,33 +327,109 @@
     document.querySelectorAll('.save-btn').forEach(btn => {
       btn.addEventListener('click', () => btn.classList.toggle('saved'));
     });
+
+    document.querySelectorAll('.mini-play').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wf = btn.nextElementSibling;
+        wf.querySelectorAll('.b').forEach((b,i) => setTimeout(() => { b.style.background='linear-gradient(180deg,var(--purple),var(--blue))'; }, i*25));
+        setTimeout(() => wf.querySelectorAll('.b').forEach(b => b.style.background=''), 22*25+400);
+      });
+    });
+
+    updateLoadMore(toShow.length, list.length);
   }
 
-  // Filter handlers
-  document.getElementById('searchInput').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtered = currentArtists.filter(a => a.name.toLowerCase().includes(term) || a.langs.some(l=>l.toLowerCase().includes(term)));
+  function updateLoadMore(shown, total) {
+    let btn = document.getElementById('loadMoreBtn');
+    if(shown < total) {
+      if(!btn) {
+        btn = document.createElement('button');
+        btn.id = 'loadMoreBtn';
+        btn.className = 'load-more';
+        btn.textContent = 'Load more artists';
+        document.getElementById('resultsGrid').after(btn);
+        btn.addEventListener('click', () => {
+          displayedCount += PAGE_SIZE;
+          applyFilters();
+        });
+      }
+      btn.style.display = 'block';
+      btn.textContent = `Load more (${total - shown} remaining)`;
+    } else if(btn) {
+      btn.style.display = 'none';
+    }
+  }
+
+  function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const langChecks = [...document.querySelectorAll('.lang-check:checked')].map(c => c.value);
+    const catChecks  = [...document.querySelectorAll('.cat-check:checked')].map(c => c.value);
+    const genderBtn  = document.querySelector('.chip-option.active[data-gender]');
+    const genderSel  = genderBtn ? genderBtn.dataset.gender : null;
+    const isAvail    = document.getElementById('availSwitch').classList.contains('on');
+    const sortVal    = document.querySelector('.sort-select').value;
+
+    let filtered = currentArtists.filter(a => {
+      if(searchTerm && !a.name.toLowerCase().includes(searchTerm) && !a.langs.some(l=>l.toLowerCase().includes(searchTerm))) return false;
+      if(langChecks.length > 0 && !langChecks.some(l => a.langs.includes(l))) return false;
+      if(catChecks.length > 0  && !catChecks.some(c  => a.cats.includes(c)))  return false;
+      if(genderSel && a.gender !== genderSel) return false;
+      if(isAvail && !a.avail) return false;
+      return true;
+    });
+
+    if(sortVal.includes('Highest rated')) filtered = [...filtered].sort((a,b) => parseFloat(b.rating) - parseFloat(a.rating));
+    else if(sortVal.includes('Newest'))   filtered = [...filtered].reverse();
+
     renderGrid(filtered);
+  }
+
+  // ── Event Listeners ──────────────────────────────────────────────────────────
+  document.getElementById('searchInput').addEventListener('input', () => { displayedCount = PAGE_SIZE; applyFilters(); });
+
+  document.querySelectorAll('.lang-check, .cat-check').forEach(cb => {
+    cb.addEventListener('change', () => { displayedCount = PAGE_SIZE; applyFilters(); });
   });
 
-  const availSwitch = document.getElementById('availSwitch');
-  availSwitch.addEventListener('click', () => {
-    availSwitch.classList.toggle('on');
-    const isAvail = availSwitch.classList.contains('on');
-    renderGrid(isAvail ? currentArtists.filter(a => a.avail) : currentArtists);
+  document.querySelectorAll('.chip-option[data-gender]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const already = btn.classList.contains('active');
+      document.querySelectorAll('.chip-option[data-gender]').forEach(b => b.classList.remove('active'));
+      if(!already) btn.classList.add('active');
+      displayedCount = PAGE_SIZE;
+      applyFilters();
+    });
   });
 
+  document.getElementById('availSwitch').addEventListener('click', () => {
+    document.getElementById('availSwitch').classList.toggle('on');
+    displayedCount = PAGE_SIZE;
+    applyFilters();
+  });
+
+  document.querySelector('.sort-select').addEventListener('change', applyFilters);
+
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    document.querySelectorAll('.lang-check, .cat-check').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.chip-option').forEach(b => b.classList.remove('active'));
+    document.getElementById('availSwitch').classList.add('on');
+    document.getElementById('searchInput').value = '';
+    displayedCount = PAGE_SIZE;
+    applyFilters();
+  });
+
+  // Mobile filter panel
   const filtersPanel = document.getElementById('filtersPanel');
   const overlay = document.getElementById('filtersOverlay');
-  document.getElementById('filterToggle').addEventListener('click', () => {
-    filtersPanel.classList.add('open'); overlay.classList.add('open');
-  });
-  document.getElementById('filtersCloseBtn').addEventListener('click', () => {
-    filtersPanel.classList.remove('open'); overlay.classList.remove('open');
-  });
-  overlay.addEventListener('click', () => {
-    filtersPanel.classList.remove('open'); overlay.classList.remove('open');
-  });
+  document.getElementById('filterToggle').addEventListener('click', () => { filtersPanel.classList.add('open'); overlay.classList.add('open'); });
+  document.getElementById('filtersCloseBtn').addEventListener('click', () => { filtersPanel.classList.remove('open'); overlay.classList.remove('open'); });
+  overlay.addEventListener('click', () => { filtersPanel.classList.remove('open'); overlay.classList.remove('open'); });
+
+  // Pre-fill search from URL (e.g. ?q=bangla)
+  const urlQ = new URLSearchParams(window.location.search).get('q');
+  if(urlQ) {
+    document.getElementById('searchInput').value = urlQ;
+  }
 
   loadArtistsFromSupabase();
 </script>
