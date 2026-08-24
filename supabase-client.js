@@ -22,6 +22,34 @@ document.addEventListener('DOMContentLoaded', async function () {
   const db = window._supabase;
   if (!db) return;
 
+  // Sync role if returning from OAuth
+  async function syncUserRole(user) {
+    if (!user) return;
+    const pendingRole = localStorage.getItem('voicecast_pending_role');
+    const existingRole = user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
+    const finalRole = pendingRole || existingRole;
+
+    if (pendingRole) {
+      try {
+        await db.auth.updateUser({ data: { role: finalRole } });
+      } catch (e) {}
+      localStorage.setItem('voicecast_user_role', finalRole);
+      localStorage.removeItem('voicecast_pending_role');
+    }
+
+    try {
+      await db.from('profiles').upsert({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0],
+        role: finalRole,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {}
+    
+    return finalRole;
+  }
+
   // Clean URL hash if it contains OAuth tokens after login
   if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
     try {
@@ -31,15 +59,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     } catch (e) {}
   }
 
-  function updateNavbarUserUI(session) {
+  async function updateNavbarUserUI(session) {
     const navCta = document.querySelector('.nav-cta');
     const mobCta = document.querySelector('.mob-cta');
 
     if (session && session.user) {
       const user = session.user;
+      const role = await syncUserRole(user) || user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || user.email.split('@')[0] || 'User';
       const initial = (name[0] || 'U').toUpperCase();
+      const roleLabel = role === 'client' ? 'Client' : 'Artist';
 
       // Desktop nav CTA update
       if (navCta) {
@@ -47,18 +77,20 @@ document.addEventListener('DOMContentLoaded', async function () {
         const langHtml = langToggle ? langToggle.outerHTML : '<button class="lang-toggle">EN | বাং</button>';
         navCta.innerHTML = `
           ${langHtml}
-          <div class="user-pill" style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 12px 4px 6px;">
+          <a href="dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
             <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.75rem;">${initial}</div>
-            <span style="font-size:0.84rem;color:var(--text);font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
-          </div>
-          <button id="logoutBtn" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.82rem;padding:7px 14px;border-radius:8px;cursor:pointer;transition:border-color 0.15s,color 0.15s;">Log out</button>
+            <span style="font-size:0.84rem;color:var(--text);font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+            <span style="font-size:0.68rem;padding:2px 7px;border-radius:999px;background:rgba(139,92,246,0.18);color:var(--purple);font-weight:600;">${roleLabel}</span>
+          </a>
+          <a class="btn-outline" href="dashboard" style="padding:7px 14px;font-size:0.82rem;">Dashboard</a>
+          <button id="logoutBtn" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.82rem;padding:7px 12px;border-radius:8px;cursor:pointer;transition:border-color 0.15s,color 0.15s;">Log out</button>
         `;
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
           logoutBtn.addEventListener('click', async () => {
             logoutBtn.textContent = 'Logging out...';
             await db.auth.signOut();
-            window.location.reload();
+            window.location.href = '/';
           });
         }
       }
@@ -66,20 +98,23 @@ document.addEventListener('DOMContentLoaded', async function () {
       // Mobile nav CTA update
       if (mobCta) {
         mobCta.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 0;">
-            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.85rem;">${initial}</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 0;border-bottom:1px solid var(--border-soft);">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.9rem;">${initial}</div>
             <div>
-              <div style="font-size:0.9rem;font-weight:600;color:var(--text);">${name}</div>
+              <div style="font-size:0.92rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;">
+                ${name} <span style="font-size:0.68rem;padding:1px 6px;border-radius:999px;background:rgba(139,92,246,0.2);color:var(--purple);">${roleLabel}</span>
+              </div>
               <div style="font-size:0.75rem;color:var(--text-faint);">${user.email}</div>
             </div>
           </div>
-          <button id="mobLogoutBtn" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:0.86rem;padding:10px;border-radius:8px;cursor:pointer;">Log out</button>
+          <a class="btn-grad" href="dashboard" style="display:block;text-align:center;margin-bottom:8px;padding:10px;">Go to Dashboard</a>
+          <button id="mobLogoutBtn" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-size:0.86rem;padding:9px;border-radius:8px;cursor:pointer;">Log out</button>
         `;
         const mobLogoutBtn = document.getElementById('mobLogoutBtn');
         if (mobLogoutBtn) {
           mobLogoutBtn.addEventListener('click', async () => {
             await db.auth.signOut();
-            window.location.reload();
+            window.location.href = '/';
           });
         }
       }
@@ -100,15 +135,15 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     const { data } = await db.auth.getSession();
     if (data && data.session) {
-      updateNavbarUserUI(data.session);
+      await updateNavbarUserUI(data.session);
     }
   } catch (e) {}
 
   // Subscribe to auth state events
   try {
-    db.auth.onAuthStateChange((event, session) => {
+    db.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        updateNavbarUserUI(session);
+        await updateNavbarUserUI(session);
       }
     });
   } catch (e) {}

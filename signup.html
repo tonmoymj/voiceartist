@@ -233,8 +233,8 @@
       if (isLogin) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        showMsg('Login successful! Redirecting...');
-        setTimeout(() => { window.location.href = '/'; }, 1200);
+        showMsg('Login successful! Redirecting to dashboard...');
+        setTimeout(() => { window.location.href = 'dashboard'; }, 1000);
       } else {
         const { data, error } = await supabaseClient.auth.signUp({
           email,
@@ -242,6 +242,7 @@
           options: { data: { full_name: fullName, role: selectedRole } }
         });
         if (error) throw error;
+        localStorage.setItem('voicecast_user_role', selectedRole);
         showMsg('Account created! Check your email to verify.');
       }
     } catch (err) {
@@ -256,13 +257,34 @@
     try {
       const supabaseClient = window._supabase;
       if(!supabaseClient) throw new Error('Auth service unavailable.');
+      
+      // Persist chosen role so it's assigned to the profile upon Google callback
+      localStorage.setItem('voicecast_pending_role', selectedRole);
+      localStorage.setItem('voicecast_user_role', selectedRole);
+
       const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/' }
+        options: { 
+          redirectTo: window.location.origin + '/dashboard',
+          queryParams: { role: selectedRole }
+        }
       });
       if (error) throw error;
     } catch (err) {
       showMsg(err.message, true);
+    }
+  });
+
+  // Auto-redirect if already logged in
+  document.addEventListener('DOMContentLoaded', async () => {
+    const db = window._supabase;
+    if (db) {
+      try {
+        const { data } = await db.auth.getSession();
+        if (data && data.session) {
+          window.location.href = 'dashboard';
+        }
+      } catch (e) {}
     }
   });
 
