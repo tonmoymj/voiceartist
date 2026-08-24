@@ -68,8 +68,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       const role = await syncUserRole(user) || user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || user.email.split('@')[0] || 'User';
-      const initial = (name[0] || 'U').toUpperCase();
-      const roleLabel = role === 'client' ? 'Client' : 'Artist';
+      const isSuperAdmin = (user.email && user.email.toLowerCase() === 'tonmoymbm@gmail.com');
+      const roleLabel = isSuperAdmin ? 'Super Admin' : (role === 'client' ? 'Client' : 'Artist');
+      const superAdminNavBtn = isSuperAdmin ? '<a href="superadmin" style="background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.4);color:#EF4444;font-weight:700;font-size:0.82rem;padding:6px 12px;border-radius:8px;text-decoration:none;box-shadow:0 0 10px rgba(239,68,68,0.2);">👑 Super Admin</a>' : '';
 
       // Desktop nav CTA update
       if (navCta) {
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const langHtml = langToggle ? langToggle.outerHTML : '<button class="lang-toggle">EN | বাং</button>';
         navCta.innerHTML = `
           ${langHtml}
+          ${superAdminNavBtn}
           <a href="dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
             <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.75rem;">${initial}</div>
             <span style="font-size:0.84rem;color:var(--text);font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
@@ -107,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               <div style="font-size:0.75rem;color:var(--text-faint);">${user.email}</div>
             </div>
           </div>
+          ${isSuperAdmin ? '<a class="btn-grad" href="superadmin" style="display:block;text-align:center;margin-bottom:8px;padding:10px;background:linear-gradient(90deg,#EF4444,#DC2626);color:#FFF;">👑 Open Super Admin Panel</a>' : ''}
           <a class="btn-grad" href="dashboard" style="display:block;text-align:center;margin-bottom:8px;padding:10px;">Go to Dashboard</a>
           <button id="mobLogoutBtn" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-size:0.86rem;padding:9px;border-radius:8px;cursor:pointer;">Log out</button>
         `;
