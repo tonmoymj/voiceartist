@@ -11,6 +11,7 @@
 <meta property="og:url" content="https://voiceartist.vercel.app">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="VoiceCast — Find the Perfect Voice">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230A0A14'/><circle cx='50' cy='50' r='24' fill='%238B5CF6'/><path d='M44 36v28l22-14z' fill='%23FFFFFF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,7 +50,8 @@
   .nav-links a{ text-decoration:none; transition:color 0.15s ease; }
   .nav-links a:hover{ color:var(--text); }
   .nav-cta{ display:flex; align-items:center; gap:14px; }
-  .lang-toggle{ font-size:0.78rem; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; }
+  .lang-toggle{ font-size:0.78rem; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; background:transparent; transition:color 0.15s, border-color 0.15s; }
+  .lang-toggle:hover{ color:var(--text); border-color:var(--purple); }
   .btn-outline{ border:1px solid var(--border); color:var(--text); font-size:0.86rem; padding:9px 16px; border-radius:8px; text-decoration:none; transition:border-color 0.15s ease; white-space:nowrap; }
   .btn-outline:hover{ border-color:var(--purple); }
   .btn-grad{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:600; font-size:0.86rem; padding:10px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; box-shadow:0 4px 18px rgba(139,92,246,0.3); }
@@ -112,13 +114,16 @@
   .artist-card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; transition:border-color 0.2s ease, transform 0.2s ease; }
   .artist-card:hover{ border-color:rgba(139,92,246,0.4); transform:translateY(-3px); }
   .artist-top{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
-  .artist-photo{ width:56px; height:56px; border-radius:50%; object-fit:cover; background:linear-gradient(160deg,#2C2850,#1B1836); border:1px solid var(--border); }
+  .artist-photo-wrap{ position:relative; flex-shrink:0; }
+  .artist-photo{ width:56px; height:56px; border-radius:50%; background:linear-gradient(160deg,#2C2850,#1B1836); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.25rem; color:var(--purple); }
+  .avail-dot{ position:absolute; bottom:2px; right:2px; width:11px; height:11px; border-radius:50%; background:#4ADE80; border:2px solid var(--surface); box-shadow:0 0 6px rgba(74,222,128,0.5); }
   .artist-name{ font-weight:600; font-size:1rem; margin-bottom:3px; }
   .artist-role{ font-size:0.8rem; color:var(--text-faint); }
   .artist-langs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
   .lang-chip{ font-size:0.72rem; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--text-muted); }
   .artist-waveform{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-  .mini-play{ width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#0B0A16; flex-shrink:0; cursor:pointer; border:none; }
+  .mini-play{ width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#0B0A16; flex-shrink:0; cursor:pointer; border:none; transition:transform 0.15s; }
+  .mini-play:hover{ transform:scale(1.08); }
   .mini-wave{ flex:1; height:22px; display:flex; align-items:center; gap:2px; }
   .mini-wave .b{ flex:1; min-width:2px; border-radius:2px; background:var(--border); }
   .artist-rating{ font-size:0.8rem; color:var(--text-muted); margin-bottom:16px; }
@@ -186,11 +191,11 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
+    <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
     <div class="nav-links">
       <a href="search.html">Browse Artists</a>
-      <a href="#">Categories</a>
-      <a href="#">How it works</a>
+      <a href="#categories">Categories</a>
+      <a href="#how-it-works">How it works</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
@@ -203,8 +208,8 @@
 
 <div class="mobile-nav" id="mobileNav">
   <a href="search.html">Browse Artists</a>
-  <a href="#">Categories</a>
-  <a href="#">How it works</a>
+  <a href="#categories">Categories</a>
+  <a href="#how-it-works">How it works</a>
   <div class="mob-cta">
     <a class="btn-outline" href="signup.html">Log in</a>
     <a class="btn-grad" href="signup.html">Join as Artist</a>
@@ -267,7 +272,10 @@
 
       <div class="artist-card">
         <div class="artist-top">
-          <img class="artist-photo" alt="Maya Okonkwo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%232C2850'/%3E%3C/svg%3E">
+          <div class="artist-photo-wrap">
+            <div class="artist-photo" style="background:linear-gradient(135deg,#3A2D78,#1E1748); color:#A78BFA;">M</div>
+            <span class="avail-dot"></span>
+          </div>
           <div>
             <div class="artist-name">Maya Okonkwo</div>
             <div class="artist-role">Commercial &amp; Narration</div>
@@ -281,12 +289,15 @@
           <div class="mini-wave" data-seed="11"></div>
         </div>
         <div class="artist-rating"><span>★ 4.9</span> · 128 reviews</div>
-        <a class="view-profile" href="profile.html">View Profile</a>
+        <a class="view-profile" href="profile.html?id=maya">View Profile</a>
       </div>
 
       <div class="artist-card">
         <div class="artist-top">
-          <img class="artist-photo" alt="Rafiq Hasan" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23223055'/%3E%3C/svg%3E">
+          <div class="artist-photo-wrap">
+            <div class="artist-photo" style="background:linear-gradient(135deg,#1E3A68,#122345); color:#60A5FA;">R</div>
+            <span class="avail-dot"></span>
+          </div>
           <div>
             <div class="artist-name">Rafiq Hasan</div>
             <div class="artist-role">Documentary &amp; E-Learning</div>
@@ -300,12 +311,14 @@
           <div class="mini-wave" data-seed="22"></div>
         </div>
         <div class="artist-rating"><span>★ 4.8</span> · 96 reviews</div>
-        <a class="view-profile" href="profile.html">View Profile</a>
+        <a class="view-profile" href="profile.html?id=rafiq">View Profile</a>
       </div>
 
       <div class="artist-card">
         <div class="artist-top">
-          <img class="artist-photo" alt="Nusrat Jahan" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23352455'/%3E%3C/svg%3E">
+          <div class="artist-photo-wrap">
+            <div class="artist-photo" style="background:linear-gradient(135deg,#581C68,#331045); color:#F472B6;">N</div>
+          </div>
           <div>
             <div class="artist-name">Nusrat Jahan</div>
             <div class="artist-role">Character &amp; Animation</div>
@@ -319,7 +332,7 @@
           <div class="mini-wave" data-seed="33"></div>
         </div>
         <div class="artist-rating"><span>★ 5.0</span> · 74 reviews</div>
-        <a class="view-profile" href="profile.html">View Profile</a>
+        <a class="view-profile" href="profile.html?id=nusrat">View Profile</a>
       </div>
 
     </div>
@@ -328,7 +341,7 @@
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
+<section class="section" id="categories" style="padding-top:0;">
   <div class="container">
     <div class="section-head">
       <div class="section-eyebrow">Browse</div>
@@ -336,27 +349,27 @@
     </div>
 
     <div class="cat-grid">
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=Commercial">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div>
         <span class="cat-name">Commercial</span>
       </a>
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=Audiobook">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/></svg></div>
         <span class="cat-name">Audiobook</span>
       </a>
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=Dubbing">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M11 10l4 2-4 2v-4z"/></svg></div>
         <span class="cat-name">Dubbing</span>
       </a>
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=E-Learning">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 4 2 10l10 6 10-6zM6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div>
         <span class="cat-name">E-Learning</span>
       </a>
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=Character+%2F+Animation">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 12 0v2M16 8a3 3 0 1 0 0-6M20 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
         <span class="cat-name">Character / Animation</span>
       </a>
-      <a class="cat-card" href="#">
+      <a class="cat-card" href="search.html?cat=IVR+%2F+Phone+Systems">
         <div class="cat-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13 1 .36 1.97.68 2.9a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.18-1.18a2 2 0 0 1 2.11-.45c.93.32 1.9.55 2.9.68A2 2 0 0 1 22 16.92z"/></svg></div>
         <span class="cat-name">IVR / Phone Systems</span>
       </a>
@@ -364,7 +377,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="how-it-works">
   <div class="container">
     <div class="section-head">
       <div class="section-eyebrow">How It Works</div>
@@ -421,14 +434,14 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
+        <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
         <p>Bangladesh's voice talent network — connecting artists with clients, worldwide.</p>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Platform</div>
         <a href="search.html">Browse Artists</a>
-        <a href="#">How it Works</a>
-        <a href="#">Join as Artist</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="signup.html">Join as Artist</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Company</div>
@@ -457,6 +470,26 @@
 <script>
   function seededRandom(seed){ let s = seed; return function(){ s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
 
+  // Web Audio Preview Synthesizer
+  let audioCtx = null;
+  function playAcousticChime(freq = 440, duration = 0.8) {
+    try {
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration * 0.4);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
   // Hero decorative wave
   const heroWave = document.getElementById('heroWave');
   const heroRand = seededRandom(7);
@@ -481,8 +514,10 @@
     }
   });
 
-  document.querySelectorAll('.mini-play').forEach(btn => {
+  const notes = [330, 392, 440, 523, 587];
+  document.querySelectorAll('.mini-play').forEach((btn, idx) => {
     btn.addEventListener('click', () => {
+      playAcousticChime(notes[idx % notes.length], 0.9);
       const wf = btn.nextElementSibling;
       wf.querySelectorAll('.b').forEach((b,i) => {
         setTimeout(() => { b.style.background = 'linear-gradient(180deg,var(--purple),var(--blue))'; }, i * 25);
@@ -493,10 +528,10 @@
     });
   });
 
-  // Hero search → redirect to search.html
+  // Hero search → redirect to search
   function doSearch() {
     const q = document.querySelector('.search-bar input').value.trim();
-    window.location.href = 'search.html' + (q ? '?q=' + encodeURIComponent(q) : '');
+    window.location.href = 'search' + (q ? '?q=' + encodeURIComponent(q) : '');
   }
   document.querySelector('.search-bar button').addEventListener('click', doSearch);
   document.querySelector('.search-bar input').addEventListener('keydown', e => {
@@ -510,6 +545,23 @@
     hamburger.classList.toggle('open');
     mobileNav.classList.toggle('open');
   });
+
+  // Bilingual toggle (EN / বাং)
+  let currentLang = localStorage.getItem('vc_lang') || 'en';
+  function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('vc_lang', lang);
+    const isBn = (lang === 'bn');
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+      btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
+    });
+  }
+  document.querySelectorAll('.lang-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyLanguage(currentLang === 'en' ? 'bn' : 'en');
+    });
+  });
+  applyLanguage(currentLang);
 </script>
 
 </body>

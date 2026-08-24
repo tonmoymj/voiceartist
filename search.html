@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Browse Voice Artists — VoiceCast</title>
+<meta name="description" content="Search and filter verified Bangla, English, and Sylheti voiceover talent by category, accent, and gender on VoiceCast.">
+<meta property="og:title" content="Browse Voice Artists — VoiceCast">
+<meta property="og:description" content="Filter Bangla and English speaking voice artists by category, language, and gender.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230A0A14'/><circle cx='50' cy='50' r='24' fill='%238B5CF6'/><path d='M44 36v28l22-14z' fill='%23FFFFFF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -132,10 +136,10 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
+    <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
     <div class="nav-links">
       <a class="active" href="search.html">Browse Artists</a>
-      <a href="index.html#how-it-works">How it works</a>
+      <a href="/#how-it-works">How it works</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
@@ -274,7 +278,16 @@
     document.getElementById('artistCount').textContent = list.length;
 
     if(list.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-faint);">No artists found matching your filters.</div>';
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:54px 20px;color:var(--text-faint);">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto 14px;color:var(--purple);opacity:0.8;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <div style="font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:6px;">No artists found</div>
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:18px;">Try adjusting your keyword or clearing selected filters.</p>
+          <button id="emptyClearBtn" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:500;">Reset all filters</button>
+        </div>
+      `;
+      const emptyBtn = document.getElementById('emptyClearBtn');
+      if(emptyBtn) emptyBtn.addEventListener('click', () => document.getElementById('clearFilters').click());
       updateLoadMore(0, 0);
       return;
     }
@@ -328,8 +341,10 @@
       btn.addEventListener('click', () => btn.classList.toggle('saved'));
     });
 
-    document.querySelectorAll('.mini-play').forEach(btn => {
+    const notes = [330, 392, 440, 523, 587];
+    document.querySelectorAll('.mini-play').forEach((btn, idx) => {
       btn.addEventListener('click', () => {
+        playSearchChime(notes[idx % notes.length], 0.85);
         const wf = btn.nextElementSibling;
         wf.querySelectorAll('.b').forEach((b,i) => setTimeout(() => { b.style.background='linear-gradient(180deg,var(--purple),var(--blue))'; }, i*25));
         setTimeout(() => wf.querySelectorAll('.b').forEach(b => b.style.background=''), 22*25+400);
@@ -337,6 +352,25 @@
     });
 
     updateLoadMore(toShow.length, list.length);
+  }
+
+  let searchAudioCtx = null;
+  function playSearchChime(freq = 440, duration = 0.8) {
+    try {
+      if(!searchAudioCtx) searchAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(searchAudioCtx.state === 'suspended') searchAudioCtx.resume();
+      const osc = searchAudioCtx.createOscillator();
+      const gain = searchAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, searchAudioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.4, searchAudioCtx.currentTime + duration * 0.4);
+      gain.gain.setValueAtTime(0.07, searchAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, searchAudioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(searchAudioCtx.destination);
+      osc.start();
+      osc.stop(searchAudioCtx.currentTime + duration);
+    } catch(e) {}
   }
 
   function updateLoadMore(shown, total) {
@@ -425,11 +459,42 @@
   document.getElementById('filtersCloseBtn').addEventListener('click', () => { filtersPanel.classList.remove('open'); overlay.classList.remove('open'); });
   overlay.addEventListener('click', () => { filtersPanel.classList.remove('open'); overlay.classList.remove('open'); });
 
-  // Pre-fill search from URL (e.g. ?q=bangla)
-  const urlQ = new URLSearchParams(window.location.search).get('q');
+  // Pre-fill search & filters from URL (e.g. ?q=bangla or ?cat=Commercial or ?lang=Bengali)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlQ = urlParams.get('q');
+  const urlCat = urlParams.get('cat');
+  const urlLang = urlParams.get('lang');
+
   if(urlQ) {
     document.getElementById('searchInput').value = urlQ;
   }
+  if(urlCat) {
+    document.querySelectorAll('.cat-check').forEach(cb => {
+      if(cb.value.toLowerCase() === urlCat.toLowerCase()) cb.checked = true;
+    });
+  }
+  if(urlLang) {
+    document.querySelectorAll('.lang-check').forEach(cb => {
+      if(cb.value.toLowerCase() === urlLang.toLowerCase()) cb.checked = true;
+    });
+  }
+
+  // Bilingual toggle (EN / বাং)
+  let currentLang = localStorage.getItem('vc_lang') || 'en';
+  function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('vc_lang', lang);
+    const isBn = (lang === 'bn');
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+      btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
+    });
+  }
+  document.querySelectorAll('.lang-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyLanguage(currentLang === 'en' ? 'bn' : 'en');
+    });
+  });
+  applyLanguage(currentLang);
 
   loadArtistsFromSupabase();
 </script>

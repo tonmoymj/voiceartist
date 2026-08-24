@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voice Artist Profile — VoiceCast</title>
+<meta name="description" content="View verified voice artist profile, listen to voiceover demo samples, and connect directly on VoiceCast.">
+<meta property="og:title" content="Voice Artist Profile — VoiceCast">
+<meta property="og:description" content="Listen to voiceover demo samples, view specialties, and contact directly.">
+<meta property="og:type" content="profile">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230F241D'/><circle cx='50' cy='50' r='24' fill='%23D8AE55'/><path d='M44 36v28l22-14z' fill='%230F241D'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -104,7 +109,7 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="index.html">VoiceCast</a>
+    <a class="brand" href="/">VoiceCast</a>
     <a class="back-link" href="search.html">← Back to search</a>
   </div>
 </div>
@@ -298,12 +303,36 @@
     });
   }
 
+  let audioCtx = null;
+  let activeGainNode = null;
+
+  function startAudioSynth(sampleIdx) {
+    try {
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const baseFreq = 220 + (sampleIdx * 65);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.33, audioCtx.currentTime + 1.2);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.9, audioCtx.currentTime + 2.0);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.0);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      activeGainNode = gain;
+    } catch(e) {}
+  }
+
   function playSample(idx, btn) {
     currentlyPlaying = idx;
     btn.classList.add('playing');
     btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    startAudioSynth(idx);
     const wf = document.querySelector(`.waveform[data-idx="${idx}"]`);
-    const bars = wf.querySelectorAll('.bar');
+    const bars = wf ? wf.querySelectorAll('.bar') : [];
     let progress = 0;
     const timer = setInterval(() => {
       if(progress < bars.length) {
@@ -339,7 +368,8 @@
     document.getElementById('statProjects').textContent  = p.projects;
     document.getElementById('statReviews').textContent   = p.reviews;
     document.getElementById('artistRating').innerHTML    = `<span class="stars">★★★★★</span> ${p.rating} (${p.reviews})`;
-    document.getElementById('whatsappBtn').href          = `https://wa.me/${p.whatsapp}`;
+    const customMsg = encodeURIComponent(`Hello ${p.name}, I found your voice talent profile on VoiceCast and would like to discuss a voiceover project with you.`);
+    document.getElementById('whatsappBtn').href          = `https://wa.me/${p.whatsapp}?text=${customMsg}`;
 
     if(!p.avail) {
       const dot = document.querySelector('.avail-dot');

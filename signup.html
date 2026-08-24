@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign up — VoiceCast</title>
+<title>Sign up / Log in — VoiceCast</title>
+<meta name="description" content="Create your VoiceCast account to discover voice talent or join as a verified voice artist.">
+<meta property="og:title" content="Join VoiceCast — Voice Talent Platform">
+<meta property="og:description" content="Create an account to hire voice talent or build your voice artist profile.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230A0A14'/><circle cx='50' cy='50' r='24' fill='%238B5CF6'/><path d='M44 36v28l22-14z' fill='%23FFFFFF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -87,7 +91,7 @@
 <div class="glow glow-2"></div>
 
 <div class="topbar">
-  <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
+  <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
   <button class="lang-toggle">EN | বাং</button>
 </div>
 
@@ -230,7 +234,7 @@
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
         showMsg('Login successful! Redirecting...');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+        setTimeout(() => { window.location.href = '/'; }, 1200);
       } else {
         const { data, error } = await supabaseClient.auth.signUp({
           email,
@@ -254,13 +258,30 @@
       if(!supabaseClient) throw new Error('Auth service unavailable.');
       const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/index.html' }
+        options: { redirectTo: window.location.origin + '/' }
       });
       if (error) throw error;
     } catch (err) {
       showMsg(err.message, true);
     }
   });
+
+  // Bilingual toggle (EN / বাং)
+  let currentLang = localStorage.getItem('vc_lang') || 'en';
+  function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('vc_lang', lang);
+    const isBn = (lang === 'bn');
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+      btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
+    });
+  }
+  document.querySelectorAll('.lang-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyLanguage(currentLang === 'en' ? 'bn' : 'en');
+    });
+  });
+  applyLanguage(currentLang);
 </script>
 
 </body>
