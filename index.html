@@ -18,6 +18,7 @@
 <!-- Supabase JS CDN & Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="i18n.js"></script>
 <style>
   :root{
     --bg: #0A0A14;
@@ -196,26 +197,26 @@
   <div class="nav-inner">
     <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
     <div class="nav-links">
-      <a href="search.html">Browse Artists</a>
-      <a href="#categories">Categories</a>
-      <a href="#how-it-works">How it works</a>
+      <a href="search" data-i18n="nav_browse">Browse Artists</a>
+      <a href="#categories" data-i18n="nav_categories">Categories</a>
+      <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
-      <a class="btn-outline" href="signup.html">Log in</a>
-      <a class="btn-grad" href="signup.html">Join as Artist</a>
+      <a class="btn-outline" href="signup" data-i18n="nav_login">Log in</a>
+      <a class="btn-grad" href="signup" data-i18n="nav_join_artist">Join as Artist</a>
       <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
   </div>
 </nav>
 
 <div class="mobile-nav" id="mobileNav">
-  <a href="search.html">Browse Artists</a>
-  <a href="#categories">Categories</a>
-  <a href="#how-it-works">How it works</a>
+  <a href="search" data-i18n="nav_browse">Browse Artists</a>
+  <a href="#categories" data-i18n="nav_categories">Categories</a>
+  <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
   <div class="mob-cta">
-    <a class="btn-outline" href="signup.html">Log in</a>
-    <a class="btn-grad" href="signup.html">Join as Artist</a>
+    <a class="btn-outline" href="signup" data-i18n="nav_login">Log in</a>
+    <a class="btn-grad" href="signup" data-i18n="nav_join_artist">Join as Artist</a>
   </div>
 </div>
 
@@ -223,19 +224,19 @@
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
   <div class="container hero-inner">
-    <span class="eyebrow"><span class="eyebrow-dot"></span>Bangladesh's Voice Talent Network</span>
+    <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="hero_tag">Bangladesh's Voice Talent Network</span></span>
     <h1 class="hero-title display">Find the perfect <span class="grad-text">voice</span> for your project</h1>
-    <p class="hero-sub">Browse verified Bangla &amp; English speaking voice artists, listen to real samples, and connect directly — no middleman, no waiting.</p>
+    <p class="hero-sub" data-i18n="hero_sub">Browse verified Bangla &amp; English speaking voice artists, listen to real samples, and connect directly — no middleman, no waiting.</p>
 
     <div class="search-bar">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" placeholder="Search by language, style, or name...">
-      <button>Search</button>
+      <input type="text" data-i18n-placeholder="search_placeholder" placeholder="Search by language, style, or name...">
+      <button data-i18n="btn_search">Search</button>
     </div>
 
     <div class="hero-cta">
-      <a class="btn-grad" href="search.html" style="padding:13px 26px; font-size:0.92rem;">Find a Voice Artist</a>
-      <a class="btn-outline" href="signup.html" style="padding:12px 24px; font-size:0.92rem;">Join as an Artist</a>
+      <a class="btn-grad" href="search" style="padding:13px 26px; font-size:0.92rem;" data-i18n="btn_find_artist">Find a Voice Artist</a>
+      <a class="btn-outline" href="signup" style="padding:12px 24px; font-size:0.92rem;" data-i18n="btn_join_artist">Join as an Artist</a>
     </div>
 
     <div class="hero-wave" id="heroWave"></div>

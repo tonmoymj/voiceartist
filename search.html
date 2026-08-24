@@ -14,6 +14,7 @@
 <!-- Supabase JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="i18n.js"></script>
 <style>
   :root{
     --bg: #0A0A14; --bg-2: #100E1E; --surface: #15132A; --surface-2: #1B1836;
@@ -292,13 +293,15 @@
       return;
     }
 
+    const savedArtistIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
     const toShow = list.slice(0, displayedCount);
     toShow.forEach(a => {
+      const isSaved = savedArtistIds.includes(a.id);
       const card = document.createElement('div');
       card.className = 'artist-card';
       card.innerHTML = `
-        <button class="save-btn" aria-label="Save artist">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c2 0 3.5 1.2 4.5 2.8C12 6.2 13.5 5 15.5 5 19 5 21.5 8.5 21.5 12.5 19 16.65 12 21 12 21z"/></svg>
+        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${a.id}" aria-label="Save artist">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isSaved ? 'var(--pink)' : 'none'}" stroke="${isSaved ? 'var(--pink)' : 'currentColor'}" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c2 0 3.5 1.2 4.5 2.8C12 6.2 13.5 5 15.5 5 19 5 21.5 8.5 21.5 12.5 19 16.65 12 21 12 21z"/></svg>
         </button>
         <div class="artist-top">
           <div class="artist-photo-wrap">
@@ -322,7 +325,7 @@
           <span style="color:var(--text-muted)">${a.reviews} reviews</span>
           ${a.rate ? `<strong style="color:var(--purple)">৳${a.rate}/min</strong>` : ''}
         </div>
-        <a class="view-profile" href="profile.html?id=${a.id}">View Profile</a>
+        <a class="view-profile" href="profile?id=${a.id}">View Profile</a>
       `;
       grid.appendChild(card);
     });
@@ -338,7 +341,23 @@
     });
 
     document.querySelectorAll('.save-btn').forEach(btn => {
-      btn.addEventListener('click', () => btn.classList.toggle('saved'));
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const artistId = btn.dataset.id;
+        let currentSaved = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
+        if (currentSaved.includes(artistId)) {
+          currentSaved = currentSaved.filter(id => id !== artistId);
+          btn.classList.remove('saved');
+          btn.querySelector('svg').setAttribute('fill', 'none');
+          btn.querySelector('svg').setAttribute('stroke', 'currentColor');
+        } else {
+          currentSaved.push(artistId);
+          btn.classList.add('saved');
+          btn.querySelector('svg').setAttribute('fill', 'var(--pink)');
+          btn.querySelector('svg').setAttribute('stroke', 'var(--pink)');
+        }
+        localStorage.setItem('voicecast_saved_artists', JSON.stringify(currentSaved));
+      });
     });
 
     const notes = [330, 392, 440, 523, 587];

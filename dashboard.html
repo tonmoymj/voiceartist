@@ -9,14 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Supabase JS CDN & Client -->
+<!-- Supabase JS CDN, Client & i18n -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="i18n.js"></script>
 <style>
   :root{
     --bg: #0A0A14; --bg-2: #100E1E; --surface: #15132A; --surface-2: #1B1836;
     --border: #2A2745; --border-soft: #1F1C38;
-    --purple: #8B5CF6; --blue: #4F8CF7; --pink: #E879C9;
+    --purple: #8B5CF6; --blue: #4F8CF7; --pink: #E879C9; --yellow: #F59E0B; --red: #EF4444;
     --text: #F3F1FA; --text-muted: #A9A5C4; --text-faint: #6E6A8F;
     --whatsapp: #25D366; --success: #4ADE80;
   }
@@ -41,6 +42,12 @@
   .btn-outline:hover{ border-color:var(--purple); color:var(--text); }
   .btn-grad{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:600; font-size:0.86rem; padding:9px 18px; border-radius:8px; text-decoration:none; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:6px; box-shadow:0 4px 16px rgba(139,92,246,0.25); transition:transform 0.15s; }
   .btn-grad:hover{ transform:translateY(-1px); }
+
+  /* Approval Banner */
+  .approval-banner{ padding:14px 20px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:16px; font-size:0.9rem; }
+  .banner-pending{ background:rgba(245,158,11,0.14); border:1px solid rgba(245,158,11,0.35); color:#FDE68A; }
+  .banner-approved{ background:rgba(34,197,94,0.14); border:1px solid rgba(34,197,94,0.35); color:#BBF7D0; }
+  .banner-rejected{ background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.35); color:#FECACA; }
 
   /* Dashboard Header */
   .dash-header{ padding:40px 0 28px; border-bottom:1px solid var(--border-soft); background:linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%); }
@@ -129,12 +136,13 @@
   <div class="nav-inner">
     <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
     <div class="nav-links">
-      <a href="search">Browse Artists</a>
-      <a href="dashboard" class="active">Dashboard</a>
+      <a href="search" data-i18n="nav_browse">Browse Artists</a>
+      <a href="dashboard" class="active" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="admin" style="font-size:0.82rem;color:var(--text-faint);">Admin Panel</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
-      <button class="btn-outline" id="navLogoutBtn">Log out</button>
+      <button class="btn-outline" id="navLogoutBtn" data-i18n="nav_logout">Log out</button>
     </div>
   </div>
 </nav>
@@ -150,6 +158,19 @@
 <div id="dashContent" style="display:none;">
   <header class="dash-header">
     <div class="container">
+
+      <!-- Artist Status Banner -->
+      <div id="artistStatusBanner" class="approval-banner banner-pending">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong id="statusTitle">Profile Status: Under Review</strong>
+            <div style="font-size:0.82rem;opacity:0.9;" id="statusDesc">Your profile and voice samples are currently in the moderation queue (usually 24–48 hours).</div>
+          </div>
+        </div>
+        <button class="btn-outline" style="border-color:currentColor;color:inherit;padding:6px 12px;font-size:0.78rem;" onclick="simulateApproval()">Simulate Instant Approval</button>
+      </div>
+
       <div class="user-bar">
         <div class="user-info">
           <div class="user-avatar" id="dashAvatar">U</div>
@@ -194,7 +215,7 @@
       <div class="dash-tabs" id="clientTabs" style="display:none;">
         <button class="tab-btn active" data-tab="savedArtistsTab">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          Saved Voice Artists
+          Saved Voice Artists (<span id="savedCountHeader">2</span>)
         </button>
         <button class="tab-btn" data-tab="projectBriefTab">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
@@ -263,7 +284,7 @@
             <textarea id="profBio" placeholder="Describe your voice style, studio equipment, and notable work experience..."></textarea>
           </div>
 
-          <button type="submit" class="btn-grad" style="padding:12px 26px;">Save Profile Changes</button>
+          <button type="submit" class="btn-grad" style="padding:12px 26px;">Save &amp; Submit for Review</button>
         </form>
       </div>
     </div>
@@ -272,14 +293,14 @@
     <div class="tab-pane" id="samplesTab">
       <div class="dash-card">
         <div class="dash-card-title">
-          <span>Manage Voice Samples</span>
+          <span>Manage Voice Samples (Max 3 samples, 30s limit)</span>
           <button class="btn-outline" id="toggleAddSampleBtn">+ Add Sample</button>
         </div>
-        <div class="dash-card-sub">High quality samples increase client direct bookings by over 400%</div>
+        <div class="dash-card-sub">High quality samples under 30 seconds increase client direct bookings by over 400%</div>
 
         <!-- Add Sample Form (Collapsible) -->
         <div id="addSampleBox" style="display:none;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;">
-          <h3 style="font-size:0.98rem;margin-bottom:14px;">Add New Voice Demo</h3>
+          <h3 style="font-size:0.98rem;margin-bottom:14px;">Add New Voice Demo (Max 30s)</h3>
           <div class="form-row">
             <div class="form-col">
               <label>Sample Title</label>
@@ -300,8 +321,8 @@
           </div>
           <div class="form-row">
             <div class="form-col">
-              <label>Duration (e.g. 0:45)</label>
-              <input type="text" id="newSampleDuration" placeholder="0:45">
+              <label>Duration (Max 0:30)</label>
+              <input type="text" id="newSampleDuration" placeholder="0:28">
             </div>
           </div>
           <div style="display:flex;gap:10px;">
@@ -401,33 +422,7 @@
         <div class="dash-card-sub">Artists you have saved for your upcoming voiceover projects</div>
 
         <div id="savedArtistsList">
-          <div class="sample-item">
-            <div class="sample-left">
-              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3A2D78,#1E1748);color:#A78BFA;display:flex;align-items:center;justify-content:center;font-weight:700;">M</div>
-              <div class="sample-info">
-                <div class="sample-name">Maya Okonkwo</div>
-                <div class="sample-meta">Commercial &amp; Narration · ★ 4.9 (128 reviews)</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;">
-              <a class="btn-outline" href="profile?id=maya">View Profile</a>
-              <a class="btn-grad" style="background:var(--whatsapp);color:#0B2412;" href="https://wa.me/8801700000001" target="_blank">WhatsApp</a>
-            </div>
-          </div>
-
-          <div class="sample-item">
-            <div class="sample-left">
-              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1E3A68,#122345);color:#60A5FA;display:flex;align-items:center;justify-content:center;font-weight:700;">R</div>
-              <div class="sample-info">
-                <div class="sample-name">Rafiq Hasan</div>
-                <div class="sample-meta">Documentary &amp; E-Learning · ★ 4.8 (96 reviews)</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;">
-              <a class="btn-outline" href="profile?id=rafiq">View Profile</a>
-              <a class="btn-grad" style="background:var(--whatsapp);color:#0B2412;" href="https://wa.me/8801700000002" target="_blank">WhatsApp</a>
-            </div>
-          </div>
+          <!-- Dynamically populated from localStorage/Supabase -->
         </div>
       </div>
     </div>
@@ -518,6 +513,15 @@
 <script>
   let currentUser = null;
   let currentRole = 'artist'; // 'artist' or 'client'
+  let artistApprovalStatus = localStorage.getItem('voicecast_artist_status') || 'approved';
+
+  const allDirectoryArtists = {
+    'maya': { id: 'maya', name: 'Maya Okonkwo', loc: 'Lagos, Nigeria', langs: 'Commercial & Narration', rating: '4.9', reviews: 128, phone: '8801700000001', initial: 'M' },
+    'rafiq': { id: 'rafiq', name: 'Rafiq Hasan', loc: 'Dhaka, Bangladesh', langs: 'Documentary & E-Learning', rating: '4.8', reviews: 96, phone: '8801700000002', initial: 'R' },
+    'nusrat': { id: 'nusrat', name: 'Nusrat Jahan', loc: 'Chattogram, Bangladesh', langs: 'Animation & Commercial', rating: '5.0', reviews: 74, phone: '8801700000003', initial: 'N' },
+    'tanvir': { id: 'tanvir', name: 'Tanvir Ahmed', loc: 'Sylhet, Bangladesh', langs: 'Commercial & Audiobook', rating: '4.7', reviews: 52, phone: '8801700000004', initial: 'T' },
+    'farhana': { id: 'farhana', name: 'Farhana Islam', loc: 'Dhaka, Bangladesh', langs: 'Commercial & E-Learning', rating: '4.9', reviews: 110, phone: '8801700000005', initial: 'F' }
+  };
 
   function showToast(text) {
     const t = document.getElementById('toastMsg');
@@ -525,6 +529,79 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
   }
+
+  function updateApprovalBanner() {
+    const banner = document.getElementById('artistStatusBanner');
+    const title = document.getElementById('statusTitle');
+    const desc = document.getElementById('statusDesc');
+
+    if (artistApprovalStatus === 'approved') {
+      banner.className = 'approval-banner banner-approved';
+      title.textContent = 'Profile Status: Live & Verified ✓';
+      desc.textContent = 'Your profile is approved and visible to all clients searching on VoiceCast.';
+    } else if (artistApprovalStatus === 'rejected') {
+      banner.className = 'approval-banner banner-rejected';
+      title.textContent = 'Profile Status: Rejection Feedback';
+      desc.textContent = 'Reason: Audio sample exceeds 30 seconds limit. Please edit your samples and resubmit.';
+    } else {
+      banner.className = 'approval-banner banner-pending';
+      title.textContent = 'Profile Status: Under Review ⏳';
+      desc.textContent = 'Your profile and voice samples are in the review queue (usually 24–48 hours).';
+    }
+  }
+
+  window.simulateApproval = function() {
+    artistApprovalStatus = artistApprovalStatus === 'approved' ? 'pending' : 'approved';
+    localStorage.setItem('voicecast_artist_status', artistApprovalStatus);
+    updateApprovalBanner();
+    showToast(`Status updated to: ${artistApprovalStatus.toUpperCase()}`);
+  };
+
+  // Render Saved Artists in Client tab
+  function renderSavedArtists() {
+    const savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
+    const container = document.getElementById('savedArtistsList');
+    document.getElementById('savedCountHeader').textContent = savedIds.length;
+
+    if (savedIds.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:40px 0;color:var(--text-faint);">
+          <p style="font-size:1.05rem;margin-bottom:6px;">No saved artists yet</p>
+          <p style="font-size:0.84rem;margin-bottom:16px;">Browse voice talent and click the heart icon on any profile to bookmark them here.</p>
+          <a class="btn-grad" href="search">Browse Voice Talent</a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = savedIds.map(id => {
+      const a = allDirectoryArtists[id] || { name: 'Voice Artist', loc: 'Bangladesh', langs: 'Commercial', rating: '5.0', reviews: 10, phone: '8801700000000', initial: id[0].toUpperCase() };
+      return `
+        <div class="sample-item">
+          <div class="sample-left">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3A2D78,#1E1748);color:#A78BFA;display:flex;align-items:center;justify-content:center;font-weight:700;">${a.initial}</div>
+            <div class="sample-info">
+              <div class="sample-name">${a.name}</div>
+              <div class="sample-meta">${a.langs} · ★ ${a.rating} (${a.reviews} reviews) · ${a.loc}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <a class="btn-outline" href="profile?id=${id}">View Profile</a>
+            <a class="btn-grad" style="background:var(--whatsapp);color:#0B2412;" href="https://wa.me/${a.phone}?text=Hello%20${encodeURIComponent(a.name)},%20I%20found%20your%20profile%20on%20VoiceCast!" target="_blank">WhatsApp</a>
+            <button class="sample-delete" onclick="removeSavedArtist('${id}')" title="Remove from bookmarks">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.removeSavedArtist = function(id) {
+    let savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
+    savedIds = savedIds.filter(item => item !== id);
+    localStorage.setItem('voicecast_saved_artists', JSON.stringify(savedIds));
+    renderSavedArtists();
+    showToast('Artist removed from bookmarks');
+  };
 
   // Web Audio for sample playback
   let dashAudioCtx = null;
@@ -545,11 +622,10 @@
     } catch(e) {}
   }
 
-  // Voice Samples data store
   let artistSamples = [
-    { id: 1, title: 'Commercial Demo — FMCG Brand', category: 'Commercial', duration: '0:45' },
-    { id: 2, title: 'Audiobook Chapter Excerpt', category: 'Audiobook', duration: '1:20' },
-    { id: 3, title: 'E-Learning Module Intro', category: 'E-Learning', duration: '0:35' }
+    { id: 1, title: 'Commercial Demo — FMCG Brand', category: 'Commercial', duration: '0:28' },
+    { id: 2, title: 'Audiobook Chapter Excerpt', category: 'Audiobook', duration: '0:30' },
+    { id: 3, title: 'E-Learning Module Intro', category: 'E-Learning', duration: '0:24' }
   ];
 
   function renderArtistSamples() {
@@ -563,7 +639,7 @@
           </button>
           <div class="sample-info">
             <div class="sample-name">${s.title}</div>
-            <div class="sample-meta">${s.category} · ${s.duration}</div>
+            <div class="sample-meta">${s.category} · ${s.duration} (Within 30s limit ✓)</div>
           </div>
         </div>
         <button class="sample-delete" onclick="deleteSample(${s.id})" title="Delete sample">
@@ -590,8 +666,9 @@
   document.getElementById('saveSampleBtn').addEventListener('click', () => {
     const title = document.getElementById('newSampleTitle').value.trim();
     const cat = document.getElementById('newSampleCat').value;
-    const dur = document.getElementById('newSampleDuration').value.trim() || '1:00';
+    const dur = document.getElementById('newSampleDuration').value.trim() || '0:25';
     if(!title) { alert('Please enter a sample title'); return; }
+    if(artistSamples.length >= 3) { alert('Maximum 3 samples allowed per artist profile budget (5MB limit)'); return; }
     artistSamples.push({ id: Date.now(), title, category: cat, duration: dur });
     renderArtistSamples();
     document.getElementById('newSampleTitle').value = '';
@@ -614,6 +691,7 @@
     const artistTabs = document.getElementById('artistTabs');
     const clientTabs = document.getElementById('clientTabs');
     const liveProfileBtn = document.getElementById('viewLiveProfileBtn');
+    const banner = document.getElementById('artistStatusBanner');
 
     if (role === 'client') {
       badge.textContent = 'Client';
@@ -622,6 +700,8 @@
       artistTabs.style.display = 'none';
       clientTabs.style.display = 'flex';
       liveProfileBtn.style.display = 'none';
+      banner.style.display = 'none';
+      renderSavedArtists();
       switchTab('savedArtistsTab');
     } else {
       badge.textContent = 'Voice Artist';
@@ -630,6 +710,8 @@
       artistTabs.style.display = 'flex';
       clientTabs.style.display = 'none';
       liveProfileBtn.style.display = 'inline-flex';
+      banner.style.display = 'flex';
+      updateApprovalBanner();
       switchTab('profileTab');
     }
   }
@@ -672,7 +754,7 @@
       bio: document.getElementById('profBio').value
     };
     localStorage.setItem('voicecast_profile_data', JSON.stringify(profileData));
-    showToast('Profile details updated successfully!');
+    showToast('Profile updated & submitted for review!');
   });
 
   document.getElementById('saveSpecialtiesBtn').addEventListener('click', () => {
@@ -715,8 +797,8 @@
     document.getElementById('dashContent').style.display = 'block';
 
     const meta = (user && user.user_metadata) || {};
-    const name = meta.full_name || meta.name || (user ? user.email.split('@')[0] : 'Voice Artist');
-    const email = user ? user.email : 'artist@voicecast.com';
+    const name = meta.full_name || meta.name || (user ? user.email.split('@')[0] : 'Ali Tonmoy');
+    const email = user ? user.email : 'tonmoymbm@gmail.com';
     const initial = (name[0] || 'U').toUpperCase();
 
     document.getElementById('dashAvatar').textContent = initial;
