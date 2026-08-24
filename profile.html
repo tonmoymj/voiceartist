@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Artist Profile — VoiceCast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Supabase JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>
+  :root{
+    --bg: #0F241D;
+    --bg-2: #142E25;
+    --surface: #17332A;
+    --border: #2A4B3F;
+    --border-soft: #1F3B31;
+    --accent: #D8AE55;
+    --accent-dim: #8C6F32;
+    --accent-soft: rgba(216,174,85,0.12);
+    --text: #F4EFE1;
+    --text-muted: #ACC0B4;
+    --text-faint: #6E8177;
+    --verified: #85E3B6;
+    --whatsapp: #25D366;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{ background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{color:inherit;}
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+  .topbar{ border-bottom:1px solid var(--border-soft); padding:22px 24px; }
+  .topbar-inner{ max-width:760px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; }
+  .brand{ font-size:0.78rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); text-decoration:none; font-weight:600; }
+  .back-link{ font-size:0.85rem; color:var(--text-faint); text-decoration:none; display:flex; align-items:center; gap:6px; transition:color 0.15s ease; }
+  .back-link:hover{ color:var(--text-muted); }
+
+  .wrap{ max-width:720px; margin:0 auto; padding:76px 24px 100px; }
+
+  /* Hero */
+  .profile-header{ text-align:center; margin-bottom:32px; }
+  .photo-wrap{ position:relative; width:132px; height:132px; margin:0 auto 26px; }
+  .photo-glow{ position:absolute; inset:-34px; border-radius:50%; background:radial-gradient(circle, rgba(216,174,85,0.30), rgba(216,174,85,0) 68%); pointer-events:none; }
+  .photo{ position:relative; z-index:1; width:132px; height:132px; border-radius:50%; object-fit:cover; background:linear-gradient(160deg,#2A4B3F,#1B362C); border:1.5px solid rgba(216,174,85,0.45); display:flex; align-items:center; justify-content:center; font-size:2.6rem; color:var(--accent); font-weight:600; margin:0 auto; }
+
+  .status-tag{ font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:10px; }
+  .name{ font-family:'Playfair Display', serif; font-weight:600; font-size:2.4rem; line-height:1.1; letter-spacing:0; margin-bottom:12px; }
+
+  .meta-line{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; font-size:0.87rem; color:var(--text-muted); margin-bottom:8px; }
+  .meta-line .sep{ color:var(--border); }
+  .meta-line .verified{ color:var(--verified); display:inline-flex; align-items:center; gap:4px; font-weight:500; }
+  .meta-line .stars{ color:var(--accent); letter-spacing:1px; }
+
+  .avail-line{ display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--text-faint); margin-bottom:30px; }
+  .avail-dot{ width:6px; height:6px; border-radius:50%; background:var(--verified); box-shadow:0 0 0 3px rgba(133,227,182,0.15); }
+
+  .bio-text{ font-size:1.05rem; line-height:1.75; color:var(--text-muted); max-width:56ch; margin:0 auto 32px; text-align:left; }
+
+  .cta-row{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:36px; }
+  .btn-whatsapp{ background:var(--whatsapp); color:#0B2412; font-weight:600; font-size:0.9rem; border:none; padding:13px 24px; border-radius:8px; cursor:pointer; transition:transform 0.15s ease, box-shadow 0.15s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+  .btn-whatsapp:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(37,211,102,0.25); }
+
+  .stat-strip{ display:flex; align-items:center; justify-content:center; gap:0; padding:20px 0; border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft); margin-bottom:56px; }
+  .stat{ text-align:center; padding:0 24px; }
+  .stat + .stat{ border-left:1px solid var(--border-soft); }
+  .stat-value{ font-family:'Playfair Display', serif; font-size:1.4rem; font-weight:600; color:var(--accent); display:block; margin-bottom:2px; }
+  .stat-label{ font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); }
+
+  .section{ margin-bottom:56px; }
+  .section-label{ font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-dim); font-weight:600; margin-bottom:24px; display:flex; justify-content:space-between; align-items:baseline; }
+
+  /* Samples */
+  .sample-row{ display:grid; grid-template-columns:50px 1fr; gap:20px; padding:24px 0; border-top:1px solid var(--border-soft); }
+  .sample-row:first-of-type{ border-top:none; padding-top:0; }
+  .sample-index{ font-family:'Playfair Display', serif; font-style:italic; font-size:1.15rem; color:var(--accent-dim); padding-top:2px; }
+  .sample-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:12px; }
+  .sample-title{ font-size:1rem; font-weight:500; }
+  .sample-time{ font-size:0.8rem; color:var(--text-faint); }
+
+  .sample-controls{ display:flex; align-items:center; gap:16px; }
+  .play-btn{ width:34px; height:34px; border-radius:50%; border:1.5px solid var(--accent-dim); background:transparent; color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .play-btn.playing{ background:var(--accent); color:#1B1400; }
+  .waveform{ flex:1; height:24px; display:flex; align-items:center; gap:2.5px; cursor:pointer; min-width:0; }
+  .waveform .bar{ flex:1; background:var(--border); border-radius:2px; min-width:2px; }
+  .waveform .bar.played{ background:var(--accent); }
+
+  /* Tags */
+  .tags-grid{ display:grid; grid-template-columns:1fr 1fr; gap:36px; }
+  .tag-list{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tag{ font-size:0.83rem; padding:7px 14px; border-radius:6px; border:1px solid var(--border); color:var(--text-muted); }
+  .tag.lang{ border-color:rgba(133,227,182,0.3); color:var(--verified); }
+
+  @media (max-width: 680px){
+    .wrap{ padding:48px 20px 104px; }
+    .name{ font-size:1.95rem; }
+    .tags-grid{ grid-template-columns:1fr; gap:26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">VoiceCast</a>
+    <a class="back-link" href="search.html">← Back to search</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="profile-header">
+    <div class="photo-wrap">
+      <div class="photo-glow"></div>
+      <div class="photo" id="artistAvatar">M</div>
+    </div>
+    <div class="status-tag" id="artistStatus">Voice Artist</div>
+    <h1 class="name" id="artistName">Maya Okonkwo</h1>
+    <div class="meta-line">
+      <span id="artistLoc">Lagos, Nigeria</span>
+      <span class="sep">·</span>
+      <span class="verified" id="verifiedBadge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        Verified
+      </span>
+      <span class="sep">·</span>
+      <span id="artistRating"><span class="stars">★★★★★</span> 4.9 (128)</span>
+    </div>
+    <div class="avail-line" id="availLine"><span class="avail-dot"></span>Available now · direct contact</div>
+
+    <p class="bio-text" id="artistBio">
+      Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn-whatsapp" id="whatsappBtn" href="https://wa.me/8801700000000" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4-.1-.1-.5-1.3-.7-1.7-.2-.5-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.1 1.6 2.5 3.9 3.5.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg>
+        Message on WhatsApp
+      </a>
+    </div>
+  </header>
+
+  <div class="stat-strip">
+    <div class="stat"><span class="stat-value" id="statYears">15</span><span class="stat-label">Years</span></div>
+    <div class="stat"><span class="stat-value" id="statProjects">340+</span><span class="stat-label">Projects</span></div>
+    <div class="stat"><span class="stat-value" id="statReviews">128</span><span class="stat-label">Reviews</span></div>
+  </div>
+
+  <section class="section" id="samples">
+    <div class="section-label">
+      <span>Voice samples</span>
+    </div>
+    <div id="samplesList">
+      <!-- Voice Samples injected here -->
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="tags-grid">
+      <div>
+        <div class="section-label">Specialties</div>
+        <div class="tag-list" id="specialtiesList">
+          <span class="tag">Commercial</span>
+          <span class="tag">Audiobook</span>
+          <span class="tag">E-Learning</span>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Languages</div>
+        <div class="tag-list" id="languagesList">
+          <span class="tag lang">Bengali</span>
+          <span class="tag lang">English</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  async function loadProfile() {
+    const artistId = getQueryParam('id');
+    if(!artistId || artistId === 'maya') return; // default template
+
+    try {
+      const supabaseClient = window.supabase || (window.supabaseJs ? supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
+      if(supabaseClient) {
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('*, artist_details(*), voice_samples(*), reviews(*)')
+          .eq('id', artistId)
+          .single();
+
+        if(!error && data) {
+          document.getElementById('artistName').textContent = data.full_name || 'Voice Artist';
+          document.getElementById('artistAvatar').textContent = (data.full_name || 'A')[0];
+          document.getElementById('artistLoc').textContent = data.location || 'Bangladesh';
+          if(data.bio) document.getElementById('artistBio').textContent = data.bio;
+          
+          if(data.whatsapp) {
+            document.getElementById('whatsappBtn').href = 'https://wa.me/' + data.whatsapp.replace(/[^0-9]/g, '');
+          }
+
+          if(data.artist_details) {
+            document.getElementById('statYears').textContent = data.artist_details.experience_years || '5';
+            document.getElementById('statProjects').textContent = (data.artist_details.projects_count || '50') + '+';
+            
+            if(data.artist_details.languages) {
+              const langBox = document.getElementById('languagesList');
+              langBox.innerHTML = data.artist_details.languages.map(l => `<span class="tag lang">${l}</span>`).join('');
+            }
+            if(data.artist_details.categories) {
+              const specBox = document.getElementById('specialtiesList');
+              specBox.innerHTML = data.artist_details.categories.map(c => `<span class="tag">${c}</span>`).join('');
+            }
+          }
+        }
+      }
+    } catch(err) {
+      console.log('Error loading dynamic profile:', err);
+    }
+  }
+
+  loadProfile();
+</script>
+
+</body>
+</html>

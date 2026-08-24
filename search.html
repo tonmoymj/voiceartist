@@ -1,0 +1,356 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Voice Artists — VoiceCast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>
+  :root{
+    --bg: #0A0A14; --bg-2: #100E1E; --surface: #15132A; --surface-2: #1B1836;
+    --border: #2A2745; --border-soft: #1F1C38;
+    --purple: #8B5CF6; --blue: #4F8CF7;
+    --text: #F3F1FA; --text-muted: #A9A5C4; --text-faint: #6E6A8F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{color:inherit;}
+  :focus-visible{ outline:2px solid var(--purple); outline-offset:3px; border-radius:4px; }
+  .display{ font-family:'Space Grotesk', sans-serif; }
+  .container{ max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  /* Nav (shared) */
+  .navbar{ position:sticky; top:0; z-index:40; backdrop-filter:blur(10px); background:rgba(10,10,20,0.8); border-bottom:1px solid var(--border-soft); }
+  .nav-inner{ max-width:1180px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:8px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.1rem; text-decoration:none; }
+  .brand-mark{ width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 0 10px rgba(139,92,246,0.7); }
+  .nav-links{ display:flex; align-items:center; gap:26px; font-size:0.88rem; color:var(--text-muted); }
+  .nav-links a{ text-decoration:none; }
+  .nav-links a.active{ color:var(--text); }
+  .nav-cta{ display:flex; align-items:center; gap:12px; }
+  .lang-toggle{ font-size:0.76rem; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; background:transparent; }
+  .btn-outline{ border:1px solid var(--border); color:var(--text); font-size:0.84rem; padding:9px 16px; border-radius:8px; text-decoration:none; white-space:nowrap; }
+  .btn-grad{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:600; font-size:0.84rem; padding:10px 16px; border-radius:8px; text-decoration:none; white-space:nowrap; border:none; cursor:pointer; }
+  @media (max-width:820px){ .nav-links{ display:none; } }
+
+  /* Page header */
+  .page-head{ padding:40px 0 24px; border-bottom:1px solid var(--border-soft); }
+  .page-title{ font-size:1.9rem; font-weight:700; margin-bottom:16px; }
+  .search-row{ display:flex; gap:10px; align-items:center; }
+  .search-bar{ flex:1; display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px 4px 4px 16px; max-width:560px; }
+  .search-bar svg{ color:var(--text-faint); flex-shrink:0; }
+  .search-bar input{ flex:1; background:transparent; border:none; outline:none; color:var(--text); font-size:0.92rem; padding:10px 0; font-family:'Inter',sans-serif; }
+  .search-bar input::placeholder{ color:var(--text-faint); }
+  .filter-toggle-btn{ display:none; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:0.85rem; padding:10px 16px; border-radius:10px; cursor:pointer; }
+  @media (max-width:900px){ .filter-toggle-btn{ display:inline-flex; } }
+
+  /* Layout */
+  .search-layout{ display:grid; grid-template-columns:250px 1fr; gap:36px; padding:36px 0 80px; align-items:flex-start; }
+  @media (max-width:900px){ .search-layout{ grid-template-columns:1fr; } }
+
+  /* Filters sidebar */
+  .filters-overlay{ display:none; }
+  .filters{ position:sticky; top:88px; }
+  .filter-group{ padding-bottom:24px; margin-bottom:24px; border-bottom:1px solid var(--border-soft); }
+  .filter-group:last-child{ border-bottom:none; }
+  .filter-label{ font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); font-weight:600; margin-bottom:14px; }
+  .check-row{ display:flex; align-items:center; gap:10px; margin-bottom:11px; font-size:0.9rem; color:var(--text-muted); cursor:pointer; }
+  .check-row input{ accent-color:var(--purple); width:15px; height:15px; cursor:pointer; }
+  .check-row:hover{ color:var(--text); }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-option{ font-size:0.82rem; padding:7px 13px; border-radius:999px; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; background:transparent; transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease; }
+  .chip-option.active{ border-color:var(--purple); color:var(--text); background:rgba(139,92,246,0.12); }
+
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; }
+  .switch-row span{ font-size:0.9rem; color:var(--text-muted); }
+  .switch{ width:38px; height:22px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); position:relative; cursor:pointer; flex-shrink:0; }
+  .switch::after{ content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--text-faint); top:2px; left:2px; transition:transform 0.15s ease, background 0.15s ease; }
+  .switch.on{ background:rgba(139,92,246,0.25); border-color:var(--purple); }
+  .switch.on::after{ transform:translateX(16px); background:var(--purple); }
+
+  .clear-btn{ background:transparent; border:none; color:var(--text-faint); font-size:0.82rem; cursor:pointer; text-decoration:underline; padding:0; }
+
+  @media (max-width:900px){
+    .filters{ position:fixed; top:0; right:-100%; width:82%; max-width:340px; height:100vh; background:var(--bg-2); border-left:1px solid var(--border); padding:24px; overflow-y:auto; z-index:60; transition:right 0.25s ease; }
+    .filters.open{ right:0; }
+    .filters-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:55; }
+    .filters-overlay.open{ display:block; }
+    .filters-close{ display:flex; justify-content:flex-end; margin-bottom:16px; }
+    .filters-close button{ background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer; }
+  }
+  .filters-close{ display:none; }
+  @media (max-width:900px){ .filters-close{ display:flex; } }
+
+  /* Results */
+  .results-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px; }
+  .results-count{ font-size:0.9rem; color:var(--text-muted); }
+  .results-count strong{ color:var(--text); }
+  .sort-select{ background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:0.86rem; padding:9px 14px; border-radius:8px; font-family:'Inter',sans-serif; }
+
+  .results-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  @media (max-width:1080px){ .results-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px){ .results-grid{ grid-template-columns:1fr; } }
+
+  .artist-card{ position:relative; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; transition:border-color 0.2s ease, transform 0.2s ease; }
+  .artist-card:hover{ border-color:rgba(139,92,246,0.4); transform:translateY(-2px); }
+  .save-btn{ position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:8px; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-faint); cursor:pointer; transition:color 0.15s ease, border-color 0.15s ease; }
+  .save-btn:hover{ color:#E879C9; border-color:#E879C9; }
+  .save-btn.saved{ color:#E879C9; border-color:#E879C9; }
+  .save-btn.saved svg{ fill:#E879C9; }
+
+  .artist-top{ display:flex; align-items:center; gap:13px; margin-bottom:14px; padding-right:30px; }
+  .artist-photo-wrap{ position:relative; flex-shrink:0; }
+  .artist-photo{ width:52px; height:52px; border-radius:50%; object-fit:cover; background:linear-gradient(160deg,#2C2850,#1B1836); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--purple); }
+  .avail-dot{ position:absolute; bottom:0; right:0; width:11px; height:11px; border-radius:50%; background:#4ADE80; border:2px solid var(--surface); }
+  .artist-name{ font-weight:600; font-size:0.98rem; margin-bottom:2px; }
+  .artist-loc{ font-size:0.78rem; color:var(--text-faint); }
+
+  .artist-langs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .lang-chip{ font-size:0.7rem; padding:4px 9px; border-radius:999px; background:var(--surface-2); color:var(--text-muted); }
+
+  .artist-waveform{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .mini-play{ width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#0B0A16; flex-shrink:0; cursor:pointer; border:none; }
+  .mini-wave{ flex:1; height:20px; display:flex; align-items:center; gap:2px; }
+  .mini-wave .b{ flex:1; min-width:2px; border-radius:2px; background:var(--border); }
+
+  .artist-foot{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; font-size:0.8rem; color:var(--text-muted); }
+  .artist-foot span{ color:var(--purple); }
+
+  .view-profile{ display:block; text-align:center; width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); color:var(--text-muted); text-decoration:none; font-size:0.85rem; transition:border-color 0.15s ease, color 0.15s ease; }
+  .view-profile:hover{ border-color:var(--purple); color:var(--text); }
+
+  .load-more{ display:block; margin:40px auto 0; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:12px 28px; border-radius:9px; cursor:pointer; font-size:0.9rem; }
+  .load-more:hover{ border-color:var(--purple); }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
+    <div class="nav-links">
+      <a class="active" href="search.html">Browse Artists</a>
+      <a href="index.html#how-it-works">How it works</a>
+    </div>
+    <div class="nav-cta">
+      <button class="lang-toggle">EN | বাং</button>
+      <a class="btn-outline" href="signup.html">Log in</a>
+      <a class="btn-grad" href="signup.html">Join as Artist</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="container">
+    <h1 class="page-title display">Browse Voice Artists</h1>
+    <div class="search-row">
+      <div class="search-bar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name, style, or keyword...">
+      </div>
+      <button class="filter-toggle-btn" id="filterToggle">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="search-layout">
+
+    <div class="filters-overlay" id="filtersOverlay"></div>
+    <aside class="filters" id="filtersPanel">
+      <div class="filters-close"><button id="filtersCloseBtn" aria-label="Close filters">✕</button></div>
+
+      <div class="filter-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="filter-label" style="margin-bottom:0;">Filters</div>
+          <button class="clear-btn" id="clearFilters">Clear all</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Language</div>
+        <label class="check-row"><input type="checkbox" class="lang-check" value="Bengali"> Bengali</label>
+        <label class="check-row"><input type="checkbox" class="lang-check" value="English"> English</label>
+        <label class="check-row"><input type="checkbox" class="lang-check" value="Sylheti"> Sylheti</label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Category</div>
+        <label class="check-row"><input type="checkbox" class="cat-check" value="Commercial"> Commercial</label>
+        <label class="check-row"><input type="checkbox" class="cat-check" value="Audiobook"> Audiobook</label>
+        <label class="check-row"><input type="checkbox" class="cat-check" value="Character / Animation"> Character / Animation</label>
+        <label class="check-row"><input type="checkbox" class="cat-check" value="E-Learning"> E-Learning</label>
+        <label class="check-row"><input type="checkbox" class="cat-check" value="IVR / Phone Systems"> IVR / Phone Systems</label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Voice Type / Gender</div>
+        <div class="chip-row">
+          <button class="chip-option" data-gender="Male">Male</button>
+          <button class="chip-option" data-gender="Female">Female</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="switch-row">
+          <span>Available now only</span>
+          <div class="switch on" id="availSwitch"></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="results">
+      <div class="results-top">
+        <div class="results-count"><strong id="artistCount">6</strong> artists found</div>
+        <select class="sort-select">
+          <option>Sort: Relevance</option>
+          <option>Sort: Highest rated</option>
+          <option>Sort: Newest</option>
+        </select>
+      </div>
+
+      <div class="results-grid" id="resultsGrid">
+        <!-- Dynamic Cards -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function seededRandom(seed){ let s = seed; return function(){ s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+
+  const fallbackArtists = [
+    { id:"maya", name:"Maya Okonkwo", loc:"Lagos, Nigeria", langs:["Bengali","English"], rating:"4.9", reviews:128, avail:true, seed:11, rate: 1500 },
+    { id:"rafiq", name:"Rafiq Hasan", loc:"Dhaka, Bangladesh", langs:["Bengali","Sylheti"], rating:"4.8", reviews:96, avail:true, seed:22, rate: 1200 },
+    { id:"nusrat", name:"Nusrat Jahan", loc:"Chattogram, Bangladesh", langs:["Bengali","English"], rating:"5.0", reviews:74, avail:false, seed:33, rate: 2000 },
+    { id:"tanvir", name:"Tanvir Ahmed", loc:"Sylhet, Bangladesh", langs:["Bengali"], rating:"4.7", reviews:52, avail:true, seed:44, rate: 1000 },
+    { id:"farhana", name:"Farhana Islam", loc:"Dhaka, Bangladesh", langs:["Bengali","English"], rating:"4.9", reviews:110, avail:true, seed:55, rate: 1800 },
+    { id:"carlos", name:"Carlos Reyes", loc:"Madrid, Spain", langs:["English","Bengali"], rating:"4.6", reviews:41, avail:false, seed:66, rate: 1500 },
+  ];
+
+  let currentArtists = [...fallbackArtists];
+
+  async function loadArtistsFromSupabase() {
+    try {
+      const supabaseClient = window.supabase || (window.supabaseJs ? supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
+      if(supabaseClient) {
+        const { data, error } = await supabaseClient.from('profiles').select('*, artist_details(*), reviews(*)').eq('role', 'artist');
+        if(!error && data && data.length > 0) {
+          currentArtists = data.map(a => ({
+            id: a.id,
+            name: a.full_name || 'Artist',
+            loc: a.location || 'Bangladesh',
+            langs: a.artist_details?.languages || ['Bengali'],
+            rating: (a.reviews?.length > 0 ? (a.reviews.reduce((s,r)=>s+r.rating,0)/a.reviews.length).toFixed(1) : "5.0"),
+            reviews: a.reviews?.length || 0,
+            avail: a.is_available ?? true,
+            seed: 12,
+            rate: a.artist_details?.rate_per_minute || null
+          }));
+        }
+      }
+    } catch(e) {
+      console.log('Using local fallback data', e);
+    }
+    renderGrid(currentArtists);
+  }
+
+  function renderGrid(list) {
+    const grid = document.getElementById('resultsGrid');
+    grid.innerHTML = '';
+    document.getElementById('artistCount').textContent = list.length;
+
+    if(list.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-faint);">No artists found matching your filters.</div>';
+      return;
+    }
+
+    list.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'artist-card';
+      card.innerHTML = `
+        <button class="save-btn" aria-label="Save artist">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c2 0 3.5 1.2 4.5 2.8C12 6.2 13.5 5 15.5 5 19 5 21.5 8.5 21.5 12.5 19 16.65 12 21 12 21z"/></svg>
+        </button>
+        <div class="artist-top">
+          <div class="artist-photo-wrap">
+            <div class="artist-photo">${a.name[0]}</div>
+            ${a.avail ? '<span class="avail-dot"></span>' : ''}
+          </div>
+          <div>
+            <div class="artist-name">${a.name}</div>
+            <div class="artist-loc">${a.loc}</div>
+          </div>
+        </div>
+        <div class="artist-langs">${a.langs.map(l => `<span class="lang-chip">${l}</span>`).join('')}</div>
+        <div class="artist-waveform">
+          <button class="mini-play" aria-label="Play sample">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
+          </button>
+          <div class="mini-wave" data-seed="${a.seed}"></div>
+        </div>
+        <div class="artist-foot">
+          <span>★ ${a.rating}</span>
+          <span style="color:var(--text-muted)">${a.reviews} reviews</span>
+          ${a.rate ? `<strong style="color:var(--purple)">৳${a.rate}/min</strong>` : ''}
+        </div>
+        <a class="view-profile" href="profile.html?id=${a.id}">View Profile</a>
+      `;
+      grid.appendChild(card);
+    });
+
+    document.querySelectorAll('.mini-wave').forEach(wf => {
+      const rand = seededRandom(parseInt(wf.dataset.seed,10) || 1);
+      for(let i=0;i<22;i++){
+        const b = document.createElement('div');
+        b.className = 'b';
+        b.style.height = (4 + Math.round(rand()*13)) + 'px';
+        wf.appendChild(b);
+      }
+    });
+
+    document.querySelectorAll('.save-btn').forEach(btn => {
+      btn.addEventListener('click', () => btn.classList.toggle('saved'));
+    });
+  }
+
+  // Filter handlers
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = currentArtists.filter(a => a.name.toLowerCase().includes(term) || a.langs.some(l=>l.toLowerCase().includes(term)));
+    renderGrid(filtered);
+  });
+
+  const availSwitch = document.getElementById('availSwitch');
+  availSwitch.addEventListener('click', () => {
+    availSwitch.classList.toggle('on');
+    const isAvail = availSwitch.classList.contains('on');
+    renderGrid(isAvail ? currentArtists.filter(a => a.avail) : currentArtists);
+  });
+
+  const filtersPanel = document.getElementById('filtersPanel');
+  const overlay = document.getElementById('filtersOverlay');
+  document.getElementById('filterToggle').addEventListener('click', () => {
+    filtersPanel.classList.add('open'); overlay.classList.add('open');
+  });
+  document.getElementById('filtersCloseBtn').addEventListener('click', () => {
+    filtersPanel.classList.remove('open'); overlay.classList.remove('open');
+  });
+  overlay.addEventListener('click', () => {
+    filtersPanel.classList.remove('open'); overlay.classList.remove('open');
+  });
+
+  loadArtistsFromSupabase();
+</script>
+
+</body>
+</html>
