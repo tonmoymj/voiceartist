@@ -161,11 +161,11 @@
     <div class="nav-links">
       <a href="search.html" data-i18n="nav_browse">Browse Artists</a>
       <a href="dashboard.html" class="active" data-i18n="nav_dashboard">Dashboard</a>
-      <a href="admin.html" style="font-size:0.82rem;color:var(--text-faint);">Admin Panel</a>
+      <a href="admin.html" id="navAdminLink" style="display:none;font-size:0.82rem;color:var(--text-faint);">Admin Panel</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
-      <button class="btn-outline" id="navLogoutBtn" data-i18n="nav_logout">Log out</button>
+      <button class="btn-outline-nav" id="navLogoutBtn" style="padding:6px 14px;font-size:0.82rem;">Sign Out</button>
     </div>
   </div>
 </nav>
@@ -1227,6 +1227,15 @@
     }
 
     const savedRole = localStorage.getItem('voicecast_user_role') || (user && user.user_metadata?.role) || 'artist';
+    const email = user ? user.email.toLowerCase() : '';
+
+    // Check if user is Super Admin or authorized Admin
+    const masterUsers = JSON.parse(localStorage.getItem('voicecast_master_users') || '[]');
+    const isAdmin = (email === 'tonmoymbm@gmail.com') || masterUsers.some(u => u.email.toLowerCase() === email && (u.role === 'Admin' || u.role === 'Super Admin'));
+    const adminLink = document.getElementById('navAdminLink');
+    if (adminLink && isAdmin) {
+      adminLink.style.display = 'inline-block';
+    }
 
     document.getElementById('authGate').style.display = 'none';
     document.getElementById('dashContent').style.display = 'block';
