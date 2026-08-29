@@ -311,7 +311,7 @@
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
         showMsg('Login successful! Redirecting to dashboard...');
-        setTimeout(() => { window.location.href = 'dashboard'; }, 1000);
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
       } else {
         const { data, error } = await supabaseClient.auth.signUp({
           email,
@@ -342,7 +342,7 @@
       const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: { 
-          redirectTo: window.location.origin + '/dashboard',
+          redirectTo: window.location.origin + '/dashboard.html',
           queryParams: { role: selectedRole }
         }
       });
@@ -359,7 +359,7 @@
       try {
         const { data } = await db.auth.getSession();
         if (data && data.session) {
-          window.location.href = 'dashboard';
+          window.location.href = 'dashboard.html';
         }
       } catch (e) {}
     }

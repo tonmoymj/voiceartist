@@ -256,11 +256,26 @@
         </div>
       </div>
 
-      <!-- ==================== TAB 4: USERS & ROLES ==================== -->
+      <!-- ==================== TAB 4: USERS & ADMIN MANAGEMENT ==================== -->
       <div id="usersTab" class="tab-pane-super" style="display:none;">
+        <!-- Admin Management Card -->
+        <div class="super-card" style="border-color:rgba(139,92,246,0.35);">
+          <div class="card-head">
+            <div>
+              <div class="card-title">👑 Platform Admin Management</div>
+              <div style="font-size:0.82rem;color:var(--text-faint);margin-top:2px;">As Super Admin, you can grant or revoke Admin permissions to team members.</div>
+            </div>
+            <button class="btn-primary" onclick="openAddAdminModal()">+ Add New Admin</button>
+          </div>
+          
+          <div id="adminListContainer" style="display:grid;gap:12px;margin-bottom:20px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
         <div class="super-card">
           <div class="card-head">
-            <div class="card-title">User Accounts &amp; Role Access</div>
+            <div class="card-title">All Registered User Accounts</div>
           </div>
           <table class="data-table">
             <thead>
@@ -360,6 +375,23 @@
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
       <button class="btn-action" onclick="closeArtistModal()">Cancel</button>
       <button class="btn-primary" onclick="saveArtistModal()">Save Changes</button>
+    </div>
+  </div>
+<!-- Add / Promote Admin Modal -->
+<div class="super-modal" id="adminModal">
+  <div class="super-modal-content">
+    <h3 class="display" id="adminModalTitle">Add Platform Admin</h3>
+    <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:12px;">This user will get access to the Moderation Panel (admin.html) to approve/reject voice artists and handle reports.</p>
+    
+    <label style="font-size:0.8rem;color:var(--text-faint);">Admin Full Name</label>
+    <input type="text" id="newAdminName" placeholder="e.g. Moderator Name">
+
+    <label style="font-size:0.8rem;color:var(--text-faint);">Admin Email Address</label>
+    <input type="email" id="newAdminEmail" placeholder="admin@voicecast.com">
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+      <button class="btn-action" onclick="closeAddAdminModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddAdmin()">Assign Admin Role</button>
     </div>
   </div>
 </div>
@@ -541,14 +573,95 @@
           <div><strong>${u.name}</strong></div>
           <div style="font-size:0.75rem;color:var(--text-faint);">${u.email}</div>
         </td>
-        <td><span class="badge ${u.role === 'Super Admin' ? 'badge-featured' : 'badge-live'}">${u.role}</span></td>
+        <td><span class="badge ${u.role === 'Super Admin' ? 'badge-featured' : (u.role === 'Admin' ? 'badge-live' : 'badge-pending')}">${u.role}</span></td>
         <td>${u.date}</td>
         <td>
-          <button class="btn-action" onclick="promoteUserRole('${u.email}')">Change Role</button>
+          ${u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? '<span style="font-size:0.78rem;color:var(--gold);">Owner (Protected)</span>' : `<button class="btn-action" onclick="promoteUserRole('${u.email}')">Change Role</button>`}
         </td>
       </tr>
     `).join('');
   }
+
+  function renderAdmins() {
+    const container = document.getElementById('adminListContainer');
+    if(!container) return;
+    const admins = masterUsers.filter(u => u.role === 'Admin' || u.role === 'Super Admin');
+
+    container.innerHTML = admins.map(a => {
+      const isOwner = a.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:50%;background:${isOwner ? 'linear-gradient(135deg,#EF4444,#B91C1C)' : 'linear-gradient(135deg,var(--purple),var(--blue))'};display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;font-size:0.85rem;">
+              ${a.name[0]}
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
+                ${a.name}
+                <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${a.role}</span>
+              </div>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${a.email} · Appointed: ${a.date}</div>
+            </div>
+          </div>
+          <div>
+            ${isOwner ? '<span style="font-size:0.78rem;color:var(--gold);font-weight:600;">👑 Master Owner</span>' : `<button class="btn-action danger" onclick="revokeAdminRole('${a.email}')">Revoke Admin Access</button>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.openAddAdminModal = function() {
+    document.getElementById('newAdminName').value = '';
+    document.getElementById('newAdminEmail').value = '';
+    document.getElementById('adminModal').style.display = 'flex';
+  };
+
+  window.closeAddAdminModal = function() {
+    document.getElementById('adminModal').style.display = 'none';
+  };
+
+  window.confirmAddAdmin = function() {
+    const name = document.getElementById('newAdminName').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+
+    if(!email || !email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    const existingUser = masterUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if(existingUser) {
+      existingUser.role = 'Admin';
+      if(name) existingUser.name = name;
+    } else {
+      masterUsers.push({
+        name: name || email.split('@')[0],
+        email: email,
+        role: 'Admin',
+        date: 'Today'
+      });
+    }
+
+    localStorage.setItem('voicecast_master_users', JSON.stringify(masterUsers));
+    closeAddAdminModal();
+    renderAdmins();
+    renderUsersTable();
+    showToast(`✓ Admin access granted to ${email}`);
+  };
+
+  window.revokeAdminRole = function(email) {
+    if(confirm(`Are you sure you want to revoke Admin rights for ${email}?`)) {
+      const user = masterUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if(user) {
+        user.role = 'Client';
+        localStorage.setItem('voicecast_master_users', JSON.stringify(masterUsers));
+        renderAdmins();
+        renderUsersTable();
+        showToast(`Admin rights revoked for ${email}`);
+      }
+    }
+  };
 
   function renderSamplesTable() {
     const tbody = document.getElementById('superSamplesTbody');
@@ -618,10 +731,11 @@
   window.promoteUserRole = function(email) {
     const user = masterUsers.find(u => u.email === email);
     if(!user) return;
-    const newRole = prompt(`Change role for ${user.email} (Artist, Client, Admin, Super Admin):`, user.role);
+    const newRole = prompt(`Change role for ${user.email} (Artist, Client, Admin):`, user.role);
     if(newRole) {
       user.role = newRole;
       renderUsersTable();
+      renderAdmins();
       showToast(`User role updated to ${newRole}`);
     }
   };
@@ -685,6 +799,7 @@
     renderPending();
     renderArtistsTable();
     renderUsersTable();
+    renderAdmins();
     renderSamplesTable();
   }
 

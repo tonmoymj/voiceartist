@@ -127,10 +127,20 @@
   .artist-foot span{ color:var(--purple); }
 
   .view-profile{ display:block; text-align:center; width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); color:var(--text-muted); text-decoration:none; font-size:0.85rem; transition:border-color 0.15s ease, color 0.15s ease; }
-  .view-profile:hover{ border-color:var(--purple); color:var(--text); }
-
-  .load-more{ display:block; margin:40px auto 0; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:12px 28px; border-radius:9px; cursor:pointer; font-size:0.9rem; }
-  .load-more:hover{ border-color:var(--purple); }
+  /* Auth Lock Modal */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,10,20,0.85); backdrop-filter:blur(8px); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; animation:fadeIn 0.2s ease; }
+  .modal-overlay.open{ display:flex; }
+  .auth-modal{ background:var(--surface); border:1px solid var(--purple); border-radius:24px; max-width:420px; width:100%; padding:32px 28px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,0.8), 0 0 30px rgba(139,92,246,0.25); animation:scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes scaleUp{ from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .lock-icon-circle{ width:64px; height:64px; border-radius:50%; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; color:var(--purple); }
+  .auth-modal-title{ font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .auth-modal-desc{ font-size:0.88rem; color:var(--text-muted); line-height:1.6; margin-bottom:24px; }
+  .auth-modal-btns{ display:flex; flex-direction:column; gap:10px; }
+  .btn-auth-signup{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:700; font-size:0.92rem; padding:13px; border-radius:10px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(139,92,246,0.3); transition:transform 0.15s; border:none; }
+  .btn-auth-signup:hover{ transform:translateY(-1px); }
+  .btn-auth-login{ background:var(--bg-2); border:1px solid var(--border); color:var(--text); font-weight:600; font-size:0.9rem; padding:12px; border-radius:10px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:border-color 0.15s; }
+  .btn-auth-login:hover{ border-color:var(--purple); }
 </style>
 </head>
 <body>
@@ -230,8 +240,65 @@
   </div>
 </div>
 
+<!-- Auth Required Lock Modal -->
+<div class="modal-overlay" id="authLockModal" onclick="if(event.target===this) closeAuthModal()">
+  <div class="auth-modal">
+    <div class="lock-icon-circle">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3 class="auth-modal-title" id="authModalTitle">সাইন আপ বা লগইন করুন</h3>
+    <p class="auth-modal-desc" id="authModalDesc">ভয়েস স্যাম্পল শুনতে ও পছন্দের আর্টিস্টদের বুকমার্ক করে রাখতে অনুগ্রহ করে আপনার একাউন্টে লগইন করুন।</p>
+    <div class="auth-modal-btns">
+      <a href="signup.html" class="btn-auth-signup">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Sign Up Free (১ মিনিটে একাউন্ট খুলুন)
+      </a>
+      <a href="signup.html" class="btn-auth-login">Login to Account</a>
+      <button onclick="closeAuthModal()" style="background:transparent;border:none;color:var(--text-faint);font-size:0.82rem;margin-top:4px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
   function seededRandom(seed){ let s = seed; return function(){ s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+
+  let isSearchUserLoggedIn = false;
+
+  async function checkSearchAuth() {
+    try {
+      const db = window._supabase;
+      if (db && db.auth) {
+        const { data } = await db.auth.getSession();
+        if (data && data.session) {
+          isSearchUserLoggedIn = true;
+          return true;
+        }
+      }
+    } catch(e) {}
+    if (localStorage.getItem('voicecast_demo_client_logged_in') === 'true' || localStorage.getItem('voicecast_user_role')) {
+      isSearchUserLoggedIn = true;
+      return true;
+    }
+    isSearchUserLoggedIn = false;
+    return false;
+  }
+
+  function requireAuthModal(reason) {
+    const title = document.getElementById('authModalTitle');
+    const desc = document.getElementById('authModalDesc');
+    if (reason === 'listen') {
+      title.textContent = 'কণ্ঠ শুনতে লগইন করুন';
+      desc.textContent = 'আর্টিস্টের ভয়েস স্যাম্পল শুনতে অনুগ্রহ করে সাইন আপ বা লগইন করুন।';
+    } else if (reason === 'save') {
+      title.textContent = 'ফেভারিট লিস্টে সেভ করতে লগইন করুন';
+      desc.textContent = 'পছন্দের আর্টিস্টদের বুকমার্ক ও সেভ করে রাখতে অনুগ্রহ করে লগইন করুন।';
+    }
+    document.getElementById('authLockModal').classList.add('open');
+  }
+
+  function closeAuthModal() {
+    document.getElementById('authLockModal').classList.remove('open');
+  }
 
   const fallbackArtists = [
     { id:"maya",    name:"Maya Okonkwo",    loc:"Lagos, Nigeria",          langs:["Bengali","English"],          cats:["Commercial","Audiobook","E-Learning"],             gender:"Female", rating:"4.9", reviews:128, avail:true,  seed:11, rate:1500 },
@@ -343,8 +410,12 @@
     document.querySelectorAll('.save-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        if (!isSearchUserLoggedIn) {
+          requireAuthModal('save');
+          return;
+        }
         const artistId = btn.dataset.id;
-        let currentSaved = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
+        let currentSaved = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '[]');
         if (currentSaved.includes(artistId)) {
           currentSaved = currentSaved.filter(id => id !== artistId);
           btn.classList.remove('saved');
@@ -363,6 +434,10 @@
     const notes = [330, 392, 440, 523, 587];
     document.querySelectorAll('.mini-play').forEach((btn, idx) => {
       btn.addEventListener('click', () => {
+        if (!isSearchUserLoggedIn) {
+          requireAuthModal('listen');
+          return;
+        }
         playSearchChime(notes[idx % notes.length], 0.85);
         const wf = btn.nextElementSibling;
         wf.querySelectorAll('.b').forEach((b,i) => setTimeout(() => { b.style.background='linear-gradient(180deg,var(--purple),var(--blue))'; }, i*25));
@@ -515,7 +590,11 @@
   });
   applyLanguage(currentLang);
 
-  loadArtistsFromSupabase();
+  async function initSearchPage() {
+    await checkSearchAuth();
+    loadArtistsFromSupabase();
+  }
+  initSearchPage();
 </script>
 
 </body>

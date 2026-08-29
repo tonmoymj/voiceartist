@@ -195,28 +195,28 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a class="brand" href="/"><span class="brand-mark"></span>VoiceCast</a>
+    <a class="brand" href="index.html"><span class="brand-mark"></span>VoiceCast</a>
     <div class="nav-links">
-      <a href="search" data-i18n="nav_browse">Browse Artists</a>
+      <a href="search.html" data-i18n="nav_browse">Browse Artists</a>
       <a href="#categories" data-i18n="nav_categories">Categories</a>
       <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
     </div>
     <div class="nav-cta">
       <button class="lang-toggle">EN | বাং</button>
-      <a class="btn-outline" href="signup" data-i18n="nav_login">Log in</a>
-      <a class="btn-grad" href="signup" data-i18n="nav_join_artist">Join as Artist</a>
+      <a class="btn-outline" href="signup.html" data-i18n="nav_login">Log in</a>
+      <a class="btn-grad" href="signup.html" data-i18n="nav_join_artist">Join as Artist</a>
       <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
   </div>
 </nav>
 
 <div class="mobile-nav" id="mobileNav">
-  <a href="search" data-i18n="nav_browse">Browse Artists</a>
+  <a href="search.html" data-i18n="nav_browse">Browse Artists</a>
   <a href="#categories" data-i18n="nav_categories">Categories</a>
   <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
   <div class="mob-cta">
-    <a class="btn-outline" href="signup" data-i18n="nav_login">Log in</a>
-    <a class="btn-grad" href="signup" data-i18n="nav_join_artist">Join as Artist</a>
+    <a class="btn-outline" href="signup.html" data-i18n="nav_login">Log in</a>
+    <a class="btn-grad" href="signup.html" data-i18n="nav_join_artist">Join as Artist</a>
   </div>
 </div>
 
@@ -230,13 +230,13 @@
 
     <div class="search-bar">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" data-i18n-placeholder="search_placeholder" placeholder="Search by language, style, or name...">
-      <button data-i18n="btn_search">Search</button>
+      <input type="text" id="heroSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Search by language, style, or name...">
+      <button id="heroSearchBtn" data-i18n="btn_search">Search</button>
     </div>
 
     <div class="hero-cta">
-      <a class="btn-grad" href="search" style="padding:13px 26px; font-size:0.92rem;" data-i18n="btn_find_artist">Find a Voice Artist</a>
-      <a class="btn-outline" href="signup" style="padding:12px 24px; font-size:0.92rem;" data-i18n="btn_join_artist">Join as an Artist</a>
+      <a class="btn-grad" href="search.html" style="padding:13px 26px; font-size:0.92rem;" data-i18n="btn_find_artist">Find a Voice Artist</a>
+      <a class="btn-outline" href="signup.html" style="padding:12px 24px; font-size:0.92rem;" data-i18n="btn_join_artist">Join as an Artist</a>
     </div>
 
     <div class="hero-wave" id="heroWave"></div>
@@ -532,10 +532,10 @@
     });
   });
 
-  // Hero search → redirect to search
+  // Hero search → redirect to search.html
   function doSearch() {
     const q = document.querySelector('.search-bar input').value.trim();
-    window.location.href = 'search' + (q ? '?q=' + encodeURIComponent(q) : '');
+    window.location.href = 'search.html' + (q ? '?q=' + encodeURIComponent(q) : '');
   }
   document.querySelector('.search-bar button').addEventListener('click', doSearch);
   document.querySelector('.search-bar input').addEventListener('keydown', e => {

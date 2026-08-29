@@ -68,9 +68,10 @@ document.addEventListener('DOMContentLoaded', async function () {
       const role = await syncUserRole(user) || user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || user.email.split('@')[0] || 'User';
+      const initial = (name[0] || 'U').toUpperCase();
       const isSuperAdmin = (user.email && user.email.toLowerCase() === 'tonmoymbm@gmail.com');
       const roleLabel = isSuperAdmin ? 'Super Admin' : (role === 'client' ? 'Client' : 'Artist');
-      const superAdminNavBtn = isSuperAdmin ? '<a href="superadmin" style="background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.4);color:#EF4444;font-weight:700;font-size:0.82rem;padding:6px 12px;border-radius:8px;text-decoration:none;box-shadow:0 0 10px rgba(239,68,68,0.2);">👑 Super Admin</a>' : '';
+      const superAdminNavBtn = isSuperAdmin ? '<a href="superadmin.html" style="background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.4);color:#EF4444;font-weight:700;font-size:0.82rem;padding:6px 12px;border-radius:8px;text-decoration:none;box-shadow:0 0 10px rgba(239,68,68,0.2);">👑 Super Admin</a>' : '';
 
       // Desktop nav CTA update
       if (navCta) {
@@ -79,12 +80,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         navCta.innerHTML = `
           ${langHtml}
           ${superAdminNavBtn}
-          <a href="dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
+          <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
             <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.75rem;">${initial}</div>
             <span style="font-size:0.84rem;color:var(--text);font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
             <span style="font-size:0.68rem;padding:2px 7px;border-radius:999px;background:rgba(139,92,246,0.18);color:var(--purple);font-weight:600;">${roleLabel}</span>
           </a>
-          <a class="btn-outline" href="dashboard" style="padding:7px 14px;font-size:0.82rem;">Dashboard</a>
+          <a class="btn-outline" href="dashboard.html" style="padding:7px 14px;font-size:0.82rem;">Dashboard</a>
           <button id="logoutBtn" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.82rem;padding:7px 12px;border-radius:8px;cursor:pointer;transition:border-color 0.15s,color 0.15s;">Log out</button>
         `;
         const logoutBtn = document.getElementById('logoutBtn');

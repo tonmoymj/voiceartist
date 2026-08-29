@@ -95,12 +95,12 @@
 <nav class="admin-nav">
   <div class="container nav-inner">
     <div style="display:flex;align-items:center;">
-      <a class="brand display" href="/">VoiceCast</a>
+      <a class="brand display" href="index.html">VoiceCast</a>
       <span class="admin-tag">Admin Panel</span>
     </div>
     <div style="display:flex;align-items:center;gap:14px;">
-      <a href="dashboard" style="font-size:0.86rem;color:var(--text-muted);">User Dashboard</a>
-      <a href="/" style="font-size:0.86rem;color:var(--text-muted);">Live Site</a>
+      <a href="dashboard.html" style="font-size:0.86rem;color:var(--text-muted);">User Dashboard</a>
+      <a href="index.html" style="font-size:0.86rem;color:var(--text-muted);">Live Site</a>
     </div>
   </div>
 </nav>
@@ -131,8 +131,8 @@
 
     <div class="tabs-nav">
       <button class="tab-btn active" onclick="switchAdminTab('pendingTab', this)">Pending Applications (<span id="pendingTabCount">2</span>)</button>
-      <button class="tab-btn" onclick="switchAdminTab('liveTab', this)">Manage Live Artists</button>
-      <button class="tab-btn" onclick="switchAdminTab('reportedTab', this)">Reported Profiles (0)</button>
+      <button class="tab-btn" onclick="switchAdminTab('liveTab', this)">Manage Live Artists (<span id="liveTabCount">3</span>)</button>
+      <button class="tab-btn" onclick="switchAdminTab('reportedTab', this)">Reported Profiles (<span id="reportedTabCount">0</span>)</button>
     </div>
   </header>
 
@@ -153,9 +153,8 @@
 
     <!-- Reported Profiles Tab -->
     <div id="reportedTab" style="display:none;">
-      <div style="text-align:center;padding:60px 0;color:var(--text-faint);">
-        <p style="font-size:1.1rem;margin-bottom:6px;">No reported profiles currently.</p>
-        <p style="font-size:0.85rem;">When visitors flag inappropriate or low quality profiles, they will appear here for investigation.</p>
+      <div id="reportedCardsContainer">
+        <!-- Rendered via JS -->
       </div>
     </div>
   </main>
@@ -348,6 +347,7 @@
   function renderLiveArtists() {
     const container = document.getElementById('liveCardsContainer');
     document.getElementById('statApproved').textContent = liveArtists.length;
+    document.getElementById('liveTabCount').textContent = liveArtists.length;
     container.innerHTML = liveArtists.map(a => `
       <div class="review-card">
         <div class="review-head" style="margin-bottom:0;">
@@ -367,6 +367,72 @@
       </div>
     `).join('');
   }
+
+  function renderReportedProfiles() {
+    const container = document.getElementById('reportedCardsContainer');
+    let reportedList = JSON.parse(localStorage.getItem('voicecast_reports') || '[]');
+    
+    // Seed sample report if empty
+    if (reportedList.length === 0) {
+      reportedList = [
+        { id: 'rep_1', artistId: 'carlos', artistName: 'Carlos Reyes', reason: 'ভয়েস স্যাম্পল অন্য একজনের থেকে কপি করা মনে হচ্ছে (Suspected non-original sample)', date: 'Today' }
+      ];
+      localStorage.setItem('voicecast_reports', JSON.stringify(reportedList));
+    }
+
+    document.getElementById('statReported').textContent = reportedList.length;
+    document.getElementById('reportedTabCount').textContent = reportedList.length;
+
+    if (reportedList.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 0;color:var(--text-faint);">
+          <p style="font-size:1.1rem;margin-bottom:6px;">No reported profiles currently. 🎉</p>
+          <p style="font-size:0.85rem;">All reported flags have been reviewed and cleared.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = reportedList.map(r => `
+      <div class="review-card" id="repCard_${r.id}" style="border-color:rgba(239,68,68,0.4);">
+        <div class="review-head">
+          <div class="artist-badge-info">
+            <div class="artist-avatar" style="background:rgba(239,68,68,0.15);color:var(--red);">⚠️</div>
+            <div>
+              <div class="artist-name">Reported: ${r.artistName || 'Artist Profile'}</div>
+              <div class="artist-meta">Reported on: ${r.date || 'Recent'} · Flagged by User</div>
+            </div>
+          </div>
+          <span class="status-badge status-rejected">Requires Action</span>
+        </div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--border-soft);border-radius:10px;padding:14px 18px;margin:16px 0;">
+          <div style="font-size:0.75rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">User Report Reason:</div>
+          <div style="font-size:0.9rem;color:var(--text);">${r.reason}</div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn-view" onclick="dismissReport('${r.id}')">Dismiss Report</button>
+          <a class="btn-view" href="profile?id=${r.artistId || 'maya'}" target="_blank">Investigate Profile</a>
+          <button class="btn-reject" style="background:var(--red);color:#fff;" onclick="suspendReportedArtist('${r.id}', '${r.artistId}')">Suspend &amp; Take Down</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.dismissReport = function(id) {
+    let list = JSON.parse(localStorage.getItem('voicecast_reports') || '[]');
+    list = list.filter(r => r.id !== id);
+    localStorage.setItem('voicecast_reports', JSON.stringify(list));
+    renderReportedProfiles();
+    showToast('Report dismissed.');
+  };
+
+  window.suspendReportedArtist = function(reportId, artistId) {
+    dismissReport(reportId);
+    if (artistId) suspendArtist(artistId);
+    showToast('Profile suspended and taken down from marketplace.');
+  };
 
   window.approveArtist = function(id) {
     const artist = pendingArtists.find(a => a.id === id);
@@ -412,10 +478,34 @@
     document.getElementById('reportedTab').style.display = tabId === 'reportedTab' ? 'block' : 'none';
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    renderPendingQueue();
-    renderLiveArtists();
-  });
+  async function checkAdminAuth() {
+    const db = window._supabase;
+    let user = null;
+    if (db) {
+      try {
+        const { data } = await db.auth.getSession();
+        if (data && data.session) user = data.session.user;
+      } catch (e) {}
+    }
+
+    const currentEmail = user ? user.email.toLowerCase() : '';
+    const masterUsers = JSON.parse(localStorage.getItem('voicecast_master_users') || '[]');
+    const adminUser = masterUsers.find(u => u.email.toLowerCase() === currentEmail && (u.role === 'Admin' || u.role === 'Super Admin'));
+
+    // If tonmoymbm@gmail.com or an assigned Admin
+    if (currentEmail === 'tonmoymbm@gmail.com' || adminUser || localStorage.getItem('voicecast_user_role') === 'admin') {
+      renderPendingQueue();
+      renderLiveArtists();
+      renderReportedProfiles();
+    } else {
+      // Prompt admin login
+      renderPendingQueue();
+      renderLiveArtists();
+      renderReportedProfiles();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', checkAdminAuth);
 </script>
 
 </body>

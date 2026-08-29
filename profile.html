@@ -8,130 +8,258 @@
 <meta property="og:title" content="Voice Artist Profile — VoiceCast">
 <meta property="og:description" content="Listen to voiceover demo samples, view specialties, and contact directly.">
 <meta property="og:type" content="profile">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230F241D'/><circle cx='50' cy='50' r='24' fill='%23D8AE55'/><path d='M44 36v28l22-14z' fill='%230F241D'/></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230A0A14'/><circle cx='50' cy='50' r='24' fill='%238B5CF6'/><path d='M44 36v28l22-14z' fill='%23FFFFFF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Supabase JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="i18n.js"></script>
 <style>
   :root{
-    --bg: #0F241D;
-    --bg-2: #142E25;
-    --surface: #17332A;
-    --border: #2A4B3F;
-    --border-soft: #1F3B31;
-    --accent: #D8AE55;
-    --accent-dim: #8C6F32;
-    --accent-soft: rgba(216,174,85,0.12);
-    --text: #F4EFE1;
-    --text-muted: #ACC0B4;
-    --text-faint: #6E8177;
-    --verified: #85E3B6;
+    --bg: #0A0A14;
+    --bg-2: #100E1E;
+    --surface: #15132A;
+    --surface-2: #1B1836;
+    --border: #2A2745;
+    --border-soft: #1F1C38;
+    --purple: #8B5CF6;
+    --blue: #4F8CF7;
+    --pink: #E879C9;
+    --accent: #8B5CF6;
+    --accent-dim: #6D43D0;
+    --accent-soft: rgba(139,92,246,0.12);
+    --text: #F3F1FA;
+    --text-muted: #A9A5C4;
+    --text-faint: #6E6A8F;
+    --verified: #4ADE80;
     --whatsapp: #25D366;
+    --success: #4ADE80;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html{scroll-behavior:smooth;}
-  body{ background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  body{ background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; min-height:100vh; }
   a{color:inherit;}
-  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+  :focus-visible{ outline:2px solid var(--purple); outline-offset:3px; border-radius:4px; }
+  .display{ font-family:'Space Grotesk', sans-serif; }
 
-  .topbar{ border-bottom:1px solid var(--border-soft); padding:22px 24px; }
-  .topbar-inner{ max-width:760px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; }
-  .brand{ font-size:0.78rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); text-decoration:none; font-weight:600; }
+  /* Navbar — matches dashboard */
+  .navbar{ position:sticky; top:0; z-index:40; backdrop-filter:blur(12px); background:rgba(10,10,20,0.85); border-bottom:1px solid var(--border-soft); }
+  .nav-inner{ max-width:1140px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:8px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.15rem; text-decoration:none; color:var(--text); }
+  .brand-mark{ width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 0 10px rgba(139,92,246,0.7); flex-shrink:0; }
+  .nav-links{ display:flex; align-items:center; gap:20px; font-size:0.88rem; color:var(--text-muted); }
+  .nav-links a{ text-decoration:none; transition:color 0.15s; }
+  .nav-links a:hover{ color:var(--text); }
   .back-link{ font-size:0.85rem; color:var(--text-faint); text-decoration:none; display:flex; align-items:center; gap:6px; transition:color 0.15s ease; }
   .back-link:hover{ color:var(--text-muted); }
+  .btn-outline-nav{ border:1px solid var(--border); color:var(--text-muted); font-size:0.84rem; padding:7px 15px; border-radius:8px; text-decoration:none; cursor:pointer; background:transparent; transition:border-color 0.15s, color 0.15s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-outline-nav:hover{ border-color:var(--purple); color:var(--text); }
 
-  .wrap{ max-width:720px; margin:0 auto; padding:76px 24px 100px; }
+  .wrap{ max-width:760px; margin:0 auto; padding:64px 24px 100px; }
 
   /* Hero */
   .profile-header{ text-align:center; margin-bottom:32px; }
-  .photo-wrap{ position:relative; width:132px; height:132px; margin:0 auto 26px; }
-  .photo-glow{ position:absolute; inset:-34px; border-radius:50%; background:radial-gradient(circle, rgba(216,174,85,0.30), rgba(216,174,85,0) 68%); pointer-events:none; }
-  .photo{ position:relative; z-index:1; width:132px; height:132px; border-radius:50%; object-fit:cover; background:linear-gradient(160deg,#2A4B3F,#1B362C); border:1.5px solid rgba(216,174,85,0.45); display:flex; align-items:center; justify-content:center; font-size:2.6rem; color:var(--accent); font-weight:600; margin:0 auto; }
+  .photo-wrap{ position:relative; width:132px; height:132px; margin:0 auto 24px; }
+  .photo-glow{ position:absolute; inset:-34px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.35), rgba(139,92,246,0) 68%); pointer-events:none; }
+  .photo{ position:relative; z-index:1; width:132px; height:132px; border-radius:50%; object-fit:cover; background:linear-gradient(135deg,#3B2E7E,#1F194C); border:2px solid rgba(139,92,246,0.5); display:flex; align-items:center; justify-content:center; font-size:2.6rem; color:var(--purple); font-weight:700; margin:0 auto; font-family:'Space Grotesk',sans-serif; }
 
-  .status-tag{ font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:10px; }
-  .name{ font-family:'Playfair Display', serif; font-weight:600; font-size:2.4rem; line-height:1.1; letter-spacing:0; margin-bottom:12px; }
+  .status-tag{ font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--purple); font-weight:600; margin-bottom:8px; display:inline-flex; align-items:center; gap:8px; }
+  .name{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:2.4rem; line-height:1.15; letter-spacing:-0.02em; margin-bottom:6px; }
+  .tagline{ font-size:1.05rem; color:var(--text-muted); font-style:italic; margin-bottom:12px; font-weight:400; }
+  .gender-badge{ display:inline-block; font-size:0.75rem; padding:3px 10px; border-radius:999px; background:rgba(139,92,246,0.15); color:var(--purple); border:1px solid rgba(139,92,246,0.3); font-weight:500; margin-bottom:12px; }
 
-  .meta-line{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; font-size:0.87rem; color:var(--text-muted); margin-bottom:8px; }
+  .meta-line{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; font-size:0.87rem; color:var(--text-muted); margin-bottom:10px; }
   .meta-line .sep{ color:var(--border); }
   .meta-line .verified{ color:var(--verified); display:inline-flex; align-items:center; gap:4px; font-weight:500; }
-  .meta-line .stars{ color:var(--accent); letter-spacing:1px; }
+  .meta-line .stars{ color:var(--purple); letter-spacing:1px; }
 
-  .avail-line{ display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--text-faint); margin-bottom:30px; }
-  .avail-dot{ width:6px; height:6px; border-radius:50%; background:var(--verified); box-shadow:0 0 0 3px rgba(133,227,182,0.15); }
+  .avail-line{ display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--text-faint); margin-bottom:24px; }
+  .avail-dot{ width:6px; height:6px; border-radius:50%; background:var(--verified); box-shadow:0 0 0 3px rgba(74,222,128,0.18); }
 
-  .bio-text{ font-size:1.05rem; line-height:1.75; color:var(--text-muted); max-width:56ch; margin:0 auto 32px; text-align:left; }
+  .short-bio-box{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; font-size:0.95rem; line-height:1.6; color:var(--text); max-width:600px; margin:0 auto 20px; text-align:center; font-weight:500; }
+  .bio-text{ font-size:0.98rem; line-height:1.75; color:var(--text-muted); max-width:64ch; margin:0 auto 28px; text-align:left; white-space:pre-line; }
 
-  .cta-row{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:36px; }
-  .btn-whatsapp{ background:var(--whatsapp); color:#0B2412; font-weight:600; font-size:0.9rem; border:none; padding:13px 24px; border-radius:8px; cursor:pointer; transition:transform 0.15s ease, box-shadow 0.15s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
-  .btn-whatsapp:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(37,211,102,0.25); }
+  /* Unified Action & Contact Hub */
+  .contact-hub{ background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%); border:1px solid var(--border); border-radius:18px; padding:22px 24px; margin:0 auto 36px; max-width:680px; box-shadow:0 12px 32px rgba(0,0,0,0.3); }
+  .hub-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:18px; border-bottom:1px solid var(--border-soft); }
+  .hub-primary-btns{ display:flex; align-items:center; gap:10px; flex:1; min-width:260px; }
+  .btn-whatsapp{ background:var(--whatsapp); color:#08210f; font-weight:600; font-size:0.92rem; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; transition:all 0.15s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px; flex:1; justify-content:center; }
+  .btn-whatsapp:hover{ transform:translateY(-1px); box-shadow:0 6px 20px rgba(37,211,102,0.35); filter:brightness(1.05); }
+  .btn-phone{ background:rgba(139,92,246,0.14); border:1px solid rgba(139,92,246,0.35); color:var(--text); font-weight:600; font-size:0.92rem; padding:12px 20px; border-radius:10px; cursor:pointer; transition:all 0.15s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px; flex:1; justify-content:center; }
+  .btn-phone:hover{ background:rgba(139,92,246,0.22); border-color:var(--purple); color:#fff; transform:translateY(-1px); }
+  
+  .hub-utility-btns{ display:flex; align-items:center; gap:8px; }
+  .btn-share{ background:var(--bg-2); border:1px solid var(--border); color:var(--text-muted); font-size:0.86rem; padding:11px 15px; border-radius:10px; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-share:hover{ border-color:var(--purple); color:var(--text); }
+  .btn-report{ background:transparent; border:1px solid transparent; color:var(--text-faint); font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px; padding:11px 12px; border-radius:10px; transition:all 0.15s; }
+  .btn-report:hover{ color:var(--pink); background:rgba(232,121,201,0.08); border-color:rgba(232,121,201,0.2); }
 
-  .stat-strip{ display:flex; align-items:center; justify-content:center; gap:0; padding:20px 0; border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft); margin-bottom:56px; }
-  .stat{ text-align:center; padding:0 24px; }
+  .hub-bottom{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; padding-top:16px; }
+  .direct-contacts{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .contact-pill{ display:inline-flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); text-decoration:none; background:var(--bg-2); padding:7px 14px; border-radius:999px; border:1px solid var(--border-soft); transition:all 0.15s; }
+  .contact-pill:hover{ border-color:var(--purple); color:var(--text); }
+  .contact-pill svg{ color:var(--purple); flex-shrink:0; }
+
+  .hub-socials{ display:flex; align-items:center; gap:8px; }
+  .social-btn{ width:34px; height:34px; border-radius:50%; background:var(--bg-2); border:1px solid var(--border-soft); display:flex; align-items:center; justify-content:center; color:var(--text-muted); transition:all 0.15s; text-decoration:none; }
+  .social-btn:hover{ border-color:var(--purple); transform:translateY(-2px); color:#fff; }
+
+  .stat-strip{ display:flex; align-items:center; justify-content:center; gap:0; background:var(--surface); border-radius:14px; border:1px solid var(--border); padding:20px 0; margin-bottom:44px; }
+  .stat{ text-align:center; padding:0 28px; }
   .stat + .stat{ border-left:1px solid var(--border-soft); }
-  .stat-value{ font-family:'Playfair Display', serif; font-size:1.4rem; font-weight:600; color:var(--accent); display:block; margin-bottom:2px; }
+  .stat-value{ font-family:'Space Grotesk', sans-serif; font-size:1.6rem; font-weight:700; color:var(--purple); display:block; margin-bottom:2px; }
   .stat-label{ font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); }
 
-  .section{ margin-bottom:56px; }
-  .section-label{ font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-dim); font-weight:600; margin-bottom:24px; display:flex; justify-content:space-between; align-items:baseline; }
+  .section{ margin-bottom:44px; }
+  .section-label{ font-size:0.75rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-dim); font-weight:700; margin-bottom:18px; display:flex; justify-content:space-between; align-items:baseline; }
+
+  /* Info cards & grid */
+  .info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .info-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; display:flex; align-items:center; gap:14px; }
+  .info-icon{ width:40px; height:40px; border-radius:10px; background:rgba(139,92,246,0.12); display:flex; align-items:center; justify-content:center; color:var(--purple); font-size:1.2rem; flex-shrink:0; }
+  .info-title{ font-size:0.76rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-faint); margin-bottom:2px; }
+  .info-val{ font-weight:600; font-size:0.95rem; color:var(--text); }
+
+  /* Pricing Card */
+  .pricing-box{ background:linear-gradient(145deg, var(--surface) 0%, var(--surface-2) 100%); border:1px solid var(--border); border-radius:14px; padding:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .pricing-left .rate-title{ font-size:0.8rem; text-transform:uppercase; color:var(--text-faint); letter-spacing:0.06em; margin-bottom:4px; }
+  .pricing-left .rate-num{ font-family:'Space Grotesk', sans-serif; font-size:1.8rem; font-weight:700; color:var(--purple); }
+  .pricing-left .rate-note{ font-size:0.82rem; color:var(--text-muted); margin-top:4px; }
+  .pricing-badge{ background:rgba(139,92,246,0.15); color:var(--purple); border:1px solid rgba(139,92,246,0.3); padding:6px 14px; border-radius:999px; font-size:0.82rem; font-weight:600; text-transform:uppercase; }
 
   /* Samples */
-  .sample-row{ display:grid; grid-template-columns:50px 1fr; gap:20px; padding:24px 0; border-top:1px solid var(--border-soft); }
-  .sample-row:first-of-type{ border-top:none; padding-top:0; }
-  .sample-index{ font-family:'Playfair Display', serif; font-style:italic; font-size:1.15rem; color:var(--accent-dim); padding-top:2px; }
-  .sample-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:12px; }
-  .sample-title{ font-size:1rem; font-weight:500; }
-  .sample-time{ font-size:0.8rem; color:var(--text-faint); }
+  .sample-row{ display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:14px; transition:border-color 0.2s; }
+  .sample-row:hover{ border-color:rgba(139,92,246,0.3); }
+  .sample-index{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:1.15rem; color:var(--purple); flex-shrink:0; width:28px; text-align:center; }
+  .sample-body{ flex:1; min-width:0; }
+  .sample-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:12px; }
+  .sample-title{ font-size:0.96rem; font-weight:600; color:var(--text); }
+  .sample-time-display{ font-size:0.8rem; color:var(--text-faint); font-family:monospace; }
+  .sample-controls{ display:flex; align-items:center; gap:10px; }
+  .play-btn{ width:38px; height:38px; border-radius:50%; border:1.5px solid rgba(139,92,246,0.5); background:transparent; color:var(--purple); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
+  .play-btn:hover{ border-color:var(--purple); background:rgba(139,92,246,0.15); transform:scale(1.05); }
+  .play-btn.playing{ background:linear-gradient(135deg,var(--purple),var(--blue)); border-color:transparent; color:#0B0A16; box-shadow:0 0 15px rgba(139,92,246,0.5); }
+  .skip-btn{ width:28px; height:28px; border-radius:50%; border:none; background:var(--bg-2); color:var(--text-faint); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; }
+  .skip-btn:hover{ color:var(--text); background:var(--surface-2); }
+  .waveform{ flex:1; height:32px; display:flex; align-items:center; gap:3px; cursor:pointer; min-width:0; padding:4px 0; }
+  .waveform .bar{ flex:1; background:var(--border); border-radius:2px; min-width:2px; transition:background 0.1s, height 0.2s; }
+  .waveform .bar:hover{ background:var(--text-faint); }
+  .waveform .bar.played{ background:linear-gradient(180deg, var(--purple), var(--blue)); box-shadow:0 0 4px rgba(139,92,246,0.4); }
 
-  .sample-controls{ display:flex; align-items:center; gap:16px; }
-  .play-btn{ width:34px; height:34px; border-radius:50%; border:1.5px solid var(--accent-dim); background:transparent; color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
-  .play-btn.playing{ background:var(--accent); color:#1B1400; }
-  .waveform{ flex:1; height:24px; display:flex; align-items:center; gap:2.5px; cursor:pointer; min-width:0; }
-  .waveform .bar{ flex:1; background:var(--border); border-radius:2px; min-width:2px; }
-  .waveform .bar.played{ background:var(--accent); }
+  /* Portfolio List */
+  .portfolio-item{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; text-decoration:none; transition:border-color 0.15s, transform 0.15s; }
+  .portfolio-item:hover{ border-color:var(--purple); transform:translateY(-1px); }
+  .port-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .port-icon{ color:var(--purple); flex-shrink:0; }
+  .port-title{ font-weight:600; font-size:0.92rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .port-url{ font-size:0.78rem; color:var(--text-faint); margin-top:2px; }
 
   /* Tags */
-  .tags-grid{ display:grid; grid-template-columns:1fr 1fr; gap:36px; }
+  .tags-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
   .tag-list{ display:flex; flex-wrap:wrap; gap:8px; }
-  .tag{ font-size:0.83rem; padding:7px 14px; border-radius:6px; border:1px solid var(--border); color:var(--text-muted); }
-  .tag.lang{ border-color:rgba(133,227,182,0.3); color:var(--verified); }
+  .tag{ font-size:0.83rem; padding:7px 14px; border-radius:999px; border:1px solid var(--border); color:var(--text-muted); background:var(--surface); }
+  .tag.lang{ border-color:rgba(74,222,128,0.3); color:var(--verified); background:rgba(74,222,128,0.06); }
+  .tag.accent{ border-color:rgba(79,140,247,0.3); color:var(--blue); background:rgba(79,140,247,0.06); }
 
+  /* Share Modal */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,10,20,0.85); backdrop-filter:blur(8px); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; animation:fadeIn 0.2s ease; }
+  .modal-overlay.open{ display:flex; }
+  .share-modal{ background:var(--surface); border:1px solid var(--border); border-radius:20px; max-width:440px; width:100%; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.7); position:relative; animation:scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes scaleUp{ from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .modal-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.25rem; color:var(--text); }
+  .modal-close{ background:transparent; border:none; color:var(--text-faint); font-size:1.3rem; cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .modal-close:hover{ background:var(--bg-2); color:var(--text); }
+  .modal-sub{ font-size:0.85rem; color:var(--text-faint); margin-bottom:22px; }
+
+  .share-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; text-align:center; }
+  .share-channel{ display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none; color:var(--text-muted); font-size:0.78rem; font-weight:500; transition:transform 0.15s; }
+  .share-channel:hover{ transform:translateY(-3px); color:var(--text); }
+  .share-icon-wrap{ width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; transition:box-shadow 0.2s, transform 0.2s; }
+  .share-channel:hover .share-icon-wrap{ box-shadow:0 8px 20px rgba(0,0,0,0.4); }
+  
+  .icon-wa{ background:linear-gradient(135deg, #25D366, #128C7E); color:#fff; }
+  .icon-fb{ background:linear-gradient(135deg, #1877F2, #0C5DC7); color:#fff; }
+  .icon-msg{ background:linear-gradient(135deg, #00B2FF, #006AFF, #9B00E8); color:#fff; }
+  .icon-insta{ background:linear-gradient(135deg, #833AB4, #FD1D1D, #F56040, #FFDC80); color:#fff; }
+
+  .copy-link-box{ display:flex; align-items:center; background:var(--bg-2); border:1px solid var(--border); border-radius:12px; padding:6px 6px 6px 14px; gap:8px; }
+  .copy-link-input{ background:transparent; border:none; color:var(--text-muted); font-size:0.85rem; flex:1; outline:none; font-family:'Inter',sans-serif; text-overflow:ellipsis; }
+  .btn-copy{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#fff; border:none; font-weight:600; font-size:0.82rem; padding:8px 16px; border-radius:8px; cursor:pointer; transition:transform 0.15s; white-space:nowrap; }
+  .btn-copy:hover{ transform:translateY(-1px); }
+
+  /* Favorite / Bookmark button */
+  .btn-fav{ background:var(--bg-2); border:1px solid var(--border); color:var(--text-muted); font-size:0.86rem; padding:11px 16px; border-radius:10px; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-fav:hover{ border-color:var(--pink); color:var(--pink); }
+  .btn-fav.active{ background:rgba(232,121,201,0.12); border-color:var(--pink); color:var(--pink); font-weight:600; }
+  .btn-fav.active svg{ fill:var(--pink); stroke:var(--pink); }
+
+  /* Auth Lock Modal */
+  .auth-modal{ background:var(--surface); border:1px solid var(--purple); border-radius:24px; max-width:420px; width:100%; padding:32px 28px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,0.8), 0 0 30px rgba(139,92,246,0.25); animation:scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
+  .lock-icon-circle{ width:64px; height:64px; border-radius:50%; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; color:var(--purple); }
+  .auth-modal-title{ font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .auth-modal-desc{ font-size:0.88rem; color:var(--text-muted); line-height:1.6; margin-bottom:24px; }
+  .auth-modal-btns{ display:flex; flex-direction:column; gap:10px; }
+  .btn-auth-signup{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:700; font-size:0.92rem; padding:13px; border-radius:10px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(139,92,246,0.3); transition:transform 0.15s; border:none; }
+  .btn-auth-signup:hover{ transform:translateY(-1px); }
+  .btn-auth-login{ background:var(--bg-2); border:1px solid var(--border); color:var(--text); font-weight:600; font-size:0.9rem; padding:12px; border-radius:10px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:border-color 0.15s; }
+  .btn-auth-login:hover{ border-color:var(--purple); }
+
+  /* Media Queries */
   @media (max-width: 680px){
-    .wrap{ padding:48px 20px 104px; }
-    .name{ font-size:1.95rem; }
-    .tags-grid{ grid-template-columns:1fr; gap:26px; }
+    .wrap{ padding:40px 20px 100px; }
+    .name{ font-size:1.9rem; }
+    .hub-top{ flex-direction:column; align-items:stretch; }
+    .hub-primary-btns{ flex-direction:column; width:100%; }
+    .hub-utility-btns{ justify-content:space-between; width:100%; }
+    .hub-bottom{ flex-direction:column; align-items:stretch; }
+    .direct-contacts{ flex-direction:column; align-items:stretch; }
+    .hub-socials{ justify-content:center; }
+    .info-grid{ grid-template-columns:1fr; }
+    .tags-grid{ grid-template-columns:1fr; gap:20px; }
   }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/">VoiceCast</a>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <a class="back-link" href="search">← Back to search</a>
-      <a class="back-link" href="dashboard" style="color:var(--accent);font-weight:500;">Dashboard</a>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark"></span>
+      VoiceCast
+    </a>
+    <div class="nav-links">
+      <a class="back-link" href="search.html">← Browse Artists</a>
+      <a class="btn-outline-nav" href="dashboard.html">Dashboard</a>
     </div>
   </div>
-</div>
+</nav>
 
 <div class="wrap">
 
   <header class="profile-header">
     <div class="photo-wrap">
       <div class="photo-glow"></div>
-      <div class="photo" id="artistAvatar">M</div>
+      <div class="photo display" id="artistAvatar">M</div>
     </div>
-    <div class="status-tag" id="artistStatus">Voice Artist</div>
-    <h1 class="name" id="artistName">Maya Okonkwo</h1>
+    
+    <div class="status-tag">
+      <span>Voice Artist</span>
+      <span id="artistGenderBadge" class="gender-badge">Female Voice</span>
+    </div>
+
+    <h1 class="name display" id="artistName">Maya Okonkwo</h1>
+    <div class="tagline" id="artistTagline">"Deep, Warm — Commercial & Corporate Narration"</div>
+
     <div class="meta-line">
       <span id="artistLoc">Lagos, Nigeria</span>
       <span class="sep">·</span>
       <span class="verified" id="verifiedBadge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
         Verified
       </span>
       <span class="sep">·</span>
@@ -139,48 +267,143 @@
     </div>
     <div class="avail-line" id="availLine"><span class="avail-dot"></span>Available now · direct contact</div>
 
+    <!-- Short Bio Card -->
+    <div class="short-bio-box" id="artistShortBio">
+      Fifteen years behind the mic, trusted by top brands for premium Bangla & English dubbing.
+    </div>
+
+    <!-- Full Bio -->
     <p class="bio-text" id="artistBio">
-      Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads.
+      Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads. Equipped with broadcast-grade acoustic treated home studio.
     </p>
 
-    <div class="cta-row">
-      <a class="btn-whatsapp" id="whatsappBtn" href="https://wa.me/8801700000000" target="_blank">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4-.1-.1-.5-1.3-.7-1.7-.2-.5-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.1 1.6 2.5 3.9 3.5.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg>
-        Message on WhatsApp
-      </a>
-    </div>
   </header>
 
+  <!-- Unified Contact & Action Hub -->
+  <div class="contact-hub">
+    <div class="hub-top">
+      <div class="hub-primary-btns">
+        <a class="btn-whatsapp" id="whatsappBtn" href="javascript:void(0)" onclick="handleContactClick('whatsapp', event)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4-.1-.1-.5-1.3-.7-1.7-.2-.5-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.1 1.6 2.5 3.9 3.5.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg>
+          WhatsApp Chat
+        </a>
+        <a class="btn-phone" id="phoneBtn" href="javascript:void(0)" onclick="handleContactClick('call', event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Direct Call
+        </a>
+      </div>
+      <div class="hub-utility-btns">
+        <button class="btn-fav" id="favBtn" onclick="toggleFavorite()" title="Add to Favorites">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="favBtnText">Save</span>
+        </button>
+        <button class="btn-share" onclick="shareProfile()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+        <button class="btn-report" onclick="reportProfile()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Report
+        </button>
+      </div>
+    </div>
+
+    <div class="hub-bottom">
+      <div class="direct-contacts">
+        <a class="contact-pill" id="contactPhoneLink" href="javascript:void(0)" onclick="handleContactClick('call', event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span id="contactPhoneText">+880 1700-000000</span>
+        </a>
+        <a class="contact-pill" id="contactEmailLink" href="javascript:void(0)" onclick="handleContactClick('email', event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="contactEmailText">artist@voicecast.com</span>
+        </a>
+      </div>
+
+      <div class="hub-socials" id="socialLinksRow">
+        <!-- Social buttons injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Strip -->
   <div class="stat-strip">
-    <div class="stat"><span class="stat-value" id="statYears">15</span><span class="stat-label">Years</span></div>
-    <div class="stat"><span class="stat-value" id="statProjects">340+</span><span class="stat-label">Projects</span></div>
+    <div class="stat"><span class="stat-value" id="statYears">15</span><span class="stat-label">Years Exp.</span></div>
+    <div class="stat"><span class="stat-value" id="statProjects">340+</span><span class="stat-label">Projects Done</span></div>
     <div class="stat"><span class="stat-value" id="statReviews">128</span><span class="stat-label">Reviews</span></div>
   </div>
 
+
+  <!-- Section: Expertise & Studio -->
+  <section class="section">
+    <div class="section-label">দক্ষতা ও কাজের ধরন (Expertise)</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">🎙️</div>
+        <div>
+          <div class="info-title">Studio Setup</div>
+          <div class="info-val" id="studioSetup">Professional Home Studio</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">⚡</div>
+        <div>
+          <div class="info-title">Turnaround Time</div>
+          <div class="info-val" id="turnaround">24–48 Hours</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Pricing -->
+  <section class="section">
+    <div class="section-label">প্রাইসিং (Pricing)</div>
+    <div class="pricing-box">
+      <div class="pricing-left">
+        <div class="rate-title" id="pricingModelTitle">Estimated Rate (Per Minute)</div>
+        <div class="rate-num" id="pricingRate">৳ 2,500</div>
+        <div class="rate-note" id="pricingNote">✓ বড় প্রজেক্টে আলোচনা সাপেক্ষ</div>
+      </div>
+      <div>
+        <span class="pricing-badge" id="pricingBadge">Direct Booking</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Voice Samples -->
   <section class="section" id="samples">
     <div class="section-label">
-      <span>Voice samples</span>
+      <span>Voice Samples (সর্বোচ্চ ৩টি)</span>
     </div>
     <div id="samplesList">
       <!-- Voice Samples injected here -->
     </div>
   </section>
 
+  <!-- Section: Portfolio -->
+  <section class="section">
+    <div class="section-label">পূর্ববর্তী কাজ (Portfolio)</div>
+    <div id="portfolioList">
+      <!-- Portfolio links injected here -->
+    </div>
+  </section>
+
+  <!-- Section: Categories & Languages -->
   <section class="section">
     <div class="tags-grid">
       <div>
-        <div class="section-label">Specialties</div>
+        <div class="section-label">জনরা / স্পেশালিটি</div>
         <div class="tag-list" id="specialtiesList">
           <span class="tag">Commercial</span>
-          <span class="tag">Audiobook</span>
-          <span class="tag">E-Learning</span>
         </div>
       </div>
       <div>
-        <div class="section-label">Languages</div>
-        <div class="tag-list" id="languagesList">
+        <div class="section-label">ভাষা ও উচ্চারণ (Languages & Accents)</div>
+        <div class="tag-list" id="languagesList" style="margin-bottom:10px;">
           <span class="tag lang">Bengali</span>
-          <span class="tag lang">English</span>
+        </div>
+        <div class="tag-list" id="accentsList">
+          <span class="tag accent">Standard Neutral</span>
         </div>
       </div>
     </div>
@@ -188,129 +411,549 @@
 
 </div>
 
+<!-- Share Modal Overlay -->
+<div class="modal-overlay" id="shareModalOverlay" onclick="if(event.target===this) closeShareModal()">
+  <div class="share-modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Share Profile</h3>
+      <button class="modal-close" onclick="closeShareModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-sub">Share this voice artist profile directly with your team or network:</div>
+
+    <div class="share-grid">
+      <!-- WhatsApp -->
+      <a class="share-channel" id="shareWaLink" href="#" target="_blank">
+        <div class="share-icon-wrap icon-wa">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4-.1-.1-.5-1.3-.7-1.7-.2-.5-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.1 1.6 2.5 3.9 3.5.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg>
+        </div>
+        <span>WhatsApp</span>
+      </a>
+
+      <!-- Facebook -->
+      <a class="share-channel" id="shareFbLink" href="#" target="_blank">
+        <div class="share-icon-wrap icon-fb">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </div>
+        <span>Facebook</span>
+      </a>
+
+      <!-- Messenger -->
+      <a class="share-channel" id="shareMsgLink" href="#" target="_blank">
+        <div class="share-icon-wrap icon-msg">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.42 3.84 7.08V22l3.77-2.07c.76.21 1.56.33 2.39.33 5.52 0 10-4.03 10-9s-4.48-9-10-9zm1.09 12.13l-2.55-2.73-4.98 2.73 5.48-5.82 2.6 2.73 4.93-2.73-5.48 5.82z"/></svg>
+        </div>
+        <span>Messenger</span>
+      </a>
+
+      <!-- Instagram / Direct -->
+      <a class="share-channel" id="shareInstaLink" href="#" onclick="copyForInstagram(event)">
+        <div class="share-icon-wrap icon-insta">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </div>
+        <span>Instagram</span>
+      </a>
+    </div>
+
+    <!-- Copy Link Bar -->
+    <div class="copy-link-box">
+      <input type="text" class="copy-link-input" id="shareLinkInput" readonly value="">
+      <button class="btn-copy" onclick="copyShareLink()">Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auth Required Lock Modal -->
+<div class="modal-overlay" id="authLockModal" onclick="if(event.target===this) closeAuthModal()">
+  <div class="auth-modal">
+    <div class="lock-icon-circle">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3 class="auth-modal-title" id="authModalTitle">সাইন আপ বা লগইন করুন</h3>
+    <p class="auth-modal-desc" id="authModalDesc">ভয়েস স্যাম্পল শুনতে ও আর্টিস্টের সাথে সরাসরি যোগাযোগ করতে অনুগ্রহ করে আপনার একাউন্টে লগইন করুন।</p>
+    <div class="auth-modal-btns">
+      <a href="signup.html" class="btn-auth-signup">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Sign Up Free (১ মিনিটে একাউন্ট খুলুন)
+      </a>
+      <a href="signup.html" class="btn-auth-login">Login to Account</a>
+      <button onclick="closeAuthModal()" style="background:transparent;border:none;color:var(--text-faint);font-size:0.82rem;margin-top:4px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toastMsg">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastText">Link copied to clipboard!</span>
+</div>
+
 <script>
   function seededRandom(seed){ let s = seed; return function(){ s = (s*9301+49297)%233280; return s/233280; }; }
 
-  // ── Per-artist fallback data ──────────────────────────────────────────────────
+  // ── Authentication Gate Logic ────────────────────────────────────────────────
+  let isUserLoggedIn = false;
+  let activeArtistId = (new URLSearchParams(window.location.search).get('id') || 'maya').toLowerCase();
+  let savedFavorites = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '[]');
+
+  async function checkAuthStatus() {
+    try {
+      const db = window._supabase;
+      if (db && db.auth) {
+        const { data } = await db.auth.getSession();
+        if (data && data.session) {
+          isUserLoggedIn = true;
+          return true;
+        }
+      }
+    } catch(e) {}
+    
+    // Check demo logged in flag
+    if (localStorage.getItem('voicecast_demo_client_logged_in') === 'true' || localStorage.getItem('voicecast_user_role')) {
+      isUserLoggedIn = true;
+      return true;
+    }
+    isUserLoggedIn = false;
+    return false;
+  }
+
+  function requireAuthModal(reason) {
+    const title = document.getElementById('authModalTitle');
+    const desc = document.getElementById('authModalDesc');
+    if (reason === 'listen') {
+      title.textContent = 'কণ্ঠ শুনতে লগইন করুন';
+      desc.textContent = 'আর্টিস্টের ভয়েস স্যাম্পল ডেমো প্লে করতে অনুগ্রহ করে লগইন বা সাইন আপ করুন।';
+    } else if (reason === 'call') {
+      title.textContent = 'সরাসরি কল করতে লগইন করুন';
+      desc.textContent = 'আর্টিস্টের সরাসরি ফোন নম্বরে যোগাযোগ করতে সাইন আপ বা লগইন সম্পন্ন করুন।';
+    } else if (reason === 'whatsapp') {
+      title.textContent = 'WhatsApp চ্যাট করতে লগইন করুন';
+      desc.textContent = 'আর্টিস্টের সাথে সরাসরি WhatsApp-এ বার্তা পাঠাতে একাউন্টে লগইন করুন।';
+    } else if (reason === 'favorite') {
+      title.textContent = 'ফেভারিট লিস্টে সেভ করতে লগইন করুন';
+      desc.textContent = 'পছন্দের আর্টিস্টদের বুকমার্ক ও সেভ করে রাখতে অনুগ্রহ করে লগইন করুন।';
+    } else {
+      title.textContent = 'Please Login or Sign Up First';
+      desc.textContent = 'এই ফিচারটি ব্যবহার করতে আপনার একাউন্টে সাইন ইন বা সাইন আপ করুন।';
+    }
+    document.getElementById('authLockModal').classList.add('open');
+  }
+
+  function closeAuthModal() {
+    document.getElementById('authLockModal').classList.remove('open');
+  }
+
+  // Handle protected contact clicks
+  function handleContactClick(type, e) {
+    if (e) e.preventDefault();
+    if (!isUserLoggedIn) {
+      requireAuthModal(type);
+      return;
+    }
+
+    // If logged in, proceed with the actual action
+    const currentArtist = profileFallback[activeArtistId] || profileFallback.maya;
+    if (type === 'whatsapp') {
+      const customMsg = encodeURIComponent(`Hello ${currentArtist.name}, I found your voice talent profile on VoiceCast and would like to discuss a project.`);
+      window.open(`https://wa.me/${currentArtist.whatsapp}?text=${customMsg}`, '_blank');
+    } else if (type === 'call') {
+      window.location.href = `tel:${currentArtist.phone || currentArtist.whatsapp}`;
+    } else if (type === 'email') {
+      if (currentArtist.email) window.location.href = `mailto:${currentArtist.email}`;
+    }
+  }
+
+  // ── Favorite Management ───────────────────────────────────────────────────────
+  function updateFavoriteBtn() {
+    const btn = document.getElementById('favBtn');
+    const txt = document.getElementById('favBtnText');
+    if (!btn || !txt) return;
+    const isFav = savedFavorites.includes(activeArtistId);
+    if (isFav) {
+      btn.classList.add('active');
+      txt.textContent = 'Saved ❤️';
+    } else {
+      btn.classList.remove('active');
+      txt.textContent = 'Save';
+    }
+  }
+
+  function toggleFavorite() {
+    if (!isUserLoggedIn) {
+      requireAuthModal('favorite');
+      return;
+    }
+    const idx = savedFavorites.indexOf(activeArtistId);
+    if (idx > -1) {
+      savedFavorites.splice(idx, 1);
+      showToast('ফেভারিট লিস্ট থেকে রিমুভ করা হয়েছে');
+    } else {
+      savedFavorites.push(activeArtistId);
+      showToast('ফেভারিট লিস্টে সেভ করা হয়েছে! ড্যাশবোর্ডে দেখতে পাবেন');
+    }
+    localStorage.setItem('voicecast_saved_artists', JSON.stringify(savedFavorites));
+    updateFavoriteBtn();
+  }
+
+
+  // ── Complete fallback profile database ───────────────────────────────────────
   const profileFallback = {
     maya: {
-      name:"Maya Okonkwo", loc:"Lagos, Nigeria", rating:"4.9", reviews:128,
-      years:15, projects:"340+", avail:true, whatsapp:"8801700000001",
-      bio:"Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads. Trusted by top brands for their Bangla dubbing needs.",
-      langs:["Bengali","English"], categories:["Commercial","Audiobook","E-Learning"],
-      samples:[
-        { title:"Commercial Demo — FMCG Brand",    duration:"0:45", seed:11 },
-        { title:"Audiobook Chapter Excerpt",        duration:"1:20", seed:22 },
-        { title:"E-Learning Module Intro",          duration:"0:35", seed:33 },
+      name: "Maya Okonkwo",
+      tagline: "Warm, Expressive — Commercial & Audiobook",
+      gender: "Female Voice",
+      loc: "Dhaka, Bangladesh",
+      rating: "4.9", reviews: 128,
+      years: 15, projects: "340+",
+      avail: true,
+      phone: "01700000001",
+      whatsapp: "8801700000001",
+      email: "maya.voice@example.com",
+      shortBio: "১৫ বছরের অভিজ্ঞতা। ব্র্যান্ড টিভি বিজ্ঞাপন ও অডিওবুক বিশেষজ্ঞ।",
+      bio: "Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads. Equipped with broadcast-grade acoustic treated home studio.",
+      langs: ["Bengali", "English"],
+      accents: ["Neutral Dhaka (প্রমিত)", "Standard British"],
+      categories: ["Commercial", "Audiobook", "E-Learning", "Corporate Narration"],
+      studio: "Professional Studio",
+      turnaround: "24–48 Hours",
+      pricingModel: "per minute",
+      pricingRate: "৳ 2,500",
+      pricingNote: "বড় প্রজেক্টে বিশেষ ডিসকাউন্ট প্রযোজ্য",
+      portfolio: [
+        { title: "Grameenphone TVC — 2024", url: "https://youtube.com" },
+        { title: "Robi Audiobook Narration Excerpt", url: "https://soundcloud.com" },
+        { title: "Aarong Heritage Commercial", url: "https://youtube.com" }
+      ],
+      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", linkedin: "https://linkedin.com", youtube: "https://youtube.com" },
+      samples: [
+        { title: "Commercial Demo — FMCG Brand", duration: "0:28", seed: 11 },
+        { title: "Audiobook Chapter Excerpt", duration: "0:30", seed: 22 },
+        { title: "E-Learning Module Intro", duration: "0:24", seed: 33 }
       ]
     },
     rafiq: {
-      name:"Rafiq Hasan", loc:"Dhaka, Bangladesh", rating:"4.8", reviews:96,
-      years:8, projects:"210+", avail:true, whatsapp:"8801700000002",
-      bio:"Documentary and e-learning specialist with a calm, authoritative voice that builds trust with every word.",
-      langs:["Bengali","Sylheti"], categories:["Documentary","E-Learning","IVR / Phone Systems"],
-      samples:[
-        { title:"Documentary Narration — Heritage Series", duration:"1:10", seed:44 },
-        { title:"Corporate E-Learning Module",             duration:"0:50", seed:55 },
-        { title:"IVR System Demo",                         duration:"0:30", seed:66 },
+      name: "Rafiq Hasan",
+      tagline: "Calm, Authoritative — Documentary & E-Learning",
+      gender: "Male Voice",
+      loc: "Dhaka, Bangladesh",
+      rating: "4.8", reviews: 96,
+      years: 8, projects: "210+",
+      avail: true,
+      phone: "01700000002",
+      whatsapp: "8801700000002",
+      email: "rafiq.hasan@example.com",
+      shortBio: "৮ বছরের অভিজ্ঞতা। তথ্যচিত্র ও কর্পোরেট ট্রেনিং মডিউল বিশেষজ্ঞ।",
+      bio: "Documentary and e-learning specialist with a calm, authoritative voice that builds trust with every word.",
+      langs: ["Bengali", "Sylheti"],
+      accents: ["Neutral Dhaka (প্রমিত)", "সিলেটি টান"],
+      categories: ["Documentary", "E-Learning", "IVR / Phone Systems"],
+      studio: "Professional Studio",
+      turnaround: "48–72 Hours",
+      pricingModel: "per project",
+      pricingRate: "৳ 5,000+",
+      pricingNote: "স্ক্রিপ্ট পর্যালোচনার পর ফাইনাল কোট দেওয়া হয়",
+      portfolio: [
+        { title: "BTV Documentary — Heritage Series", url: "https://youtube.com" },
+        { title: "Corporate E-Learning System", url: "https://soundcloud.com" }
+      ],
+      social: { facebook: "https://facebook.com", linkedin: "https://linkedin.com" },
+      samples: [
+        { title: "Documentary Narration — Heritage Series", duration: "0:30", seed: 44 },
+        { title: "Corporate E-Learning Module", duration: "0:25", seed: 55 },
+        { title: "IVR System Demo", duration: "0:18", seed: 66 }
       ]
     },
     nusrat: {
-      name:"Nusrat Jahan", loc:"Chattogram, Bangladesh", rating:"5.0", reviews:74,
-      years:6, projects:"180+", avail:false, whatsapp:"8801700000003",
-      bio:"Character voice specialist with an incredible range — from playful animation to serious drama. Perfect for dubbing and animation projects.",
-      langs:["Bengali","English"], categories:["Character / Animation","Commercial"],
-      samples:[
-        { title:"Animation Character — Kids Show", duration:"0:40", seed:77 },
-        { title:"Dramatic Reading",                duration:"1:05", seed:88 },
-        { title:"Commercial — Fashion Brand",      duration:"0:30", seed:99 },
+      name: "Nusrat Jahan",
+      tagline: "Playful & Dramatic — Animation & Character Dubbing",
+      gender: "Female Voice",
+      loc: "Chattogram, Bangladesh",
+      rating: "5.0", reviews: 74,
+      years: 6, projects: "180+",
+      avail: false,
+      phone: "01700000003",
+      whatsapp: "8801700000003",
+      email: "nusrat.dub@example.com",
+      shortBio: "৬ বছরের অভিজ্ঞতা। অ্যানিমেশন ও ক্যারেক্টার ভয়েস বিশেষজ্ঞ।",
+      bio: "Character voice specialist with an incredible range — from playful animation to serious drama. Perfect for cartoon and game dubbing.",
+      langs: ["Bengali", "English"],
+      accents: ["চাটগাঁইয়া (Chittagong)", "Neutral Dhaka"],
+      categories: ["Character / Animation", "Commercial", "Dubbing"],
+      studio: "Home Studio",
+      turnaround: "24–48 Hours",
+      pricingModel: "per minute",
+      pricingRate: "৳ 3,000",
+      pricingNote: "ক্যারেক্টার ভ্যারিয়েশন অনুযায়ী রেট প্রযোজ্য",
+      portfolio: [
+        { title: "Meena Cartoon — Special Episode", url: "https://youtube.com" },
+        { title: "Kids Rhyme Animation Series", url: "https://youtube.com" }
+      ],
+      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", youtube: "https://youtube.com" },
+      samples: [
+        { title: "Animation Character — Kids Show", duration: "0:20", seed: 77 },
+        { title: "Dramatic Reading — Fiction", duration: "0:28", seed: 88 },
+        { title: "Commercial — Fashion Brand", duration: "0:22", seed: 99 }
       ]
     },
     tanvir: {
-      name:"Tanvir Ahmed", loc:"Sylhet, Bangladesh", rating:"4.7", reviews:52,
-      years:5, projects:"130+", avail:true, whatsapp:"8801700000004",
-      bio:"Deep, resonant voice perfect for commercials and audiobooks. Specialises in Bangla with a clean, neutral accent.",
-      langs:["Bengali"], categories:["Commercial","Audiobook"],
-      samples:[
-        { title:"Radio Commercial — Telecom Brand", duration:"0:35", seed:12 },
-        { title:"Audiobook — Travel Memoir",        duration:"1:15", seed:24 },
+      name: "Tanvir Ahmed",
+      tagline: "Deep, Resonant — Radio & Commercial Ads",
+      gender: "Male Voice",
+      loc: "Sylhet, Bangladesh",
+      rating: "4.7", reviews: 52,
+      years: 5, projects: "130+",
+      avail: true,
+      phone: "01700000004",
+      whatsapp: "8801700000004",
+      email: "tanvir.voice@example.com",
+      shortBio: "৫ বছরের অভিজ্ঞতা। গম্ভীর কণ্ঠ, রেডিও ও ডিজিটাল বিজ্ঞাপনে পারদর্শী।",
+      bio: "Deep, resonant voice perfect for commercials and audiobooks. Clean neutral Bangla accent with home broadcast studio.",
+      langs: ["Bengali"],
+      accents: ["Neutral Dhaka (প্রমিত)"],
+      categories: ["Commercial", "Audiobook"],
+      studio: "Home Studio",
+      turnaround: "24 Hours",
+      pricingModel: "per minute",
+      pricingRate: "৳ 1,800",
+      pricingNote: "নূন্যতম বুকিং ৫ মিনিট",
+      portfolio: [
+        { title: "Robi Telecom Radio Commercial", url: "https://youtube.com" }
+      ],
+      social: { facebook: "https://facebook.com" },
+      samples: [
+        { title: "Radio Commercial — Telecom Brand", duration: "0:26", seed: 12 },
+        { title: "Audiobook — Travel Memoir", duration: "0:29", seed: 24 }
       ]
     },
     farhana: {
-      name:"Farhana Islam", loc:"Dhaka, Bangladesh", rating:"4.9", reviews:110,
-      years:10, projects:"280+", avail:true, whatsapp:"8801700000005",
-      bio:"Warm and versatile voice artist with experience across e-learning, commercial, and audiobook projects for both Bangla and English audiences.",
-      langs:["Bengali","English"], categories:["Commercial","E-Learning","Audiobook"],
-      samples:[
-        { title:"E-Learning — Medical Training Module", duration:"1:00", seed:36 },
-        { title:"Commercial — Food & Beverage",         duration:"0:45", seed:48 },
-        { title:"Audiobook — Literary Fiction",         duration:"1:30", seed:60 },
-      ]
-    },
-    carlos: {
-      name:"Carlos Reyes", loc:"Madrid, Spain", rating:"4.6", reviews:41,
-      years:7, projects:"160+", avail:false, whatsapp:"8801700000006",
-      bio:"International voice artist with a neutral English accent and growing Bangla capabilities. Ideal for global brands entering the South Asian market.",
-      langs:["English","Bengali"], categories:["Commercial","Dubbing"],
-      samples:[
-        { title:"Global Brand Commercial",      duration:"0:45", seed:72 },
-        { title:"Dubbing Demo — Action Series", duration:"0:55", seed:84 },
+      name: "Farhana Islam",
+      tagline: "Warm & Versatile — E-Learning & Commercial",
+      gender: "Female Voice",
+      loc: "Dhaka, Bangladesh",
+      rating: "4.9", reviews: 110,
+      years: 10, projects: "280+",
+      avail: true,
+      phone: "01700000005",
+      whatsapp: "8801700000005",
+      email: "farhana.vo@example.com",
+      shortBio: "১০ বছরের অভিজ্ঞতা। দ্বিভাষিক (বাংলা ও ইংরেজি) ভয়েস আর্টিস্ট।",
+      bio: "Warm and versatile voice artist with experience across e-learning, commercial, and audiobook projects for both Bangla and English audiences.",
+      langs: ["Bengali", "English"],
+      accents: ["Neutral Dhaka", "American English"],
+      categories: ["Commercial", "E-Learning", "Audiobook"],
+      studio: "Professional Studio",
+      turnaround: "24–48 Hours",
+      pricingModel: "per word",
+      pricingRate: "৳ 0.50 / word",
+      pricingNote: "নূন্যতম অর্ডার: ৫০০ শব্দ",
+      portfolio: [
+        { title: "BRAC E-Learning Series — 2024", url: "https://youtube.com" },
+        { title: "Square Food TV Commercial", url: "https://youtube.com" }
+      ],
+      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", linkedin: "https://linkedin.com", youtube: "https://youtube.com" },
+      samples: [
+        { title: "E-Learning — Training Module", duration: "0:28", seed: 36 },
+        { title: "Commercial — Food Brand", duration: "0:25", seed: 48 },
+        { title: "Audiobook — Literary Fiction", duration: "0:30", seed: 60 }
       ]
     }
   };
 
-  // ── Voice Sample Player ───────────────────────────────────────────────────────
+  // ── Advanced Voice Sample Player (SoundCloud / WaveSurfer Style) ───────────────
   let currentlyPlaying = null;
+  let audioCtx = null;
+  let activeAudioElement = null;
+  let sampleProgress = {}; // Store { currentTime, duration, timer } per sample
 
   function renderSamples(samples) {
     const list = document.getElementById('samplesList');
     list.innerHTML = samples.map((s, i) => `
-      <div class="sample-row">
+      <div class="sample-row" id="sampleRow_${i}">
         <div class="sample-index">0${i+1}</div>
-        <div style="flex:1;min-width:0;">
+        <div class="sample-body">
           <div class="sample-top">
             <span class="sample-title">${s.title}</span>
-            <span class="sample-time">${s.duration}</span>
+            <span class="sample-time-display" id="timeDisplay_${i}">0:00 / ${s.duration || '0:30'}</span>
           </div>
           <div class="sample-controls">
-            <button class="play-btn" data-idx="${i}" aria-label="Play sample">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
+            <!-- Rewind 5s -->
+            <button class="skip-btn" onclick="skipAudio(${i}, -5)" title="Rewind 5s" aria-label="Rewind 5s">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
             </button>
-            <div class="waveform" data-seed="${s.seed}" data-idx="${i}"></div>
+
+            <!-- Play/Pause Button -->
+            <button class="play-btn" data-idx="${i}" id="playBtn_${i}" aria-label="Play sample">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
+            </button>
+
+            <!-- Forward 5s -->
+            <button class="skip-btn" onclick="skipAudio(${i}, 5)" title="Forward 5s" aria-label="Forward 5s">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+            </button>
+
+            <!-- Interactive Waveform -->
+            <div class="waveform" data-seed="${s.seed || (i+1)*11}" data-idx="${i}" id="waveform_${i}" onclick="seekWaveform(${i}, event)"></div>
           </div>
         </div>
       </div>
     `).join('');
 
-    // Build waveforms
+    // Generate random realistic audio bars
     list.querySelectorAll('.waveform').forEach(wf => {
       const rand = seededRandom(parseInt(wf.dataset.seed, 10) || 1);
-      for(let i = 0; i < 40; i++) {
+      for(let i = 0; i < 48; i++) {
         const b = document.createElement('div');
         b.className = 'bar';
-        b.style.height = (3 + Math.round(rand() * 18)) + 'px';
+        b.style.height = (4 + Math.round(rand() * 22)) + 'px';
         wf.appendChild(b);
       }
     });
 
-    // Play button handlers
+    // Wire Play/Pause button click
     list.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx);
-        if(currentlyPlaying === idx) {
-          stopSample(idx);
+        if (!isUserLoggedIn) {
+          requireAuthModal('listen');
           return;
         }
-        if(currentlyPlaying !== null) stopSample(currentlyPlaying);
-        playSample(idx, btn);
+        const idx = parseInt(btn.dataset.idx);
+        if(currentlyPlaying === idx) {
+          pauseSample(idx);
+          return;
+        }
+        if(currentlyPlaying !== null) pauseSample(currentlyPlaying);
+        playSample(idx, samples[idx]);
       });
     });
   }
 
-  let audioCtx = null;
-  let activeGainNode = null;
+  function formatAudioTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
 
-  function startAudioSynth(sampleIdx) {
+  function playSample(idx, sampleData) {
+    currentlyPlaying = idx;
+    const btn = document.getElementById(`playBtn_${idx}`);
+    btn.classList.add('playing');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+
+    if (!sampleProgress[idx]) {
+      sampleProgress[idx] = { current: 0, total: 30 };
+    }
+
+    // If real audio URL exists, play it via HTML5 Audio, else realistic synth engine
+    if (sampleData && sampleData.url && sampleData.url.startsWith('http')) {
+      if (!activeAudioElement || activeAudioElement.src !== sampleData.url) {
+        activeAudioElement = new Audio(sampleData.url);
+      }
+      activeAudioElement.currentTime = sampleProgress[idx].current;
+      activeAudioElement.play();
+    } else {
+      startSynthTone(idx);
+    }
+
+    const wf = document.getElementById(`waveform_${idx}`);
+    const bars = wf ? wf.querySelectorAll('.bar') : [];
+    const timeDisplay = document.getElementById(`timeDisplay_${idx}`);
+
+    clearInterval(sampleProgress[idx].timer);
+    sampleProgress[idx].timer = setInterval(() => {
+      sampleProgress[idx].current += 0.25;
+      const cur = sampleProgress[idx].current;
+      const total = sampleProgress[idx].total;
+
+      if (timeDisplay) timeDisplay.textContent = `${formatAudioTime(cur)} / ${formatAudioTime(total)}`;
+
+      // Update waveform bars
+      const playedBarsCount = Math.floor((cur / total) * bars.length);
+      bars.forEach((b, bIdx) => {
+        if (bIdx <= playedBarsCount) b.classList.add('played');
+        else b.classList.remove('played');
+      });
+
+      if (cur >= total) {
+        stopSample(idx);
+      }
+    }, 250);
+  }
+
+  function pauseSample(idx) {
+    if (activeAudioElement) activeAudioElement.pause();
+    const btn = document.getElementById(`playBtn_${idx}`);
+    if (btn) {
+      btn.classList.remove('playing');
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>';
+    }
+    if (sampleProgress[idx]) clearInterval(sampleProgress[idx].timer);
+    currentlyPlaying = null;
+  }
+
+  function stopSample(idx) {
+    pauseSample(idx);
+    if (sampleProgress[idx]) {
+      sampleProgress[idx].current = 0;
+      const timeDisplay = document.getElementById(`timeDisplay_${idx}`);
+      if (timeDisplay) timeDisplay.textContent = `0:00 / ${formatAudioTime(sampleProgress[idx].total)}`;
+    }
+    const wf = document.getElementById(`waveform_${idx}`);
+    if (wf) wf.querySelectorAll('.bar').forEach(b => b.classList.remove('played'));
+  }
+
+  function seekWaveform(idx, e) {
+    if (!isUserLoggedIn) {
+      requireAuthModal('listen');
+      return;
+    }
+    const wf = document.getElementById(`waveform_${idx}`);
+    if (!wf) return;
+    const rect = wf.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, clickX / rect.width));
+
+    if (!sampleProgress[idx]) sampleProgress[idx] = { current: 0, total: 30 };
+    sampleProgress[idx].current = percent * sampleProgress[idx].total;
+
+    const bars = wf.querySelectorAll('.bar');
+    const playedBars = Math.floor(percent * bars.length);
+    bars.forEach((b, i) => {
+      if (i <= playedBars) b.classList.add('played');
+      else b.classList.remove('played');
+    });
+
+    const timeDisplay = document.getElementById(`timeDisplay_${idx}`);
+    if (timeDisplay) timeDisplay.textContent = `${formatAudioTime(sampleProgress[idx].current)} / ${formatAudioTime(sampleProgress[idx].total)}`;
+
+    if (currentlyPlaying !== idx) {
+      if (currentlyPlaying !== null) pauseSample(currentlyPlaying);
+      const currentArtist = profileFallback[activeArtistId] || profileFallback.maya;
+      playSample(idx, (currentArtist.samples || [])[idx]);
+    }
+  }
+
+  function skipAudio(idx, delta) {
+    if (!isUserLoggedIn) {
+      requireAuthModal('listen');
+      return;
+    }
+    if (!sampleProgress[idx]) sampleProgress[idx] = { current: 0, total: 30 };
+    sampleProgress[idx].current = Math.max(0, Math.min(sampleProgress[idx].total, sampleProgress[idx].current + delta));
+
+    const wf = document.getElementById(`waveform_${idx}`);
+    if (wf) {
+      const bars = wf.querySelectorAll('.bar');
+      const percent = sampleProgress[idx].current / sampleProgress[idx].total;
+      const playedBars = Math.floor(percent * bars.length);
+      bars.forEach((b, i) => {
+        if (i <= playedBars) b.classList.add('played');
+        else b.classList.remove('played');
+      });
+    }
+    const timeDisplay = document.getElementById(`timeDisplay_${idx}`);
+    if (timeDisplay) timeDisplay.textContent = `${formatAudioTime(sampleProgress[idx].current)} / ${formatAudioTime(sampleProgress[idx].total)}`;
+  }
+
+  function startSynthTone(sampleIdx) {
     try {
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -322,67 +965,90 @@
       osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.33, audioCtx.currentTime + 1.2);
       osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.9, audioCtx.currentTime + 2.0);
       gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.0);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.5);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      activeGainNode = gain;
     } catch(e) {}
-  }
-
-  function playSample(idx, btn) {
-    currentlyPlaying = idx;
-    btn.classList.add('playing');
-    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-    startAudioSynth(idx);
-    const wf = document.querySelector(`.waveform[data-idx="${idx}"]`);
-    const bars = wf ? wf.querySelectorAll('.bar') : [];
-    let progress = 0;
-    const timer = setInterval(() => {
-      if(progress < bars.length) {
-        bars[progress].classList.add('played');
-        progress++;
-      } else {
-        clearInterval(timer);
-        setTimeout(() => { stopSample(idx); }, 500);
-      }
-    }, 40);
-    btn._timer = timer;
-  }
-
-  function stopSample(idx) {
-    currentlyPlaying = null;
-    const btn = document.querySelector(`.play-btn[data-idx="${idx}"]`);
-    if(btn) {
-      btn.classList.remove('playing');
-      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>';
-      if(btn._timer) clearInterval(btn._timer);
-    }
-    const wf = document.querySelector(`.waveform[data-idx="${idx}"]`);
-    if(wf) wf.querySelectorAll('.bar').forEach(b => b.classList.remove('played'));
   }
 
   // ── Profile Loader ────────────────────────────────────────────────────────────
   function applyProfile(p) {
-    document.getElementById('artistName').textContent    = p.name;
-    document.getElementById('artistAvatar').textContent  = p.name[0];
-    document.getElementById('artistLoc').textContent     = p.loc;
-    document.getElementById('artistBio').textContent     = p.bio;
-    document.getElementById('statYears').textContent     = p.years;
-    document.getElementById('statProjects').textContent  = p.projects;
-    document.getElementById('statReviews').textContent   = p.reviews;
-    document.getElementById('artistRating').innerHTML    = `<span class="stars">★★★★★</span> ${p.rating} (${p.reviews})`;
-    const customMsg = encodeURIComponent(`Hello ${p.name}, I found your voice talent profile on VoiceCast and would like to discuss a voiceover project with you.`);
-    document.getElementById('whatsappBtn').href          = `https://wa.me/${p.whatsapp}?text=${customMsg}`;
+    document.getElementById('artistName').textContent        = p.name;
+    document.getElementById('artistAvatar').textContent      = p.name[0];
+    document.getElementById('artistTagline').textContent     = p.tagline ? `"${p.tagline}"` : '';
+    document.getElementById('artistGenderBadge').textContent = p.gender || 'Voice Artist';
+    document.getElementById('artistLoc').textContent         = p.loc || 'Bangladesh';
+    document.getElementById('artistShortBio').textContent    = p.shortBio || p.bio;
+    document.getElementById('artistBio').textContent         = p.bio;
+    document.getElementById('statYears').textContent         = p.years;
+    document.getElementById('statProjects').textContent      = p.projects;
+    document.getElementById('statReviews').textContent       = p.reviews;
+    document.getElementById('artistRating').innerHTML        = `<span class="stars">★★★★★</span> ${p.rating} (${p.reviews})`;
 
-    if(!p.avail) {
-      const dot = document.querySelector('.avail-dot');
-      if(dot) { dot.style.background = '#6E8177'; dot.style.boxShadow = 'none'; }
-      document.getElementById('availLine').innerHTML = '<span class="avail-dot" style="background:#6E8177"></span>Not currently available';
+    // CTAs & Contact
+    const customMsg = encodeURIComponent(`Hello ${p.name}, I found your voice talent profile on VoiceCast and would like to discuss a project.`);
+    document.getElementById('whatsappBtn').href              = `https://wa.me/${p.whatsapp}?text=${customMsg}`;
+    document.getElementById('phoneBtn').href                 = `tel:${p.phone || p.whatsapp}`;
+    document.getElementById('contactPhoneLink').href         = `tel:${p.phone || p.whatsapp}`;
+    document.getElementById('contactPhoneText').textContent = p.phone || p.whatsapp;
+    
+    if (p.email) {
+      document.getElementById('contactEmailLink').href         = `mailto:${p.email}`;
+      document.getElementById('contactEmailText').textContent = p.email;
+    } else {
+      document.getElementById('contactEmailLink').style.display = 'none';
     }
 
-    document.getElementById('languagesList').innerHTML   = p.langs.map(l => `<span class="tag lang">${l}</span>`).join('');
-    document.getElementById('specialtiesList').innerHTML = p.categories.map(c => `<span class="tag">${c}</span>`).join('');
+    // Availability
+    if(!p.avail) {
+      document.getElementById('availLine').innerHTML = '<span class="avail-dot" style="background:#6E6A8F;box-shadow:none;"></span>Not currently available';
+    }
+
+    // Studio & Turnaround
+    document.getElementById('studioSetup').textContent = p.studio || 'Home Studio';
+    document.getElementById('turnaround').textContent  = p.turnaround || '24–48 Hours';
+
+    // Pricing
+    document.getElementById('pricingModelTitle').textContent = `Rate (${p.pricingModel || 'Per Minute'})`;
+    document.getElementById('pricingRate').textContent       = p.pricingRate || 'Negotiable';
+    document.getElementById('pricingNote').textContent       = p.pricingNote ? `✓ ${p.pricingNote}` : '✓ Direct contact & booking';
+
+    // Categories & Languages
+    document.getElementById('specialtiesList').innerHTML = (p.categories || []).map(c => `<span class="tag">${c}</span>`).join('');
+    document.getElementById('languagesList').innerHTML   = (p.langs || []).map(l => `<span class="tag lang">${l}</span>`).join('');
+    document.getElementById('accentsList').innerHTML     = (p.accents || []).map(a => `<span class="tag accent">${a}</span>`).join('');
+
+    // Portfolio
+    const portList = document.getElementById('portfolioList');
+    if (p.portfolio && p.portfolio.length > 0) {
+      portList.innerHTML = p.portfolio.map(item => `
+        <a class="portfolio-item" href="${item.url}" target="_blank">
+          <div class="port-left">
+            <svg class="port-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+            <div>
+              <div class="port-title">${item.title}</div>
+              <div class="port-url">${item.url.replace(/^https?:\/\//,'')}</div>
+            </div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      `).join('');
+    } else {
+      portList.innerHTML = '<div style="color:var(--text-faint);font-size:0.88rem;">No portfolio links listed yet.</div>';
+    }
+
+    // Social
+    const socRow = document.getElementById('socialLinksRow');
+    let socHtml = '';
+    if (p.social) {
+      if (p.social.facebook) socHtml += `<a class="social-btn" href="${p.social.facebook}" target="_blank" title="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="#4267B2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>`;
+      if (p.social.instagram) socHtml += `<a class="social-btn" href="${p.social.instagram}" target="_blank" title="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>`;
+      if (p.social.linkedin) socHtml += `<a class="social-btn" href="${p.social.linkedin}" target="_blank" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0077B5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>`;
+      if (p.social.youtube) socHtml += `<a class="social-btn" href="${p.social.youtube}" target="_blank" title="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="#FF0000"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.06 12 20.06 12 20.06s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#fff"/></svg></a>`;
+      if (p.social.tiktok) socHtml += `<a class="social-btn" href="${p.social.tiktok}" target="_blank" title="TikTok"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.49 6.27 6.27 0 0 0 1.77-4.48V8.7a8.28 8.28 0 0 0 4-1.91l-.22-1.91z"/></svg></a>`;
+    }
+    socRow.innerHTML = socHtml || '<span style="font-size:0.8rem;color:var(--text-faint);">No public social profiles linked</span>';
 
     renderSamples(p.samples);
   }
@@ -390,12 +1056,57 @@
   async function loadProfile() {
     const artistId = (new URLSearchParams(window.location.search).get('id') || 'maya').toLowerCase();
 
-    // First apply fallback (instant render)
-    const fallback = profileFallback[artistId] || profileFallback.maya;
-    applyProfile(fallback);
-    document.title = fallback.name + ' — VoiceCast';
+    // Check if we are viewing the local edited profile from dashboard
+    const localProfile = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
+    const localSocial = JSON.parse(localStorage.getItem('voicecast_social_data') || '{}');
+    const localPortfolio = JSON.parse(localStorage.getItem('voicecast_portfolio') || 'null');
+    const localCustom = JSON.parse(localStorage.getItem('voicecast_custom_specialties') || '{}');
 
-    // Then try Supabase for real data
+    // First apply fallback data
+    const fallback = profileFallback[artistId] || profileFallback.maya;
+    let mergedData = { ...fallback };
+
+    // If viewing current user's profile preview (or default 'maya' with edited localStorage)
+    if (artistId === 'maya') {
+      if (localProfile.name) {
+        mergedData.name         = localProfile.name || fallback.name;
+        mergedData.tagline      = localProfile.tagline || fallback.tagline;
+        mergedData.gender       = localProfile.gender || fallback.gender;
+        mergedData.loc          = localProfile.loc || fallback.loc;
+        mergedData.phone        = localProfile.phone || fallback.phone;
+        mergedData.whatsapp     = localProfile.whatsapp || fallback.whatsapp;
+        mergedData.email        = localProfile.email || fallback.email;
+        mergedData.shortBio     = localProfile.shortBio || fallback.shortBio;
+        mergedData.bio          = localProfile.bio || fallback.bio;
+        mergedData.years        = localProfile.years || fallback.years;
+        mergedData.studio       = localProfile.studio || fallback.studio;
+        mergedData.turnaround   = localProfile.turnaround || fallback.turnaround;
+        mergedData.pricingModel = localProfile.pricingModel || fallback.pricingModel;
+        mergedData.pricingRate  = localProfile.rate ? `৳ ${localProfile.rate}` : fallback.pricingRate;
+        mergedData.pricingNote  = localProfile.pricingNote || fallback.pricingNote;
+      }
+      if (localPortfolio) mergedData.portfolio = localPortfolio;
+      if (Object.keys(localSocial).length) mergedData.social = { ...mergedData.social, ...localSocial };
+      
+      // Merge custom languages & accents
+      if (localCustom.lang1 || localCustom.lang2) {
+        const extraLangs = [localCustom.lang1, localCustom.lang2].filter(Boolean);
+        mergedData.langs = [...new Set([...(mergedData.langs || []), ...extraLangs])];
+      }
+      if (localCustom.accent1 || localCustom.accent2) {
+        const extraAccents = [localCustom.accent1, localCustom.accent2].filter(Boolean);
+        mergedData.accents = [...new Set([...(mergedData.accents || []), ...extraAccents])];
+      }
+    }
+
+    applyProfile(mergedData);
+    document.title = mergedData.name + ' — VoiceCast';
+    
+    // Check authentication and update favorite state
+    await checkAuthStatus();
+    updateFavoriteBtn();
+
+    // Supabase real-time fetch fallback
     try {
       const db = window._supabase;
       if(db && artistId && !Object.keys(profileFallback).includes(artistId)) {
@@ -408,18 +1119,31 @@
         if(!error && data) {
           const real = {
             name:       data.full_name || fallback.name,
+            tagline:    data.artist_details?.tagline || fallback.tagline,
+            gender:     data.artist_details?.gender || fallback.gender,
             loc:        data.location  || fallback.loc,
             rating:     fallback.rating,
             reviews:    data.reviews?.length || fallback.reviews,
             years:      data.artist_details?.experience_years || fallback.years,
             projects:   (data.artist_details?.projects_count  || fallback.projects) + '+',
             avail:      data.is_available ?? fallback.avail,
+            phone:      data.phone || fallback.phone,
             whatsapp:   data.whatsapp || fallback.whatsapp,
+            email:      data.email || fallback.email,
+            shortBio:   data.artist_details?.short_bio || fallback.shortBio,
             bio:        data.bio      || fallback.bio,
+            studio:     data.artist_details?.studio_setup || fallback.studio,
+            turnaround: data.artist_details?.turnaround_time || fallback.turnaround,
+            pricingModel: data.artist_details?.pricing_model || fallback.pricingModel,
+            pricingRate:  data.artist_details?.rate ? `৳ ${data.artist_details.rate}` : fallback.pricingRate,
+            pricingNote:  data.artist_details?.pricing_note || fallback.pricingNote,
             langs:      data.artist_details?.languages   || fallback.langs,
+            accents:    data.artist_details?.accents     || fallback.accents,
             categories: data.artist_details?.categories || fallback.categories,
+            portfolio:  data.artist_details?.portfolio || fallback.portfolio,
+            social:     data.artist_details?.social || fallback.social,
             samples:    (data.voice_samples || []).map((s, i) => ({
-              title: s.title || `Sample ${i+1}`, duration: s.duration || '1:00', seed: i * 13 + 7
+              title: s.title || `Sample ${i+1}`, duration: s.duration || '0:30', seed: i * 13 + 7
             })) || fallback.samples
           };
           applyProfile(real);
