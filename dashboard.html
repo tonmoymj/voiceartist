@@ -178,7 +178,7 @@
 </div>
 
 <!-- Main Dashboard Container -->
-<div id="dashContent" style="display:none;">
+<div id="dashContent">
   <header class="dash-header">
     <div class="container">
 
@@ -863,94 +863,54 @@
     }
   };
 
-  // Audio Upload Handling & Web Audio API Duration Detection
-  const dropzone = document.getElementById('audioDropzone');
-  const fileInput = document.getElementById('audioFileInput');
-  const uploadPreview = document.getElementById('uploadPreview');
-  let selectedAudioFile = null;
-  let detectedDurationSeconds = 0;
+  // Add sample collapsible handlers
+  const toggleBtn = document.getElementById('toggleAddSampleBtn');
+  const sampleBox = document.getElementById('addSampleBox');
+  const cancelBtn = document.getElementById('cancelSampleBtn');
+  const saveBtn   = document.getElementById('saveSampleBtn');
 
-  dropzone.addEventListener('click', () => fileInput.click());
-  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--purple)'; });
-  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--border)';
-    if (e.dataTransfer.files.length) handleAudioFileSelect(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length) handleAudioFileSelect(e.target.files[0]);
-  });
-
-  async function handleAudioFileSelect(file) {
-    if (artistSamples.length >= 3) {
-      showToast('সর্বোচ্চ ৩টি স্যাম্পল আপলোড করা যাবে। আগের একটি ডিলিট করুন।');
-      return;
-    }
-    if (!file.type.includes('audio') && !file.name.match(/\.(mp3|wav|m4a|aac)$/i)) {
-      showToast('Only MP3 or WAV audio files are allowed.');
-      return;
-    }
-
-    selectedAudioFile = file;
-    document.getElementById('previewFileName').textContent = file.name;
-    document.getElementById('sampleTitleInput').value = file.name.replace(/\.[^/.]+$/, "");
-    uploadPreview.style.display = 'block';
-
-    // Decode Audio Data to measure exact duration
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const tempAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const decodedData = await tempAudioCtx.decodeAudioData(arrayBuffer);
-      detectedDurationSeconds = Math.round(decodedData.duration);
-      
-      const durationStr = `${Math.floor(detectedDurationSeconds/60)}:${detectedDurationSeconds%60 < 10 ? '0' : ''}${detectedDurationSeconds%60}`;
-      const durText = document.getElementById('previewDurationText');
-      durText.textContent = `Duration: ${durationStr} (Max 30s limit)`;
-
-      if (detectedDurationSeconds > 30) {
-        durText.style.color = 'var(--red)';
-        durText.textContent += ' ❌ Exceeds 30s limit!';
-      } else {
-        durText.style.color = 'var(--green)';
-        durText.textContent += ' ✓ Valid duration';
-      }
-    } catch(e) {
-      document.getElementById('previewDurationText').textContent = 'Duration: 0:28 (estimated)';
-      detectedDurationSeconds = 28;
-    }
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      sampleBox.style.display = sampleBox.style.display === 'none' ? 'block' : 'none';
+    });
   }
 
-  document.getElementById('cancelUploadBtn').addEventListener('click', () => {
-    uploadPreview.style.display = 'none';
-    selectedAudioFile = null;
-    fileInput.value = '';
-  });
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      sampleBox.style.display = 'none';
+      document.getElementById('newSampleTitle').value = '';
+      document.getElementById('newSampleFile').value = '';
+      document.getElementById('fileNameDisplay').textContent = '';
+      document.getElementById('fileDurationDisplay').textContent = '';
+    });
+  }
 
-  document.getElementById('confirmUploadBtn').addEventListener('click', () => {
-    if (!selectedAudioFile) return;
-    if (detectedDurationSeconds > 30) {
-      alert('অডিও স্যাম্পল ৩০ সেকেন্ডের বেশি হতে পারবে না। অনুগ্রহ করে ট্রিম বা ছোট করে আপলোড করুন।');
-      return;
-    }
-    const title = document.getElementById('sampleTitleInput').value.trim() || 'My Voice Sample';
-    const durationStr = `${Math.floor(detectedDurationSeconds/60)}:${detectedDurationSeconds%60 < 10 ? '0' : ''}${detectedDurationSeconds%60}`;
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      if (artistSamples.length >= 3) {
+        showToast('সর্বোচ্চ ৩টি স্যাম্পল আপলোড করা যাবে।');
+        return;
+      }
+      const title = document.getElementById('newSampleTitle').value.trim() || 'Commercial Voice Demo';
+      const dur = document.getElementById('newSampleDuration').value.trim() || '0:28';
 
-    const newSample = {
-      id: Date.now(),
-      title: title,
-      duration: durationStr,
-      status: 'Live'
-    };
+      artistSamples.push({
+        id: Date.now(),
+        title: title,
+        duration: dur,
+        status: 'Live'
+      });
 
-    artistSamples.push(newSample);
-    localStorage.setItem('voicecast_artist_samples', JSON.stringify(artistSamples));
-    renderArtistSamples();
-    uploadPreview.style.display = 'none';
-    selectedAudioFile = null;
-    fileInput.value = '';
-    showToast('Voice sample uploaded successfully! ✓');
-  });
+      localStorage.setItem('voicecast_artist_samples', JSON.stringify(artistSamples));
+      renderArtistSamples();
+      sampleBox.style.display = 'none';
+      document.getElementById('newSampleTitle').value = '';
+      document.getElementById('newSampleFile').value = '';
+      document.getElementById('fileNameDisplay').textContent = '';
+      document.getElementById('fileDurationDisplay').textContent = '';
+      showToast('Voice sample added successfully! ✓');
+    });
+  }
 
   function setDashboardRole(role) {
     currentRole = role;
