@@ -630,10 +630,23 @@
 
     <!-- ==================== CLIENT TAB 1: SAVED ARTISTS ==================== -->
     <div class="tab-pane" id="savedArtistsTab">
+      <!-- Create Voice Artist Profile Card for Clients -->
+      <div class="dash-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(79,140,247,0.06));border-color:rgba(139,92,246,0.35);margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+          <div>
+            <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+              🎙️ Are you a Voice Talent too?
+            </h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin:0;">You can create your own Voice Artist profile, upload audio samples, and get hired by other clients.</p>
+          </div>
+          <button class="btn-grad" onclick="setDashboardRole('artist')" style="padding:10px 20px;font-size:0.88rem;">+ Create Voice Artist Profile</button>
+        </div>
+      </div>
+
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Bookmarked Voice Artists</span>
-          <a class="btn-outline" href="search">+ Browse More</a>
+          <a class="btn-outline" href="search.html">+ Browse More</a>
         </div>
         <div class="dash-card-sub">Artists you have saved for your upcoming voiceover projects</div>
 
@@ -727,25 +740,6 @@
 </div>
 
 <script>
-  let currentUser = null;
-  let currentRole = 'artist'; // 'artist' or 'client'
-  let artistApprovalStatus = localStorage.getItem('voicecast_artist_status') || 'approved';
-
-  const allDirectoryArtists = {
-    'maya': { id: 'maya', name: 'Maya Okonkwo', loc: 'Lagos, Nigeria', langs: 'Commercial & Narration', rating: '4.9', reviews: 128, phone: '8801700000001', initial: 'M' },
-    'rafiq': { id: 'rafiq', name: 'Rafiq Hasan', loc: 'Dhaka, Bangladesh', langs: 'Documentary & E-Learning', rating: '4.8', reviews: 96, phone: '8801700000002', initial: 'R' },
-    'nusrat': { id: 'nusrat', name: 'Nusrat Jahan', loc: 'Chattogram, Bangladesh', langs: 'Animation & Commercial', rating: '5.0', reviews: 74, phone: '8801700000003', initial: 'N' },
-    'tanvir': { id: 'tanvir', name: 'Tanvir Ahmed', loc: 'Sylhet, Bangladesh', langs: 'Commercial & Audiobook', rating: '4.7', reviews: 52, phone: '8801700000004', initial: 'T' },
-    'farhana': { id: 'farhana', name: 'Farhana Islam', loc: 'Dhaka, Bangladesh', langs: 'Commercial & E-Learning', rating: '4.9', reviews: 110, phone: '8801700000005', initial: 'F' }
-  };
-
-  function showToast(text) {
-    const t = document.getElementById('toastMsg');
-    document.getElementById('toastText').textContent = text;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  }
-
   function updateApprovalBanner() {
     const banner = document.getElementById('artistStatusBanner');
     const title = document.getElementById('statusTitle');
@@ -756,9 +750,10 @@
       title.textContent = 'Profile Status: Live & Verified ✓';
       desc.textContent = 'Your profile is approved and visible to all clients searching on VoiceCast.';
     } else if (artistApprovalStatus === 'rejected') {
+      const feedback = JSON.parse(localStorage.getItem('voicecast_rejection_feedback') || '{}');
       banner.className = 'approval-banner banner-rejected';
-      title.textContent = 'Profile Status: Rejection Feedback';
-      desc.textContent = 'Reason: Audio sample exceeds 30 seconds limit. Please edit your samples and resubmit.';
+      title.textContent = `Profile Status: Rejection Feedback (${feedback.reason || 'Guidelines Issue'})`;
+      desc.innerHTML = `<strong>Admin Note:</strong> ${feedback.note || 'Audio sample exceeds 30 seconds limit or incomplete profile information. Please fix and resubmit.'}`;
     } else {
       banner.className = 'approval-banner banner-pending';
       title.textContent = 'Profile Status: Under Review ⏳';
@@ -767,13 +762,12 @@
   }
 
   window.simulateApproval = function() {
-    artistApprovalStatus = artistApprovalStatus === 'approved' ? 'pending' : 'approved';
+    artistApprovalStatus = artistApprovalStatus === 'approved' ? 'pending' : (artistApprovalStatus === 'pending' ? 'rejected' : 'approved');
     localStorage.setItem('voicecast_artist_status', artistApprovalStatus);
     updateApprovalBanner();
     showToast(`Status updated to: ${artistApprovalStatus.toUpperCase()}`);
   };
 
-  // Render Saved Artists in Client tab
   function renderSavedArtists() {
     const savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
     const container = document.getElementById('savedArtistsList');
@@ -784,7 +778,7 @@
         <div style="text-align:center;padding:40px 0;color:var(--text-faint);">
           <p style="font-size:1.05rem;margin-bottom:6px;">No saved artists yet</p>
           <p style="font-size:0.84rem;margin-bottom:16px;">Browse voice talent and click the heart icon on any profile to bookmark them here.</p>
-          <a class="btn-grad" href="search">Browse Voice Talent</a>
+          <a class="btn-grad" href="search.html">Browse Voice Talent</a>
         </div>
       `;
       return;
@@ -802,7 +796,7 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <a class="btn-outline" href="profile?id=${id}">View Profile</a>
+            <a class="btn-outline" href="profile.html?id=${id}">View Profile</a>
             <a class="btn-grad" style="background:var(--whatsapp);color:#0B2412;" href="https://wa.me/${a.phone}?text=Hello%20${encodeURIComponent(a.name)},%20I%20found%20your%20profile%20on%20VoiceCast!" target="_blank">WhatsApp</a>
             <button class="sample-delete" onclick="removeSavedArtist('${id}')" title="Remove from bookmarks">✕</button>
           </div>
@@ -811,15 +805,7 @@
     }).join('');
   }
 
-  window.removeSavedArtist = function(id) {
-    let savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
-    savedIds = savedIds.filter(item => item !== id);
-    localStorage.setItem('voicecast_saved_artists', JSON.stringify(savedIds));
-    renderSavedArtists();
-    showToast('Artist removed from bookmarks');
-  };
-
-  // Web Audio for sample playback
+  // Web Audio API & Sample Playback
   let dashAudioCtx = null;
   function playDashTone(freq = 440) {
     try {
@@ -838,24 +824,27 @@
     } catch(e) {}
   }
 
-  let artistSamples = [
-    { id: 1, title: 'Commercial Demo — FMCG Brand', category: 'Commercial', duration: '0:28' },
-    { id: 2, title: 'Audiobook Chapter Excerpt', category: 'Audiobook', duration: '0:30' },
-    { id: 3, title: 'E-Learning Module Intro', category: 'E-Learning', duration: '0:24' }
-  ];
+  // ── Voice Samples Management ──────────────────────────────────────────────────
+  let artistSamples = JSON.parse(localStorage.getItem('voicecast_artist_samples') || '[{"id":1,"title":"Commercial Demo — Telecom","duration":"0:26","status":"Live"},{"id":2,"title":"Audiobook Excerpt — Fiction","duration":"0:30","status":"Live"},{"id":3,"title":"IVR Prompt Demo","duration":"0:18","status":"Live"}]');
 
   function renderArtistSamples() {
     const container = document.getElementById('samplesListContainer');
     document.getElementById('samplesCount').textContent = artistSamples.length;
+
+    if (artistSamples.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-faint);padding:20px 0;text-align:center;">কোনো ভয়েস স্যাম্পল আপলোড করা হয়নি। কমপক্ষে ১টি স্যাম্পল দিন।</p>';
+      return;
+    }
+
     container.innerHTML = artistSamples.map((s, idx) => `
       <div class="sample-item">
         <div class="sample-left">
-          <button class="sample-play" onclick="playDashTone(${320 + idx*50})" aria-label="Play sample">
+          <button class="sample-play-btn" onclick="playDashTone(${320 + idx*55})" title="Play Sample">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
           </button>
           <div class="sample-info">
             <div class="sample-name">${s.title}</div>
-            <div class="sample-meta">${s.category} · ${s.duration} (Within 30s limit ✓)</div>
+            <div class="sample-meta">${s.duration} · Status: <span style="color:var(--green);">${s.status || 'Live'}</span></div>
           </div>
         </div>
         <button class="sample-delete" onclick="deleteSample(${s.id})" title="Delete sample">
@@ -866,36 +855,101 @@
   }
 
   window.deleteSample = function(id) {
-    artistSamples = artistSamples.filter(s => s.id !== id);
-    renderArtistSamples();
-    showToast('Sample removed');
+    if (confirm('Are you sure you want to delete this sample?')) {
+      artistSamples = artistSamples.filter(s => s.id !== id);
+      localStorage.setItem('voicecast_artist_samples', JSON.stringify(artistSamples));
+      renderArtistSamples();
+      showToast('Sample deleted.');
+    }
   };
 
-  // Add sample buttons
-  document.getElementById('toggleAddSampleBtn').addEventListener('click', () => {
-    const box = document.getElementById('addSampleBox');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  // Audio Upload Handling & Web Audio API Duration Detection
+  const dropzone = document.getElementById('audioDropzone');
+  const fileInput = document.getElementById('audioFileInput');
+  const uploadPreview = document.getElementById('uploadPreview');
+  let selectedAudioFile = null;
+  let detectedDurationSeconds = 0;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--purple)'; });
+  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--border)';
+    if (e.dataTransfer.files.length) handleAudioFileSelect(e.dataTransfer.files[0]);
   });
-  document.getElementById('cancelSampleBtn').addEventListener('click', () => {
-    document.getElementById('addSampleBox').style.display = 'none';
-  });
-  document.getElementById('saveSampleBtn').addEventListener('click', () => {
-    const title = document.getElementById('newSampleTitle').value.trim();
-    const cat = document.getElementById('newSampleCat').value;
-    const dur = document.getElementById('newSampleDuration').value.trim() || '0:25';
-    if(!title) { alert('Please enter a sample title'); return; }
-    if(artistSamples.length >= 3) { alert('Maximum 3 samples allowed per artist profile budget (5MB limit)'); return; }
-    artistSamples.push({ id: Date.now(), title, category: cat, duration: dur });
-    renderArtistSamples();
-    document.getElementById('newSampleTitle').value = '';
-    document.getElementById('addSampleBox').style.display = 'none';
-    showToast('Voice sample added!');
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleAudioFileSelect(e.target.files[0]);
   });
 
-  // Switch role button
-  document.getElementById('roleSwitchBtn').addEventListener('click', () => {
-    setDashboardRole(currentRole === 'artist' ? 'client' : 'artist');
-    showToast(`Switched view to ${currentRole === 'artist' ? 'Artist' : 'Client'} Dashboard`);
+  async function handleAudioFileSelect(file) {
+    if (artistSamples.length >= 3) {
+      showToast('সর্বোচ্চ ৩টি স্যাম্পল আপলোড করা যাবে। আগের একটি ডিলিট করুন।');
+      return;
+    }
+    if (!file.type.includes('audio') && !file.name.match(/\.(mp3|wav|m4a|aac)$/i)) {
+      showToast('Only MP3 or WAV audio files are allowed.');
+      return;
+    }
+
+    selectedAudioFile = file;
+    document.getElementById('previewFileName').textContent = file.name;
+    document.getElementById('sampleTitleInput').value = file.name.replace(/\.[^/.]+$/, "");
+    uploadPreview.style.display = 'block';
+
+    // Decode Audio Data to measure exact duration
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const tempAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const decodedData = await tempAudioCtx.decodeAudioData(arrayBuffer);
+      detectedDurationSeconds = Math.round(decodedData.duration);
+      
+      const durationStr = `${Math.floor(detectedDurationSeconds/60)}:${detectedDurationSeconds%60 < 10 ? '0' : ''}${detectedDurationSeconds%60}`;
+      const durText = document.getElementById('previewDurationText');
+      durText.textContent = `Duration: ${durationStr} (Max 30s limit)`;
+
+      if (detectedDurationSeconds > 30) {
+        durText.style.color = 'var(--red)';
+        durText.textContent += ' ❌ Exceeds 30s limit!';
+      } else {
+        durText.style.color = 'var(--green)';
+        durText.textContent += ' ✓ Valid duration';
+      }
+    } catch(e) {
+      document.getElementById('previewDurationText').textContent = 'Duration: 0:28 (estimated)';
+      detectedDurationSeconds = 28;
+    }
+  }
+
+  document.getElementById('cancelUploadBtn').addEventListener('click', () => {
+    uploadPreview.style.display = 'none';
+    selectedAudioFile = null;
+    fileInput.value = '';
+  });
+
+  document.getElementById('confirmUploadBtn').addEventListener('click', () => {
+    if (!selectedAudioFile) return;
+    if (detectedDurationSeconds > 30) {
+      alert('অডিও স্যাম্পল ৩০ সেকেন্ডের বেশি হতে পারবে না। অনুগ্রহ করে ট্রিম বা ছোট করে আপলোড করুন।');
+      return;
+    }
+    const title = document.getElementById('sampleTitleInput').value.trim() || 'My Voice Sample';
+    const durationStr = `${Math.floor(detectedDurationSeconds/60)}:${detectedDurationSeconds%60 < 10 ? '0' : ''}${detectedDurationSeconds%60}`;
+
+    const newSample = {
+      id: Date.now(),
+      title: title,
+      duration: durationStr,
+      status: 'Live'
+    };
+
+    artistSamples.push(newSample);
+    localStorage.setItem('voicecast_artist_samples', JSON.stringify(artistSamples));
+    renderArtistSamples();
+    uploadPreview.style.display = 'none';
+    selectedAudioFile = null;
+    fileInput.value = '';
+    showToast('Voice sample uploaded successfully! ✓');
   });
 
   function setDashboardRole(role) {
@@ -912,7 +966,7 @@
     if (role === 'client') {
       badge.textContent = 'Client';
       badge.className = 'role-badge role-client';
-      switchBtn.textContent = 'Switch to Artist';
+      switchBtn.textContent = 'Switch to Voice Artist';
       artistTabs.style.display = 'none';
       clientTabs.style.display = 'flex';
       liveProfileBtn.style.display = 'none';
@@ -946,6 +1000,13 @@
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
+  // Switch role button
+  document.getElementById('roleSwitchBtn').addEventListener('click', () => {
+    const newRole = currentRole === 'artist' ? 'client' : 'artist';
+    setDashboardRole(newRole);
+    showToast(`Switched mode to: ${newRole === 'artist' ? 'Voice Artist' : 'Client'}`);
+  });
+
   // Availability Switch
   document.getElementById('availToggle').addEventListener('click', function() {
     this.classList.toggle('on');
@@ -957,28 +1018,52 @@
     chip.addEventListener('click', () => chip.classList.toggle('selected'));
   });
 
-  // Save profile form
+  // Save profile form with Full Completion Validation
   document.getElementById('artistProfileForm').addEventListener('submit', (e) => {
     e.preventDefault();
+
+    const name = document.getElementById('profFullName').value.trim();
+    const tagline = document.getElementById('profTagline').value.trim();
+    const loc = document.getElementById('profLocation').value.trim();
+    const whatsapp = document.getElementById('profWhatsapp').value.trim();
+    const shortBio = document.getElementById('profShortBio').value.trim();
+    const bio = document.getElementById('profBio').value.trim();
+    const rate = document.getElementById('profRate').value.trim();
+
+    // Required fields check (Full completion enforcement)
+    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio || !rate) {
+      alert('⚠️ অনুগ্রহ করে প্রোফাইলের সকল আবশ্যক তথ্য পূরণ করুন (নাম, ট্যাগলাইন, লোকেশন, WhatsApp নম্বর, শর্ট ও বিস্তারিত বায়ো, এবং প্রাইসিং রেট)। সম্পূর্ণ তথ্য না দিলে প্রোফাইল সাবমিট করা যাবে না।');
+      return;
+    }
+
+    if (artistSamples.length === 0) {
+      alert('⚠️ অনুগ্রহ করে Voice Samples ট্যাবে গিয়ে কমপক্ষে ১টি অডিও স্যাম্পল আপলোড করুন।');
+      switchTab('samplesTab');
+      return;
+    }
+
     const profileData = {
-      name:         document.getElementById('profFullName').value,
-      tagline:      document.getElementById('profTagline').value,
+      name:         name,
+      tagline:      tagline,
       gender:       document.getElementById('profGender').value,
-      loc:          document.getElementById('profLocation').value,
-      whatsapp:     document.getElementById('profWhatsapp').value,
-      phone:        document.getElementById('profPhone').value,
-      email:        document.getElementById('profEmail').value,
-      shortBio:     document.getElementById('profShortBio').value,
-      bio:          document.getElementById('profBio').value,
+      loc:          loc,
+      whatsapp:     whatsapp,
+      phone:        document.getElementById('profPhone').value.trim() || whatsapp,
+      email:        document.getElementById('profEmail').value.trim(),
+      shortBio:     shortBio,
+      bio:          bio,
       years:        document.getElementById('profYears').value,
       turnaround:   document.getElementById('profTurnaround').value,
       studio:       document.querySelector('input[name="studioSetup"]:checked')?.value || 'Home Studio',
       pricingModel: document.getElementById('profPricingModel').value,
-      rate:         document.getElementById('profRate').value,
-      pricingNote:  document.getElementById('profPricingNote').value,
+      rate:         rate,
+      pricingNote:  document.getElementById('profPricingNote').value.trim(),
     };
     localStorage.setItem('voicecast_profile_data', JSON.stringify(profileData));
-    showToast('Profile updated & submitted for review!');
+    artistApprovalStatus = 'pending';
+    localStorage.setItem('voicecast_artist_status', 'pending');
+    updateApprovalBanner();
+    showToast('✓ Profile complete & submitted for review!');
   });
 
   document.getElementById('saveSpecialtiesBtn').addEventListener('click', () => {

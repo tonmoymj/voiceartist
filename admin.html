@@ -98,7 +98,8 @@
       <a class="brand display" href="index.html">VoiceCast</a>
       <span class="admin-tag">Admin Panel</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="dashboard.html" class="btn-action" style="padding:6px 12px;background:rgba(139,92,246,0.18);color:var(--purple);font-weight:600;border-color:rgba(139,92,246,0.3);">+ My Voice Artist Profile</a>
       <a href="dashboard.html" style="font-size:0.86rem;color:var(--text-muted);">User Dashboard</a>
       <a href="index.html" style="font-size:0.86rem;color:var(--text-muted);">Live Site</a>
     </div>
@@ -446,6 +447,7 @@
 
   window.openRejectModal = function(id) {
     activeRejectId = id;
+    document.getElementById('rejectCustomNote').value = '';
     document.getElementById('rejectModal').style.display = 'flex';
   };
 
@@ -457,11 +459,23 @@
   window.confirmReject = function() {
     if (!activeRejectId) return;
     const reason = document.getElementById('rejectReasonSelect').value;
+    const note = document.getElementById('rejectCustomNote').value.trim();
     const artist = pendingArtists.find(a => a.id === activeRejectId);
+    
+    // Save feedback note for artist
+    const rejectionData = {
+      artistId: activeRejectId,
+      reason: reason,
+      note: note || 'Please update your samples and bio details according to platform guidelines.',
+      date: new Date().toLocaleDateString()
+    };
+    localStorage.setItem('voicecast_rejection_feedback', JSON.stringify(rejectionData));
+    localStorage.setItem('voicecast_artist_status', 'rejected');
+
     pendingArtists = pendingArtists.filter(a => a.id !== activeRejectId);
     closeRejectModal();
     renderPendingQueue();
-    showToast(`Application rejected with reason: ${reason}`);
+    showToast(`Application rejected with note: ${note ? '"' + note.substring(0,25) + '..."' : reason}`);
   };
 
   window.suspendArtist = function(id) {
