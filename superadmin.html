@@ -517,7 +517,48 @@
     document.getElementById(tabId).style.display = 'block';
   }
 
+  function loadMasterArtistsFromStorage() {
+    const storagePendings = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    storagePendings.forEach(sp => {
+      const exists = masterArtists.find(a => a.id === sp.id || a.name === sp.name);
+      if (!exists) {
+        masterArtists.unshift({
+          id: sp.id,
+          name: sp.name,
+          loc: sp.city || 'Dhaka, Bangladesh',
+          rate: sp.rawRate || 1500,
+          phone: sp.whatsapp || '8801700000000',
+          status: 'pending',
+          featured: false,
+          samplesCount: (sp.samples || []).length || 1,
+          avatar: sp.avatar || ''
+        });
+      }
+    });
+
+    const storageApproved = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
+    storageApproved.forEach(sa => {
+      const exists = masterArtists.find(a => a.id === sa.id || a.name === sa.name);
+      if (exists) {
+        exists.status = 'live';
+      } else {
+        masterArtists.unshift({
+          id: sa.id,
+          name: sa.name,
+          loc: sa.city || sa.loc || 'Bangladesh',
+          rate: sa.rawRate || 1500,
+          phone: sa.whatsapp || '8801700000000',
+          status: 'live',
+          featured: false,
+          samplesCount: (sa.samples || []).length || 1,
+          avatar: sa.avatar || ''
+        });
+      }
+    });
+  }
+
   function renderPending() {
+    loadMasterArtistsFromStorage();
     const list = document.getElementById('superPendingList');
     const pendings = masterArtists.filter(a => a.status === 'pending');
     document.getElementById('sidePendingCount').textContent = pendings.length;
@@ -529,9 +570,14 @@
 
     list.innerHTML = pendings.map(a => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;gap:12px;">
-        <div>
-          <div style="font-weight:700;font-size:1rem;">${a.name}</div>
-          <div style="font-size:0.8rem;color:var(--text-faint);">${a.loc} · Rate: ৳${a.rate}/min · WhatsApp: ${a.phone} · ${a.samplesCount} Audio Samples</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;">
+            ${a.avatar && a.avatar.length > 20 ? `<img src="${a.avatar}" style="width:100%;height:100%;object-fit:cover;">` : a.name[0]}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:1rem;">${a.name}</div>
+            <div style="font-size:0.8rem;color:var(--text-faint);">${a.loc} · Rate: ৳${a.rate}/min · WhatsApp: ${a.phone} · ${a.samplesCount} Audio Samples</div>
+          </div>
         </div>
         <div style="display:flex;gap:8px;">
           <button class="btn-action approve" onclick="superApproveArtist('${a.id}')">✓ Approve &amp; Make Live</button>
@@ -686,14 +732,34 @@
 
   window.superApproveArtist = function(id) {
     const artist = masterArtists.find(a => a.id === id);
-    if(artist) artist.status = 'live';
+    if(artist) {
+      artist.status = 'live';
+
+      // Update storage
+      let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+      pendingSubmissions = pendingSubmissions.filter(s => s.id !== id && s.name !== artist.name);
+      localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
+
+      let approvedArtists = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
+      approvedArtists.unshift({ ...artist, status: 'approved' });
+      localStorage.setItem('voicecast_approved_artists', JSON.stringify(approvedArtists));
+
+      localStorage.setItem('voicecast_artist_status', 'approved');
+    }
     renderPending();
     renderArtistsTable();
-    showToast(`✓ ${artist.name} is now approved!`);
+    showToast(`✓ ${artist ? artist.name : 'Artist'} is now approved!`);
   };
 
   window.superRejectArtist = function(id) {
+    const artist = masterArtists.find(a => a.id === id);
     masterArtists = masterArtists.filter(a => a.id !== id);
+
+    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    pendingSubmissions = pendingSubmissions.filter(s => s.id !== id && (!artist || s.name !== artist.name));
+    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
+    localStorage.setItem('voicecast_artist_status', 'rejected');
+
     renderPending();
     renderArtistsTable();
     showToast('Artist application rejected');

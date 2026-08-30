@@ -372,7 +372,7 @@
         </button>
         <div class="artist-top">
           <div class="artist-photo-wrap">
-            <div class="artist-photo">${a.name[0]}</div>
+            <div class="artist-photo" style="overflow:hidden;">${a.avatar && a.avatar.length > 20 ? `<img src="${a.avatar}" alt="${a.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : a.name[0]}</div>
             ${a.avail ? '<span class="avail-dot"></span>' : ''}
           </div>
           <div>
@@ -392,7 +392,7 @@
           <span style="color:var(--text-muted)">${a.reviews} reviews</span>
           ${a.rate ? `<strong style="color:var(--purple)">৳${a.rate}/min</strong>` : ''}
         </div>
-        <a class="view-profile" href="profile?id=${a.id}">View Profile</a>
+        <a class="view-profile" href="profile.html?id=${a.id}">View Profile</a>
       `;
       grid.appendChild(card);
     });

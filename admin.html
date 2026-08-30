@@ -189,7 +189,7 @@
 <div class="toast" id="adminToast">Action completed!</div>
 
 <script>
-  let pendingArtists = [
+  const defaultPendingArtists = [
     {
       id: 'app_1',
       name: 'Tanvir Ahmed',
@@ -225,6 +225,8 @@
     }
   ];
 
+  let pendingArtists = [];
+
   let liveArtists = [
     {
       id: 'maya',
@@ -255,6 +257,58 @@
     }
   ];
 
+  function loadPendingFromStorage() {
+    let list = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    
+    // Fallback: If user submitted profile in dashboard and status is pending
+    const currentArtistStatus = localStorage.getItem('voicecast_artist_status');
+    const profileData = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
+    const avatar = localStorage.getItem('voicecast_profile_avatar') || profileData.avatar || '';
+    const samples = JSON.parse(localStorage.getItem('voicecast_artist_samples') || '[]');
+
+    if (profileData.name && (currentArtistStatus === 'pending' || !currentArtistStatus)) {
+      const exists = list.some(s => s.name === profileData.name || s.email === profileData.email);
+      if (!exists) {
+        list.unshift({
+          id: 'sub_artist_current',
+          name: profileData.name,
+          email: profileData.email || 'artist@voicecast.com',
+          city: profileData.loc || 'Dhaka, Bangladesh',
+          whatsapp: profileData.whatsapp || '+8801700000000',
+          phone: profileData.phone || profileData.whatsapp,
+          rate: `৳${profileData.rate || '1,500'} / ${profileData.pricingModel || 'minute'}`,
+          languages: ['Bengali (Standard)', 'English'],
+          categories: ['Commercial', 'Narration'],
+          bio: profileData.bio || profileData.shortBio || 'Professional voice talent application.',
+          tagline: profileData.tagline,
+          status: 'pending',
+          avatar: avatar,
+          samples: samples.length > 0 ? samples : [
+            { title: 'Commercial Voice Demo', duration: '0:28' }
+          ]
+        });
+      }
+    }
+
+    // Merge custom list with defaults
+    const combined = [...list];
+    defaultPendingArtists.forEach(def => {
+      if (!combined.some(c => c.id === def.id || c.email === def.email)) {
+        combined.push(def);
+      }
+    });
+
+    // Also load newly approved artists from storage
+    const approvedFromStorage = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
+    approvedFromStorage.forEach(app => {
+      if (!liveArtists.some(l => l.id === app.id || l.email === app.email)) {
+        liveArtists.unshift(app);
+      }
+    });
+
+    pendingArtists = combined.filter(a => a.status === 'pending');
+  }
+
   let activeRejectId = null;
 
   // Web Audio Preview Tone
@@ -284,6 +338,7 @@
   }
 
   function renderPendingQueue() {
+    loadPendingFromStorage();
     const container = document.getElementById('pendingCardsContainer');
     document.getElementById('statPending').textContent = pendingArtists.length;
     document.getElementById('pendingTabCount').textContent = pendingArtists.length;
@@ -298,36 +353,41 @@
       return;
     }
 
-    container.innerHTML = pendingArtists.map((a, idx) => `
+    container.innerHTML = pendingArtists.map((a, idx) => {
+      const avatarHtml = a.avatar && a.avatar.length > 20 
+        ? `<img src="${a.avatar}" alt="${a.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : (a.name ? a.name[0].toUpperCase() : 'U');
+
+      return `
       <div class="review-card" id="card_${a.id}">
         <div class="review-head">
           <div class="artist-badge-info">
-            <div class="artist-avatar">${a.name[0]}</div>
+            <div class="artist-avatar" style="overflow:hidden;border:2px solid var(--purple);">${avatarHtml}</div>
             <div>
-              <div class="artist-name">${a.name}</div>
-              <div class="artist-meta">${a.city} · ${a.email} · WhatsApp: ${a.whatsapp} · Rate: ${a.rate}</div>
+              <div class="artist-name">${a.name} ${a.tagline ? `<span style="font-size:0.82rem;font-weight:400;color:var(--text-muted);">— "${a.tagline}"</span>` : ''}</div>
+              <div class="artist-meta">${a.city || 'Bangladesh'} · ${a.email} · WhatsApp: <a href="https://wa.me/${(a.whatsapp||'').replace(/[^0-9]/g,'')}" target="_blank" style="color:var(--purple);">${a.whatsapp || 'N/A'}</a> · Rate: ${a.rate}</div>
             </div>
           </div>
-          <span class="status-badge status-pending">Pending Review</span>
+          <span class="status-badge status-pending">Pending Review ⏳</span>
         </div>
 
         <div class="review-body">
           <div class="bio-box">
             <h4>Artist Bio &amp; Specialties</h4>
-            <p class="bio-text">${a.bio}</p>
+            <p class="bio-text">${a.bio || a.shortBio || 'No bio provided'}</p>
             <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
-              ${a.languages.map(l => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--purple);">${l}</span>`).join('')}
-              ${a.categories.map(c => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(79,140,247,0.15);color:var(--blue);">${c}</span>`).join('')}
+              ${(a.languages || ['Bengali']).map(l => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--purple);">${l}</span>`).join('')}
+              ${(a.categories || ['Commercial']).map(c => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(79,140,247,0.15);color:var(--blue);">${c}</span>`).join('')}
             </div>
           </div>
 
           <div class="samples-box">
-            <h4>Submitted Audio Samples (${a.samples.length}/3)</h4>
-            ${a.samples.map((s, sIdx) => `
+            <h4>Submitted Audio Samples (${(a.samples || []).length}/3)</h4>
+            ${(a.samples || []).map((s, sIdx) => `
               <div class="admin-sample">
                 <div>
                   <div style="font-size:0.84rem;font-weight:500;">${s.title}</div>
-                  <div style="font-size:0.72rem;color:var(--text-faint);">Duration: ${s.duration} · Max limit 0:30 ✓</div>
+                  <div style="font-size:0.72rem;color:var(--text-faint);">Duration: ${s.duration || '0:28'} · Max limit 0:30 ✓</div>
                 </div>
                 <button class="sample-play-btn" onclick="playSampleAudio(${350 + sIdx*70})" title="Play sample">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
@@ -339,34 +399,40 @@
 
         <div class="actions-row">
           <button class="btn-reject" onclick="openRejectModal('${a.id}')">Reject Application</button>
+          <a class="btn-view" href="profile.html?id=maya" target="_blank">View Live Preview</a>
           <button class="btn-approve" onclick="approveArtist('${a.id}')">✓ Approve &amp; Publish Profile</button>
         </div>
       </div>
-    `).join('');
+    `;}).join('');
   }
 
   function renderLiveArtists() {
     const container = document.getElementById('liveCardsContainer');
     document.getElementById('statApproved').textContent = liveArtists.length;
     document.getElementById('liveTabCount').textContent = liveArtists.length;
-    container.innerHTML = liveArtists.map(a => `
+    container.innerHTML = liveArtists.map(a => {
+      const avatarHtml = a.avatar && a.avatar.length > 20 
+        ? `<img src="${a.avatar}" alt="${a.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : (a.name ? a.name[0].toUpperCase() : 'U');
+
+      return `
       <div class="review-card">
         <div class="review-head" style="margin-bottom:0;">
           <div class="artist-badge-info">
-            <div class="artist-avatar">${a.name[0]}</div>
+            <div class="artist-avatar" style="overflow:hidden;">${avatarHtml}</div>
             <div>
               <div class="artist-name">${a.name}</div>
-              <div class="artist-meta">${a.city} · Rate: ${a.rate} · ${a.languages.join(', ')}</div>
+              <div class="artist-meta">${a.city || 'Bangladesh'} · Rate: ${a.rate} · ${(a.languages || ['Bengali']).join(', ')}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="status-badge status-approved">Live</span>
-            <a class="btn-view" href="profile?id=${a.id}" target="_blank">View Live Profile</a>
+            <a class="btn-view" href="profile.html?id=${a.id || 'maya'}" target="_blank">View Live Profile</a>
             <button class="btn-reject" onclick="suspendArtist('${a.id}')">Suspend</button>
           </div>
         </div>
       </div>
-    `).join('');
+    `;}).join('');
   }
 
   function renderReportedProfiles() {
@@ -414,7 +480,7 @@
 
         <div class="actions-row">
           <button class="btn-view" onclick="dismissReport('${r.id}')">Dismiss Report</button>
-          <a class="btn-view" href="profile?id=${r.artistId || 'maya'}" target="_blank">Investigate Profile</a>
+          <a class="btn-view" href="profile.html?id=${r.artistId || 'maya'}" target="_blank">Investigate Profile</a>
           <button class="btn-reject" style="background:var(--red);color:#fff;" onclick="suspendReportedArtist('${r.id}', '${r.artistId}')">Suspend &amp; Take Down</button>
         </div>
       </div>
@@ -438,6 +504,20 @@
   window.approveArtist = function(id) {
     const artist = pendingArtists.find(a => a.id === id);
     if (!artist) return;
+
+    // Update pending submissions in storage
+    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    pendingSubmissions = pendingSubmissions.filter(s => s.id !== id && s.email !== artist.email);
+    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
+
+    // Update approved artists in storage
+    let approvedArtists = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
+    approvedArtists.unshift({ ...artist, status: 'approved' });
+    localStorage.setItem('voicecast_approved_artists', JSON.stringify(approvedArtists));
+
+    // Update current artist status in storage so user dashboard reflects approved immediately
+    localStorage.setItem('voicecast_artist_status', 'approved');
+
     pendingArtists = pendingArtists.filter(a => a.id !== id);
     liveArtists.unshift({ ...artist, status: 'approved' });
     renderPendingQueue();
@@ -472,10 +552,15 @@
     localStorage.setItem('voicecast_rejection_feedback', JSON.stringify(rejectionData));
     localStorage.setItem('voicecast_artist_status', 'rejected');
 
+    // Update pending submissions in storage
+    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    pendingSubmissions = pendingSubmissions.filter(s => s.id !== activeRejectId && (!artist || s.email !== artist.email));
+    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
+
     pendingArtists = pendingArtists.filter(a => a.id !== activeRejectId);
     closeRejectModal();
     renderPendingQueue();
-    showToast(`Application rejected with note: ${note ? '"' + note.substring(0,25) + '..."' : reason}`);
+    showToast(`Application rejected with feedback note.`);
   };
 
   window.suspendArtist = function(id) {

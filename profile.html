@@ -975,7 +975,11 @@
   // ── Profile Loader ────────────────────────────────────────────────────────────
   function applyProfile(p) {
     document.getElementById('artistName').textContent        = p.name;
-    document.getElementById('artistAvatar').textContent      = p.name[0];
+    if (p.avatar && p.avatar.length > 20) {
+      document.getElementById('artistAvatar').innerHTML = `<img src="${p.avatar}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      document.getElementById('artistAvatar').textContent = p.name ? p.name[0].toUpperCase() : 'U';
+    }
     document.getElementById('artistTagline').textContent     = p.tagline ? `"${p.tagline}"` : '';
     document.getElementById('artistGenderBadge').textContent = p.gender || 'Voice Artist';
     document.getElementById('artistLoc').textContent         = p.loc || 'Bangladesh';
@@ -1066,8 +1070,27 @@
     const fallback = profileFallback[artistId] || profileFallback.maya;
     let mergedData = { ...fallback };
 
+    // Check if artist matches a saved submission in storage
+    const allStorageSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    const allApprovedArtists = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
+    const matchedArtist = [...allStorageSubmissions, ...allApprovedArtists].find(a => a.id === artistId);
+
+    if (matchedArtist) {
+      mergedData = {
+        ...mergedData,
+        ...matchedArtist,
+        pricingRate: matchedArtist.rate || (matchedArtist.rawRate ? `৳ ${matchedArtist.rawRate}` : 'Negotiable'),
+        langs: matchedArtist.languages || mergedData.langs,
+        cats: matchedArtist.categories || mergedData.categories,
+        samples: matchedArtist.samples && matchedArtist.samples.length > 0 ? matchedArtist.samples : mergedData.samples
+      };
+    }
+
     // If viewing current user's profile preview (or default 'maya' with edited localStorage)
-    if (artistId === 'maya') {
+    if (artistId === 'maya' || artistId === 'sub_artist_current' || artistId === 'sub_local_user') {
+      const savedAvatar = localStorage.getItem('voicecast_profile_avatar') || localProfile.avatar || '';
+      if (savedAvatar) mergedData.avatar = savedAvatar;
+
       if (localProfile.name) {
         mergedData.name         = localProfile.name || fallback.name;
         mergedData.tagline      = localProfile.tagline || fallback.tagline;
