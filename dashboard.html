@@ -1073,6 +1073,106 @@
     });
   }
 
+  // ── Unified Complete Submission Builder ─────────────────────────────────────────
+  function buildCompleteProfileSubmission(status = 'pending') {
+    const name = document.getElementById('profFullName').value.trim();
+    const tagline = document.getElementById('profTagline').value.trim();
+    const loc = document.getElementById('profLocation').value.trim();
+    const whatsapp = document.getElementById('profWhatsapp').value.trim();
+    const shortBio = document.getElementById('profShortBio').value.trim();
+    const bio = document.getElementById('profBio').value.trim();
+    const rate = document.getElementById('profRate').value.trim();
+    const email = document.getElementById('profEmail').value.trim() || document.getElementById('dashEmail').textContent.trim();
+    const phone = document.getElementById('profPhone').value.trim() || whatsapp;
+    const gender = document.getElementById('profGender').value;
+    const years = document.getElementById('profYears').value;
+    const turnaround = document.getElementById('profTurnaround').value;
+    const studio = document.querySelector('input[name="studioSetup"]:checked')?.value || 'Home Studio';
+    const pricingModel = document.getElementById('profPricingModel').value;
+    const pricingNote = document.getElementById('profPricingNote').value.trim();
+    const isAvail = document.getElementById('availToggle').classList.contains('on');
+    const currentAvatar = localStorage.getItem('voicecast_profile_avatar') || '';
+
+    // Languages & Custom Languages
+    const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
+    const customLang1 = document.getElementById('customLang1')?.value.trim();
+    const customLang2 = document.getElementById('customLang2')?.value.trim();
+    const allLangs = [...new Set([...selectedLangs, customLang1, customLang2].filter(Boolean))];
+
+    // Categories
+    const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
+
+    // Accents & Custom Accents
+    const selectedAccents = [...document.querySelectorAll('#accentChips .chip.selected')].map(c => c.dataset.val);
+    const customAccent1 = document.getElementById('customAccent1')?.value.trim();
+    const customAccent2 = document.getElementById('customAccent2')?.value.trim();
+    const allAccents = [...new Set([...selectedAccents, customAccent1, customAccent2].filter(Boolean))];
+
+    // Social Links
+    const socialData = {
+      facebook:  document.getElementById('socialFacebook')?.value.trim() || '',
+      instagram: document.getElementById('socialInstagram')?.value.trim() || '',
+      linkedin:  document.getElementById('socialLinkedin')?.value.trim() || '',
+      youtube:   document.getElementById('socialYoutube')?.value.trim() || '',
+      tiktok:    document.getElementById('socialTiktok')?.value.trim() || ''
+    };
+
+    // Save individual storage keys for granular persistence
+    const profileData = {
+      name, tagline, gender, loc, whatsapp, phone, email, shortBio, bio,
+      years, turnaround, studio, pricingModel, rate, pricingNote,
+      avail: isAvail, avatar: currentAvatar
+    };
+    localStorage.setItem('voicecast_profile_data', JSON.stringify(profileData));
+    localStorage.setItem('voicecast_social_data', JSON.stringify(socialData));
+    localStorage.setItem('voicecast_custom_specialties', JSON.stringify({
+      lang1: customLang1, lang2: customLang2, accent1: customAccent1, accent2: customAccent2
+    }));
+
+    // Build Master Submission Record for Admin & Directory
+    const submissionId = 'sub_' + (email ? email.replace(/[^a-zA-Z0-9]/g, '_') : 'artist_current');
+    const fullSubmission = {
+      id:           submissionId,
+      name:         name,
+      email:        email,
+      city:         loc || 'Bangladesh',
+      whatsapp:     whatsapp,
+      phone:        phone,
+      tagline:      tagline,
+      gender:       gender,
+      rate:         rate ? `৳${rate} / ${pricingModel}` : 'Negotiable',
+      rawRate:      rate,
+      pricingModel: pricingModel,
+      pricingNote:  pricingNote,
+      languages:    allLangs.length > 0 ? allLangs : ['Bengali (Standard)', 'English'],
+      accents:      allAccents,
+      categories:   selectedCats.length > 0 ? selectedCats : ['Commercial', 'Audiobook'],
+      shortBio:     shortBio,
+      bio:          bio,
+      years:        years || 3,
+      turnaround:   turnaround || '24–48 hours',
+      studio:       studio,
+      avail:        isAvail,
+      avatar:       currentAvatar,
+      samples:      artistSamples,
+      portfolio:    artistPortfolio,
+      social:       socialData,
+      status:       status,
+      submittedAt:  new Date().toISOString()
+    };
+
+    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+    const existingIdx = pendingSubmissions.findIndex(s => s.id === submissionId || s.email === email);
+    if (existingIdx > -1) {
+      pendingSubmissions[existingIdx] = fullSubmission;
+    } else {
+      pendingSubmissions.unshift(fullSubmission);
+    }
+    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
+
+    return fullSubmission;
+  }
+
   // Save profile form with Full Completion Validation & Admin Queue Submission
   document.getElementById('artistProfileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1097,44 +1197,18 @@
       return;
     }
 
-    const currentAvatar = localStorage.getItem('voicecast_profile_avatar') || '';
-    const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
-    const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
-    const selectedAccents = [...document.querySelectorAll('#accentChips .chip.selected')].map(c => c.dataset.val);
+    const fullSubmission = buildCompleteProfileSubmission('pending');
 
-    const profileData = {
-      name:         name,
-      tagline:      tagline,
-      gender:       document.getElementById('profGender').value,
-      loc:          loc,
-      whatsapp:     whatsapp,
-      phone:        document.getElementById('profPhone').value.trim() || whatsapp,
-      email:        document.getElementById('profEmail').value.trim() || document.getElementById('dashEmail').textContent,
-      shortBio:     shortBio,
-      bio:          bio,
-      years:        document.getElementById('profYears').value,
-      turnaround:   document.getElementById('profTurnaround').value,
-      studio:       document.querySelector('input[name="studioSetup"]:checked')?.value || 'Home Studio',
-      pricingModel: document.getElementById('profPricingModel').value,
-      rate:         rate,
-      pricingNote:  document.getElementById('profPricingNote').value.trim(),
-      avatar:       currentAvatar
-    };
-    localStorage.setItem('voicecast_profile_data', JSON.stringify(profileData));
-
-    // Save & push to Admin Review Queue
+    // Sync with Supabase profile table
     const db = window._supabase;
-    let userId = 'local_user';
     if (db) {
       try {
         const { data } = await db.auth.getSession();
         if (data && data.session && data.session.user) {
-          userId = data.session.user.id;
-          // Upsert to Supabase profiles
           await db.from('profiles').upsert({
-            id: userId,
-            email: profileData.email,
-            full_name: name,
+            id: data.session.user.id,
+            email: fullSubmission.email,
+            full_name: fullSubmission.name,
             role: 'artist',
             updated_at: new Date().toISOString()
           });
@@ -1142,74 +1216,21 @@
       } catch (err) {}
     }
 
-    const submissionId = 'sub_' + userId;
-    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
-
-    const newSubmission = {
-      id:           submissionId,
-      userId:       userId,
-      name:         name,
-      email:        profileData.email,
-      city:         loc,
-      whatsapp:     whatsapp,
-      phone:        profileData.phone,
-      tagline:      tagline,
-      gender:       profileData.gender,
-      rate:         `৳${rate} / ${profileData.pricingModel}`,
-      rawRate:      rate,
-      pricingModel: profileData.pricingModel,
-      pricingNote:  profileData.pricingNote,
-      languages:    selectedLangs.length > 0 ? selectedLangs : ['Bengali (Standard)', 'English'],
-      accents:      selectedAccents,
-      categories:   selectedCats.length > 0 ? selectedCats : ['Commercial', 'Audiobook'],
-      shortBio:     shortBio,
-      bio:          bio,
-      years:        profileData.years || 3,
-      turnaround:   profileData.turnaround || '24–48 hours',
-      studio:       profileData.studio,
-      avatar:       currentAvatar,
-      samples:      artistSamples,
-      portfolio:    artistPortfolio,
-      status:       'pending',
-      submittedAt:  new Date().toISOString()
-    };
-
-    const existingIdx = pendingSubmissions.findIndex(s => s.id === submissionId || s.email === newSubmission.email);
-    if (existingIdx > -1) {
-      pendingSubmissions[existingIdx] = newSubmission;
-    } else {
-      pendingSubmissions.unshift(newSubmission);
-    }
-    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
-
     artistApprovalStatus = 'pending';
     localStorage.setItem('voicecast_artist_status', 'pending');
     updateApprovalBanner();
-    showToast('✓ Profile complete & submitted to Admin Review Queue!');
+    showToast('✓ সম্পূর্ণ প্রোফাইল সফলভাবে অ্যাডমিন রিভিউতে সাবমিট হয়েছে!');
   });
 
   document.getElementById('saveSpecialtiesBtn').addEventListener('click', () => {
-    const customData = {
-      lang1:   document.getElementById('customLang1').value.trim(),
-      lang2:   document.getElementById('customLang2').value.trim(),
-      accent1: document.getElementById('customAccent1').value.trim(),
-      accent2: document.getElementById('customAccent2').value.trim()
-    };
-    localStorage.setItem('voicecast_custom_specialties', JSON.stringify(customData));
+    buildCompleteProfileSubmission(artistApprovalStatus);
     showToast('Specialties & Languages saved!');
   });
 
   // Social links form
   document.getElementById('socialLinksForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const socialData = {
-      facebook:  document.getElementById('socialFacebook').value.trim(),
-      instagram: document.getElementById('socialInstagram').value.trim(),
-      linkedin:  document.getElementById('socialLinkedin').value.trim(),
-      youtube:   document.getElementById('socialYoutube').value.trim(),
-      tiktok:    document.getElementById('socialTiktok').value.trim()
-    };
-    localStorage.setItem('voicecast_social_data', JSON.stringify(socialData));
+    buildCompleteProfileSubmission(artistApprovalStatus);
     showToast('Social links saved!');
   });
 
