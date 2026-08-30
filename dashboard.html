@@ -216,40 +216,39 @@
 
       <!-- Artist Tabs -->
       <div class="dash-tabs" id="artistTabs">
-        <button class="tab-btn active" data-tab="profileTab">
+        <button class="tab-btn active" data-tab="profileTab" onclick="switchTab('profileTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
           Profile Details
         </button>
-        <button class="tab-btn" data-tab="samplesTab">
+        <button class="tab-btn" data-tab="samplesTab" onclick="switchTab('samplesTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13M9 9l12-2M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
           Voice Samples (<span id="samplesCount">3</span>)
         </button>
-        <button class="tab-btn" data-tab="specialtiesTab">
+        <button class="tab-btn" data-tab="specialtiesTab" onclick="switchTab('specialtiesTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/></svg>
           Languages &amp; Specialties
         </button>
-        <button class="tab-btn" data-tab="portfolioTab">
+        <button class="tab-btn" data-tab="portfolioTab" onclick="switchTab('portfolioTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
           Portfolio
         </button>
-        <button class="tab-btn" data-tab="socialTab">
+        <button class="tab-btn" data-tab="socialTab" onclick="switchTab('socialTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           Social Links
         </button>
       </div>
 
-
       <!-- Client Tabs -->
       <div class="dash-tabs" id="clientTabs" style="display:none;">
-        <button class="tab-btn active" data-tab="savedArtistsTab">
+        <button class="tab-btn active" data-tab="savedArtistsTab" onclick="switchTab('savedArtistsTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           Saved Voice Artists (<span id="savedCountHeader">2</span>)
         </button>
-        <button class="tab-btn" data-tab="projectBriefTab">
+        <button class="tab-btn" data-tab="projectBriefTab" onclick="switchTab('projectBriefTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
           Post a Project Brief
         </button>
-        <button class="tab-btn" data-tab="clientSettingsTab">
+        <button class="tab-btn" data-tab="clientSettingsTab" onclick="switchTab('clientSettingsTab')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Account Settings
         </button>
@@ -762,10 +761,32 @@
 </div>
 
 <script>
+  // Global State Variables
+  let currentRole = localStorage.getItem('voicecast_user_role') || 'artist';
+  let artistApprovalStatus = localStorage.getItem('voicecast_artist_status') || 'pending';
+  const allDirectoryArtists = {
+    maya: { name: 'Maya Okonkwo', loc: 'Lagos, Nigeria', langs: 'Commercial', rating: '4.9', reviews: 88, phone: '8801700000001', initial: 'M' },
+    rafiq: { name: 'Rafiq Hasan', loc: 'Dhaka, Bangladesh', langs: 'Documentary', rating: '5.0', reviews: 142, phone: '8801700000002', initial: 'R' },
+    nusrat: { name: 'Nusrat Jahan', loc: 'Chattogram, Bangladesh', langs: 'Audiobook', rating: '4.8', reviews: 64, phone: '8801700000003', initial: 'N' }
+  };
+
+  // Global Tab Switching Function
+  window.switchTab = function(tabId) {
+    if (!tabId) return;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const t = btn.getAttribute('data-tab') || btn.dataset.tab;
+      btn.classList.toggle('active', t === tabId);
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === tabId);
+    });
+  };
+
   function updateApprovalBanner() {
     const banner = document.getElementById('artistStatusBanner');
     const title = document.getElementById('statusTitle');
     const desc = document.getElementById('statusDesc');
+    if (!banner || !title || !desc) return;
 
     if (artistApprovalStatus === 'approved') {
       banner.className = 'approval-banner banner-approved';
@@ -793,7 +814,9 @@
   function renderSavedArtists() {
     const savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
     const container = document.getElementById('savedArtistsList');
-    document.getElementById('savedCountHeader').textContent = savedIds.length;
+    const countHeader = document.getElementById('savedCountHeader');
+    if (countHeader) countHeader.textContent = savedIds.length;
+    if (!container) return;
 
     if (savedIds.length === 0) {
       container.innerHTML = `
@@ -807,7 +830,7 @@
     }
 
     container.innerHTML = savedIds.map(id => {
-      const a = allDirectoryArtists[id] || { name: 'Voice Artist', loc: 'Bangladesh', langs: 'Commercial', rating: '5.0', reviews: 10, phone: '8801700000000', initial: id[0].toUpperCase() };
+      const a = allDirectoryArtists[id] || { name: 'Voice Artist', loc: 'Bangladesh', langs: 'Commercial', rating: '5.0', reviews: 10, phone: '8801700000000', initial: (id && id[0] ? id[0].toUpperCase() : 'U') };
       return `
         <div class="sample-item">
           <div class="sample-left">
@@ -826,6 +849,14 @@
       `;
     }).join('');
   }
+
+  window.removeSavedArtist = function(id) {
+    let savedIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '[]');
+    savedIds = savedIds.filter(x => x !== id);
+    localStorage.setItem('voicecast_saved_artists', JSON.stringify(savedIds));
+    renderSavedArtists();
+    showToast('Removed from saved list.');
+  };
 
   // Web Audio API & Sample Playback
   let dashAudioCtx = null;
@@ -851,7 +882,9 @@
 
   function renderArtistSamples() {
     const container = document.getElementById('samplesListContainer');
-    document.getElementById('samplesCount').textContent = artistSamples.length;
+    const countEl = document.getElementById('samplesCount');
+    if (countEl) countEl.textContent = artistSamples.length;
+    if (!container) return;
 
     if (artistSamples.length === 0) {
       container.innerHTML = '<p style="color:var(--text-faint);padding:20px 0;text-align:center;">কোনো ভয়েস স্যাম্পল আপলোড করা হয়নি। কমপক্ষে ১টি স্যাম্পল দিন।</p>';
@@ -946,54 +979,53 @@
     const banner = document.getElementById('artistStatusBanner');
 
     if (role === 'client') {
-      badge.textContent = 'Client';
-      badge.className = 'role-badge role-client';
-      switchBtn.textContent = 'Switch to Voice Artist';
-      artistTabs.style.display = 'none';
-      clientTabs.style.display = 'flex';
-      liveProfileBtn.style.display = 'none';
-      banner.style.display = 'none';
+      if (badge) { badge.textContent = 'Client'; badge.className = 'role-badge role-client'; }
+      if (switchBtn) switchBtn.textContent = 'Switch to Voice Artist';
+      if (artistTabs) artistTabs.style.display = 'none';
+      if (clientTabs) clientTabs.style.display = 'flex';
+      if (liveProfileBtn) liveProfileBtn.style.display = 'none';
+      if (banner) banner.style.display = 'none';
       renderSavedArtists();
       switchTab('savedArtistsTab');
     } else {
-      badge.textContent = 'Voice Artist';
-      badge.className = 'role-badge role-artist';
-      switchBtn.textContent = 'Switch to Client';
-      artistTabs.style.display = 'flex';
-      clientTabs.style.display = 'none';
-      liveProfileBtn.style.display = 'inline-flex';
-      banner.style.display = 'flex';
+      if (badge) { badge.textContent = 'Voice Artist'; badge.className = 'role-badge role-artist'; }
+      if (switchBtn) switchBtn.textContent = 'Switch to Client';
+      if (artistTabs) artistTabs.style.display = 'flex';
+      if (clientTabs) clientTabs.style.display = 'none';
+      if (liveProfileBtn) liveProfileBtn.style.display = 'inline-flex';
+      if (banner) banner.style.display = 'flex';
       updateApprovalBanner();
       switchTab('profileTab');
     }
   }
 
-  function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
-    });
-    document.querySelectorAll('.tab-pane').forEach(pane => {
-      pane.classList.toggle('active', pane.id === tabId);
-    });
-  }
-
-  // Tab click listeners
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  // Global tab click delegation
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (btn) {
+      const tabId = btn.getAttribute('data-tab') || btn.dataset.tab;
+      if (tabId) switchTab(tabId);
+    }
   });
 
   // Switch role button
-  document.getElementById('roleSwitchBtn').addEventListener('click', () => {
-    const newRole = currentRole === 'artist' ? 'client' : 'artist';
-    setDashboardRole(newRole);
-    showToast(`Switched mode to: ${newRole === 'artist' ? 'Voice Artist' : 'Client'}`);
-  });
+  const roleSwitchBtn = document.getElementById('roleSwitchBtn');
+  if (roleSwitchBtn) {
+    roleSwitchBtn.addEventListener('click', () => {
+      const newRole = currentRole === 'artist' ? 'client' : 'artist';
+      setDashboardRole(newRole);
+      showToast(`Switched mode to: ${newRole === 'artist' ? 'Voice Artist' : 'Client'}`);
+    });
+  }
 
   // Availability Switch
-  document.getElementById('availToggle').addEventListener('click', function() {
-    this.classList.toggle('on');
-    showToast(this.classList.contains('on') ? 'Status: Available now' : 'Status: Busy');
-  });
+  const availToggle = document.getElementById('availToggle');
+  if (availToggle) {
+    availToggle.addEventListener('click', function() {
+      this.classList.toggle('on');
+      showToast(this.classList.contains('on') ? 'Status: Available now' : 'Status: Busy');
+    });
+  }
 
   // Chips click listeners
   document.querySelectorAll('.chip').forEach(chip => {
