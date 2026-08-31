@@ -173,24 +173,24 @@
       <div id="overviewTab" class="tab-pane-super">
         <div class="stats-grid">
           <div class="stat-box">
-            <div class="stat-label">Total Artists</div>
-            <div class="stat-val" id="statTotalArtists">8</div>
-            <div class="stat-sub">6 Live · 2 Pending</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-val" id="statTotalUsers">0</div>
+            <div class="stat-sub">Overall accounts</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Registered Clients</div>
-            <div class="stat-val" style="color:var(--blue);">42</div>
-            <div class="stat-sub">+18 this month</div>
+            <div class="stat-val" style="color:var(--blue);" id="statRegisteredClients">0</div>
+            <div class="stat-sub">Looking for talent</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">WhatsApp Inquiries</div>
-            <div class="stat-val" style="color:var(--green);">342</div>
-            <div class="stat-sub">Direct client matches</div>
+            <div class="stat-label">Approved Artists</div>
+            <div class="stat-val" style="color:var(--green);" id="statApprovedArtists">0</div>
+            <div class="stat-sub">Live on directory</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Storage Consumed</div>
-            <div class="stat-val" style="color:var(--purple);">4.8 MB</div>
-            <div class="stat-sub">0.48% of 1GB Free Tier</div>
+            <div class="stat-label">Pending Reviews</div>
+            <div class="stat-val" style="color:var(--yellow);" id="statPendingReviews">0</div>
+            <div class="stat-sub">Awaiting moderation</div>
           </div>
         </div>
 
@@ -531,30 +531,39 @@
     } catch(e) {}
   }
 
-  // Master Data Stores
-  let masterArtists = [
-    { id: 'maya', name: 'Maya Okonkwo', loc: 'Lagos, Nigeria', rate: 2500, phone: '8801700000001', status: 'live', featured: true, samplesCount: 3 },
-    { id: 'rafiq', name: 'Rafiq Hasan', loc: 'Dhaka, Bangladesh', rate: 1500, phone: '8801700000002', status: 'live', featured: true, samplesCount: 3 },
-    { id: 'nusrat', name: 'Nusrat Jahan', loc: 'Chattogram, Bangladesh', rate: 1400, phone: '8801700000003', status: 'live', featured: true, samplesCount: 2 },
-    { id: 'tanvir', name: 'Tanvir Ahmed', loc: 'Sylhet, Bangladesh', rate: 1800, phone: '8801812345678', status: 'pending', featured: false, samplesCount: 3 },
-    { id: 'farhana', name: 'Farhana Kabir', loc: 'Sylhet, Bangladesh', rate: 1200, phone: '8801723456789', status: 'pending', featured: false, samplesCount: 2 }
-  ];
-
-  let masterUsers = [
-    { name: 'Ali Tonmoy (Master)', email: 'tonmoymbm@gmail.com', role: 'Super Admin', date: 'Aug 24, 2026' },
-    { name: 'Maya Okonkwo', email: 'maya.voice@gmail.com', role: 'Artist', date: 'Aug 20, 2026' },
-    { name: 'Rafiq Hasan', email: 'rafiq.voice@gmail.com', role: 'Artist', date: 'Aug 18, 2026' },
-    { name: 'Apex Media Client', email: 'apex.agency@gmail.com', role: 'Client', date: 'Aug 22, 2026' }
-  ];
-
-  let masterSamples = [
-    { title: 'Telecom 4G Commercial Demo', artist: 'Tanvir Ahmed', cat: 'Commercial', dur: '0:28', status: 'Pending Review' },
-    { title: 'Nature Documentary Narration', artist: 'Tanvir Ahmed', cat: 'Documentary', dur: '0:30', status: 'Pending Review' },
-    { title: 'Commercial Demo — FMCG Brand', artist: 'Maya Okonkwo', cat: 'Commercial', dur: '0:26', status: 'Approved' },
-    { title: 'Audiobook Chapter 1 Intro', artist: 'Rafiq Hasan', cat: 'Audiobook', dur: '0:29', status: 'Approved' }
-  ];
-
+  let usersData = [];
+  let detailsData = [];
   let editingArtistId = null;
+
+  async function fetchSuperAdminData() {
+    const db = window._supabase;
+    if (!db) return;
+    const { data: users } = await db.from('profiles').select('*');
+    const { data: details } = await db.from('artist_details').select('*');
+    
+    usersData = users || [];
+    detailsData = details || [];
+
+    const totalUsers = usersData.length;
+    const clients = usersData.filter(u => (u.role || '').toLowerCase() === 'client').length;
+    const approvedArtists = usersData.filter(u => u.status === 'live' || u.status === 'approved').length;
+    const pending = usersData.filter(u => u.status === 'pending').length;
+
+    const elTotal = document.getElementById('statTotalUsers');
+    if (elTotal) elTotal.textContent = totalUsers;
+    
+    const elClients = document.getElementById('statRegisteredClients');
+    if (elClients) elClients.textContent = clients;
+    
+    const elApproved = document.getElementById('statApprovedArtists');
+    if (elApproved) elApproved.textContent = approvedArtists;
+    
+    const elPending = document.getElementById('statPendingReviews');
+    if (elPending) elPending.textContent = pending;
+
+    const sidePendingCount = document.getElementById('sidePendingCount');
+    if(sidePendingCount) sidePendingCount.textContent = pending;
+  }
 
   function showSuperTab(tabId, btn) {
     document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
@@ -563,66 +572,31 @@
     document.getElementById(tabId).style.display = 'block';
   }
 
-  function loadMasterArtistsFromStorage() {
-    const storagePendings = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
-    storagePendings.forEach(sp => {
-      const exists = masterArtists.find(a => a.id === sp.id || a.name === sp.name);
-      if (!exists) {
-        masterArtists.unshift({
-          id: sp.id,
-          name: sp.name,
-          loc: sp.city || 'Dhaka, Bangladesh',
-          rate: sp.rawRate || 1500,
-          phone: sp.whatsapp || '8801700000000',
-          status: 'pending',
-          featured: false,
-          samplesCount: (sp.samples || []).length || 1,
-          avatar: sp.avatar || ''
-        });
-      }
-    });
-
-    const storageApproved = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
-    storageApproved.forEach(sa => {
-      const exists = masterArtists.find(a => a.id === sa.id || a.name === sa.name);
-      if (exists) {
-        exists.status = 'live';
-      } else {
-        masterArtists.unshift({
-          id: sa.id,
-          name: sa.name,
-          loc: sa.city || sa.loc || 'Bangladesh',
-          rate: sa.rawRate || 1500,
-          phone: sa.whatsapp || '8801700000000',
-          status: 'live',
-          featured: false,
-          samplesCount: (sa.samples || []).length || 1,
-          avatar: sa.avatar || ''
-        });
-      }
-    });
-  }
-
   function renderPending() {
-    loadMasterArtistsFromStorage();
     const list = document.getElementById('superPendingList');
-    const pendings = masterArtists.filter(a => a.status === 'pending');
-    document.getElementById('sidePendingCount').textContent = pendings.length;
+    if(!list) return;
+    const pendings = usersData.filter(a => a.status === 'pending');
 
     if (pendings.length === 0) {
       list.innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-faint);">No pending applications in the queue! ✓</p>`;
       return;
     }
 
-    list.innerHTML = pendings.map(a => `
+    list.innerHTML = pendings.map(a => {
+      const d = detailsData.find(x => x.user_id === a.id) || {};
+      const rate = d.rate || d.rawRate || 1500;
+      const phone = d.whatsapp || 'N/A';
+      const loc = d.city || 'Bangladesh';
+      const samplesCount = (d.samples || []).length;
+      return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;">
-            ${a.avatar && a.avatar.length > 20 ? `<img src="${escapeHTML(a.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : escapeHTML(a.name[0])}
+            ${a.avatar_url ? `<img src="${escapeHTML(a.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">` : (a.name ? escapeHTML(a.name[0]) : 'U')}
           </div>
           <div>
             <div style="font-weight:700;font-size:1rem;">${escapeHTML(a.name)}</div>
-            <div style="font-size:0.8rem;color:var(--text-faint);">${escapeHTML(a.loc)} · Rate: ৳${escapeHTML(String(a.rate))}/min · WhatsApp: ${escapeHTML(a.phone)} · ${escapeHTML(String(a.samplesCount))} Audio Samples</div>
+            <div style="font-size:0.8rem;color:var(--text-faint);">${escapeHTML(loc)} · Rate: ৳${escapeHTML(String(rate))}/min · WhatsApp: ${escapeHTML(phone)} · ${escapeHTML(String(samplesCount))} Audio Samples</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -630,45 +604,57 @@
           <button class="btn-action danger" onclick="superRejectArtist('${escapeHTML(a.id)}')">Reject</button>
         </div>
       </div>
-    `).join('');
+      `
+    }).join('');
   }
 
   function renderArtistsTable() {
     const tbody = document.getElementById('superArtistsTbody');
-    tbody.innerHTML = masterArtists.map(a => `
+    if(!tbody) return;
+    const artists = usersData.filter(u => (u.role || '').toLowerCase() === 'artist' || ['live','approved','pending','suspended'].includes(u.status));
+    
+    tbody.innerHTML = artists.map(a => {
+      const d = detailsData.find(x => x.user_id === a.id) || {};
+      const rate = d.rate || 1500;
+      const loc = d.city || 'Bangladesh';
+      const featured = d.featured || false;
+      const isLive = a.status === 'live' || a.status === 'approved';
+      return `
       <tr>
         <td><strong>${escapeHTML(a.name)}</strong></td>
-        <td>${escapeHTML(a.loc)}</td>
-        <td>৳${escapeHTML(String(a.rate))}/min</td>
-        <td><span class="badge ${a.status === 'live' ? 'badge-live' : 'badge-pending'}">${escapeHTML(a.status)}</span></td>
+        <td>${escapeHTML(loc)}</td>
+        <td>৳${escapeHTML(String(rate))}/min</td>
+        <td><span class="badge ${isLive ? 'badge-live' : 'badge-pending'}">${escapeHTML(a.status)}</span></td>
         <td>
-          <button class="badge ${a.featured ? 'badge-featured' : 'badge-suspended'}" onclick="toggleFeatured('${escapeHTML(a.id)}')" style="cursor:pointer;border:none;">
-            ${a.featured ? '★ Featured' : 'Normal'}
+          <button class="badge ${featured ? 'badge-featured' : 'badge-suspended'}" onclick="toggleFeatured('${escapeHTML(a.id)}')" style="cursor:pointer;border:none;">
+            ${featured ? '★ Featured' : 'Normal'}
           </button>
         </td>
         <td>
           <div style="display:flex;gap:6px;">
             <button class="btn-action" onclick="openEditArtistModal('${escapeHTML(a.id)}')">Edit</button>
-            <a class="btn-action" href="profile?id=${escapeHTML(a.id)}" target="_blank">View</a>
+            <a class="btn-action" href="profile.html?id=${escapeHTML(a.id)}" target="_blank">View</a>
             <button class="btn-action danger" onclick="deleteArtistMaster('${escapeHTML(a.id)}')">Delete</button>
           </div>
         </td>
       </tr>
-    `).join('');
+      `
+    }).join('');
   }
 
   function renderUsersTable() {
     const tbody = document.getElementById('superUsersTbody');
-    tbody.innerHTML = masterUsers.map(u => `
+    if(!tbody) return;
+    tbody.innerHTML = usersData.map(u => `
       <tr>
         <td>
-          <div><strong>${escapeHTML(u.name)}</strong></div>
-          <div style="font-size:0.75rem;color:var(--text-faint);">${escapeHTML(u.email)}</div>
+          <div><strong>${escapeHTML(u.name || 'Unknown')}</strong></div>
+          <div style="font-size:0.75rem;color:var(--text-faint);">${escapeHTML(u.email || '')}</div>
         </td>
-        <td><span class="badge ${u.role === 'Super Admin' ? 'badge-featured' : (u.role === 'Admin' ? 'badge-live' : 'badge-pending')}">${escapeHTML(u.role)}</span></td>
-        <td>${escapeHTML(u.date)}</td>
+        <td><span class="badge ${u.role === 'super_admin' || u.role === 'Super Admin' ? 'badge-featured' : ((u.role||'').toLowerCase() === 'admin' ? 'badge-live' : 'badge-pending')}">${escapeHTML(u.role || 'client')}</span></td>
+        <td>${u.created_at ? escapeHTML(new Date(u.created_at).toLocaleDateString()) : 'N/A'}</td>
         <td>
-          ${u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? '<span style="font-size:0.78rem;color:var(--gold);">Owner (Protected)</span>' : `<button class="btn-action" onclick="promoteUserRole('${escapeHTML(u.email)}')">Change Role</button>`}
+          ${(u.email||'').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? '<span style="font-size:0.78rem;color:var(--gold);">Owner (Protected)</span>' : `<button class="btn-action" onclick="promoteUserRole('${escapeHTML(u.id)}')">Change Role</button>`}
         </td>
       </tr>
     `).join('');
@@ -677,22 +663,23 @@
   function renderAdmins() {
     const container = document.getElementById('adminListContainer');
     if(!container) return;
-    const admins = masterUsers.filter(u => u.role === 'Admin' || u.role === 'Super Admin');
+    const admins = usersData.filter(u => (u.role||'').toLowerCase() === 'admin' || (u.role||'').toLowerCase() === 'super admin' || (u.email||'').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
 
     container.innerHTML = admins.map(a => {
-      const isOwner = a.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+      const isOwner = (a.email||'').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+      const roleStr = isOwner ? 'Super Admin' : (a.role || 'Admin');
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:38px;height:38px;border-radius:50%;background:${isOwner ? 'linear-gradient(135deg,#EF4444,#B91C1C)' : 'linear-gradient(135deg,var(--purple),var(--blue))'};display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;font-size:0.85rem;">
-              ${escapeHTML(a.name[0])}
+              ${escapeHTML((a.name||'A')[0])}
             </div>
             <div>
               <div style="font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
-                ${escapeHTML(a.name)}
-                <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${escapeHTML(a.role)}</span>
+                ${escapeHTML(a.name || 'Admin')}
+                <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${escapeHTML(roleStr)}</span>
               </div>
-              <div style="font-size:0.78rem;color:var(--text-faint);">${escapeHTML(a.email)} · Appointed: ${escapeHTML(a.date)}</div>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${escapeHTML(a.email)} · Appointed: ${a.created_at ? escapeHTML(new Date(a.created_at).toLocaleDateString()) : 'N/A'}</div>
             </div>
           </div>
           <div>
@@ -713,44 +700,32 @@
     document.getElementById('adminModal').style.display = 'none';
   };
 
-  window.confirmAddAdmin = function() {
-    const name = document.getElementById('newAdminName').value.trim();
+  window.confirmAddAdmin = async function() {
     const email = document.getElementById('newAdminEmail').value.trim();
-
     if(!email || !email.includes('@')) {
       alert('Please enter a valid email address');
       return;
     }
-
-    const existingUser = masterUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if(existingUser) {
-      existingUser.role = 'Admin';
-      if(name) existingUser.name = name;
-    } else {
-      masterUsers.push({
-        name: name || email.split('@')[0],
-        email: email,
-        role: 'Admin',
-        date: 'Today'
-      });
+    if (window._supabase) {
+       const user = usersData.find(u => u.email.toLowerCase() === email.toLowerCase());
+       if(user) {
+          await window._supabase.from('profiles').update({ role: 'admin' }).eq('id', user.id);
+          showToast(`✓ Admin access granted to ${email}`);
+          await reloadSuperAdminData();
+       } else {
+          alert('User with this email not found in database. They must register first.');
+       }
     }
-
-    localStorage.setItem('voicecast_master_users', JSON.stringify(masterUsers));
     closeAddAdminModal();
-    renderAdmins();
-    renderUsersTable();
-    showToast(`✓ Admin access granted to ${email}`);
   };
 
   window.revokeAdminRole = function(email) {
-    openConfirmModal('Revoke Admin Rights', `Are you sure you want to revoke Admin rights for ${email}?`, 'Revoke', () => {
-      const user = masterUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if(user) {
-        user.role = 'Client';
-        localStorage.setItem('voicecast_master_users', JSON.stringify(masterUsers));
-        renderAdmins();
-        renderUsersTable();
-        showToast(`Admin rights revoked for ${email}`);
+    openConfirmModal('Revoke Admin Rights', `Are you sure you want to revoke Admin rights for ${email}?`, 'Revoke', async () => {
+      const user = usersData.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (user && window._supabase) {
+         await window._supabase.from('profiles').update({ role: 'client' }).eq('id', user.id);
+         await reloadSuperAdminData();
+         showToast(`Admin rights revoked`);
       }
     });
   };
@@ -773,108 +748,65 @@
 
   function renderSamplesTable() {
     const tbody = document.getElementById('superSamplesTbody');
-    tbody.innerHTML = masterSamples.map((s, idx) => `
-      <tr>
-        <td><strong>${escapeHTML(s.title)}</strong></td>
-        <td>${escapeHTML(s.artist)}</td>
-        <td>${escapeHTML(s.cat)}</td>
-        <td>${escapeHTML(s.dur)} (Max 30s ✓)</td>
-        <td>
-          <button class="audio-inline-play" onclick="playSuperAudio(${340 + idx*45})">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
-          </button>
-        </td>
-        <td><span class="badge ${s.status === 'Approved' ? 'badge-live' : 'badge-pending'}">${escapeHTML(s.status)}</span></td>
-        <td>
-          ${s.status !== 'Approved' ? `<button class="btn-action approve" onclick="approveSample(${idx})">Approve</button>` : `<button class="btn-action danger" onclick="deleteSampleSuper(${idx})">Remove</button>`}
-        </td>
-      </tr>
-    `).join('');
+    if(tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;">Audio Moderation is handled via Supabase direct integration.</td></tr>`;
   }
 
-  window.superApproveArtist = function(id) {
-    const artist = masterArtists.find(a => a.id === id);
-    if(artist) {
-      artist.status = 'live';
-
-      // Update storage
-      let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
-      pendingSubmissions = pendingSubmissions.filter(s => s.id !== id && s.name !== artist.name);
-      localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
-
-      let approvedArtists = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
-      approvedArtists.unshift({ ...artist, status: 'approved' });
-      localStorage.setItem('voicecast_approved_artists', JSON.stringify(approvedArtists));
-
-      localStorage.setItem('voicecast_artist_status', 'approved');
+  window.superApproveArtist = async function(id) {
+    if (window._supabase) {
+      await window._supabase.from('profiles').update({ status: 'approved' }).eq('id', id);
     }
-    renderPending();
-    renderArtistsTable();
-    showToast(`✓ ${artist ? artist.name : 'Artist'} is now approved!`);
+    await reloadSuperAdminData();
+    showToast(`✓ Artist is now approved!`);
   };
 
-  window.superRejectArtist = function(id) {
-    const artist = masterArtists.find(a => a.id === id);
-    masterArtists = masterArtists.filter(a => a.id !== id);
-
-    let pendingSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
-    pendingSubmissions = pendingSubmissions.filter(s => s.id !== id && (!artist || s.name !== artist.name));
-    localStorage.setItem('voicecast_pending_submissions', JSON.stringify(pendingSubmissions));
-    localStorage.setItem('voicecast_artist_status', 'rejected');
-
-    renderPending();
-    renderArtistsTable();
+  window.superRejectArtist = async function(id) {
+    if (window._supabase) {
+      await window._supabase.from('profiles').update({ status: 'rejected' }).eq('id', id);
+    }
+    await reloadSuperAdminData();
     showToast('Artist application rejected');
   };
 
-  window.toggleFeatured = function(id) {
-    const artist = masterArtists.find(a => a.id === id);
-    if(artist) {
-      artist.featured = !artist.featured;
-      renderArtistsTable();
-      showToast(`${artist.name} featured state updated!`);
+  window.toggleFeatured = async function(id) {
+    const d = detailsData.find(x => x.user_id === id);
+    if(d) {
+      const newFeatured = !d.featured;
+      if (window._supabase) {
+        await window._supabase.from('artist_details').update({ featured: newFeatured }).eq('user_id', id);
+      }
+      await reloadSuperAdminData();
+      showToast(`Featured state updated!`);
     }
   };
 
   window.deleteArtistMaster = function(id) {
-    openConfirmModal('Delete Artist', 'Are you sure you want to permanently delete this artist from VoiceCast?', 'Delete', () => {
-      masterArtists = masterArtists.filter(a => a.id !== id);
-      renderArtistsTable();
-      showToast('Artist profile deleted');
+    openConfirmModal('Delete Artist', 'Are you sure you want to permanently delete this user from VoiceCast?', 'Delete', async () => {
+      if (window._supabase) {
+        await window._supabase.from('profiles').delete().eq('id', id);
+      }
+      await reloadSuperAdminData();
+      showToast('User profile deleted');
     });
   };
 
-  window.approveSample = function(idx) {
-    masterSamples[idx].status = 'Approved';
-    renderSamplesTable();
-    showToast('Audio sample approved!');
-  };
-
-  window.deleteSampleSuper = function(idx) {
-    masterSamples.splice(idx, 1);
-    renderSamplesTable();
-    showToast('Audio sample removed');
-  };
-
-  let roleUserEmail = null;
-  window.promoteUserRole = function(email) {
-    const user = masterUsers.find(u => u.email === email);
+  let roleUserId = null;
+  window.promoteUserRole = function(id) {
+    const user = usersData.find(u => u.id === id);
     if(!user) return;
-    roleUserEmail = email;
+    roleUserId = id;
     document.getElementById('roleModalDesc').textContent = `Change role for ${user.email}:`;
-    document.getElementById('roleSelect').value = user.role;
+    const roleMap = { 'artist': 'Artist', 'client': 'Client', 'admin': 'Admin' };
+    document.getElementById('roleSelect').value = roleMap[(user.role || 'client').toLowerCase()] || 'Client';
     document.getElementById('roleModal').style.display = 'flex';
   };
   window.closeRoleModal = function() {
     document.getElementById('roleModal').style.display = 'none';
   };
-  window.confirmRoleModal = function() {
-    const user = masterUsers.find(u => u.email === roleUserEmail);
-    const newRole = document.getElementById('roleSelect').value;
-    if(user && newRole) {
-      user.role = newRole;
-      renderUsersTable();
-      renderAdmins();
+  window.confirmRoleModal = async function() {
+    const newRole = document.getElementById('roleSelect').value.toLowerCase();
+    if(roleUserId && newRole && window._supabase) {
+      await window._supabase.from('profiles').update({ role: newRole }).eq('id', roleUserId);
+      await reloadSuperAdminData();
       showToast(`User role updated to ${newRole}`);
     }
     closeRoleModal();
@@ -883,13 +815,14 @@
   // Modal Handlers
   window.openEditArtistModal = function(id) {
     editingArtistId = id;
-    const a = masterArtists.find(item => item.id === id);
+    const a = usersData.find(item => item.id === id);
+    const d = detailsData.find(x => x.user_id === id) || {};
     if(!a) return;
     document.getElementById('modalTitle').textContent = `Edit Artist: ${a.name}`;
-    document.getElementById('modalName').value = a.name;
-    document.getElementById('modalLoc').value = a.loc;
-    document.getElementById('modalRate').value = a.rate;
-    document.getElementById('modalPhone').value = a.phone;
+    document.getElementById('modalName').value = a.name || '';
+    document.getElementById('modalLoc').value = d.city || '';
+    document.getElementById('modalRate').value = d.rate || d.rawRate || 1500;
+    document.getElementById('modalPhone').value = d.whatsapp || '';
     document.getElementById('artistModal').style.display = 'flex';
   };
 
@@ -907,7 +840,7 @@
     document.getElementById('artistModal').style.display = 'none';
   };
 
-  window.saveArtistModal = function() {
+  window.saveArtistModal = async function() {
     const name = document.getElementById('modalName').value.trim();
     const loc = document.getElementById('modalLoc').value.trim();
     const rate = parseInt(document.getElementById('modalRate').value, 10) || 1000;
@@ -915,32 +848,33 @@
 
     if(!name) { alert('Name is required'); return; }
 
-    if(editingArtistId) {
-      const a = masterArtists.find(item => item.id === editingArtistId);
-      if(a) {
-        a.name = name;
-        a.loc = loc;
-        a.rate = rate;
-        a.phone = phone;
-      }
-      showToast('Artist details updated!');
+    if(editingArtistId && window._supabase) {
+       await window._supabase.from('profiles').update({ name }).eq('id', editingArtistId);
+       const d = detailsData.find(x => x.user_id === editingArtistId);
+       if(d) {
+          await window._supabase.from('artist_details').update({ city: loc, rate, whatsapp: phone }).eq('user_id', editingArtistId);
+       } else {
+          await window._supabase.from('artist_details').insert({ user_id: editingArtistId, city: loc, rate, whatsapp: phone });
+       }
+       showToast('Artist details updated!');
+       closeArtistModal();
+       await reloadSuperAdminData();
     } else {
-      const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      masterArtists.unshift({ id: newId, name, loc, rate, phone, status: 'live', featured: false, samplesCount: 1 });
-      showToast('New artist created and published live!');
+       alert('Creating new artist manually requires auth registration first on Supabase.');
     }
-
-    closeArtistModal();
-    renderArtistsTable();
-    renderPending();
   };
 
-  function initSuperAdminData() {
+  async function reloadSuperAdminData() {
+    await fetchSuperAdminData();
     renderPending();
     renderArtistsTable();
     renderUsersTable();
     renderAdmins();
     renderSamplesTable();
+  }
+
+  async function initSuperAdminData() {
+    await reloadSuperAdminData();
   }
 
   document.addEventListener('DOMContentLoaded', checkSuperAdminAuth);

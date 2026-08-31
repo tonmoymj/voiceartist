@@ -146,6 +146,22 @@
     .user-bar{ flex-direction:column; align-items:flex-start; }
     .radio-group{ flex-direction:column; }
   }
+  /* Wizard Stepper */
+  .wizard-stepper { display: flex; align-items: center; justify-content: space-between; margin: 0 0 30px; position: relative; }
+  .wizard-stepper::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--border); z-index: 1; }
+  .wizard-step-nav { position: relative; z-index: 2; background: var(--bg); padding: 0 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-faint); font-weight: 600; font-size: 0.85rem; }
+  .wizard-step-nav .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: all 0.3s; }
+  .wizard-step-nav.active { color: var(--purple); }
+  .wizard-step-nav.active .step-circle { background: rgba(139,92,246,0.18); border-color: var(--purple); color: var(--purple); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
+  .wizard-step-nav.completed { color: var(--text); }
+  .wizard-step-nav.completed .step-circle { background: var(--purple); border-color: var(--purple); color: #fff; }
+  
+  .wizard-step-content { display: none; animation: fadeIn 0.3s ease; }
+  .wizard-step-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .step-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
+  .step-footer .btn-prev { margin-right: auto; }
 </style>
 </head>
 <body>
@@ -253,8 +269,32 @@
 
   <main class="dash-body container">
 
-    <!-- ==================== ARTIST TAB 1: PROFILE DETAILS ==================== -->
+    <!-- ==================== ARTIST WIZARD ==================== -->
     <div class="tab-pane active" id="profileTab">
+      
+      <!-- Wizard Stepper -->
+      <div class="wizard-stepper" id="artistStepper">
+        <div class="wizard-step-nav active" data-step="1">
+          <div class="step-circle">1</div>
+          Basic Info
+        </div>
+        <div class="wizard-step-nav" data-step="2">
+          <div class="step-circle">2</div>
+          Voice & Skills
+        </div>
+        <div class="wizard-step-nav" data-step="3">
+          <div class="step-circle">3</div>
+          Studio & Pricing
+        </div>
+        <div class="wizard-step-nav" data-step="4">
+          <div class="step-circle">4</div>
+          Portfolio
+        </div>
+        <div class="wizard-step-nav" data-step="5">
+          <div class="step-circle">5</div>
+          Review
+        </div>
+      </div>
 
       <!-- Availability Toggle -->
       <div class="switch-line">
@@ -266,6 +306,10 @@
       </div>
 
       <form id="artistProfileForm">
+
+        <!-- STEP 1 -->
+        <div class="wizard-step-content active" id="step1">
+
 
         <!-- Card: Identity -->
         <div class="dash-card">
@@ -357,6 +401,25 @@
           </div>
         </div>
 
+        <div class="step-footer">
+          <button type="button" class="btn-grad next-step" onclick="goToStep(2)">Next Step</button>
+        </div>
+        </div> <!-- End Step 1 -->
+
+        <!-- STEP 2: Voice & Skills (Will be moved here via JS or placed here) -->
+        <div class="wizard-step-content" id="step2">
+          <!-- Voice Categories, Languages, Accents will go here -->
+          <div id="step2-placeholder"></div>
+          <div class="step-footer">
+            <button type="button" class="btn-outline prev-step" onclick="goToStep(1)">Previous</button>
+            <button type="button" class="btn-grad next-step" onclick="goToStep(3)">Next Step</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Studio & Pricing -->
+        <div class="wizard-step-content" id="step3">
+
+
         <!-- Card: Professional Details -->
         <div class="dash-card">
           <div class="dash-card-title">প্রফেশনাল তথ্য</div>
@@ -413,10 +476,32 @@
             <input type="text" id="profPricingNote" placeholder="e.g. বড় প্রজেক্টে আলোচনা সাপেক্ষ">
           </div>
         </div>
+        <div class="step-footer">
+          <button type="button" class="btn-outline prev-step" onclick="goToStep(2)">Previous</button>
+          <button type="button" class="btn-grad next-step" onclick="goToStep(4)">Next Step</button>
+        </div>
+        </div> <!-- End Step 3 -->
 
-        <button type="submit" class="btn-grad" style="padding:12px 26px;">Save &amp; Submit for Review</button>
+        <!-- STEP 4: Samples & Portfolio -->
+        <div class="wizard-step-content" id="step4">
+          <div id="step4-placeholder"></div>
+          <div class="step-footer">
+            <button type="button" class="btn-outline prev-step" onclick="goToStep(3)">Previous</button>
+            <button type="button" class="btn-grad next-step" onclick="goToStep(5)">Next Step</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Final Review & Submit -->
+        <div class="wizard-step-content" id="step5">
+          <div id="step5-placeholder"></div>
+          <div class="step-footer">
+            <button type="button" class="btn-outline prev-step" onclick="goToStep(4)">Previous</button>
+            <button type="submit" class="btn-grad" id="finalSubmitBtn">Save &amp; Submit for Review</button>
+          </div>
+        </div>
+
       </form>
-    </div>
+    </div> <!-- End WIZARD tab pane -->
 
 
     <!-- ==================== ARTIST TAB 2: VOICE SAMPLES ==================== -->
@@ -1270,8 +1355,8 @@
     }
 
     if (artistSamples.length === 0) {
-      alert('⚠️ অনুগ্রহ করে Voice Samples ট্যাবে গিয়ে কমপক্ষে ১টি অডিও স্যাম্পল আপলোড করুন।');
-      switchTab('samplesTab');
+      alert('⚠️ অনুগ্রহ করে Voice Samples ধাপে গিয়ে কমপক্ষে ১টি অডিও স্যাম্পল আপলোড করুন।');
+      if (typeof goToStep === 'function') goToStep(4);
       return;
     }
 
@@ -1314,6 +1399,7 @@
     artistApprovalStatus = 'pending';
     localStorage.setItem('voicecast_artist_status', 'pending');
     updateApprovalBanner();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast('✓ সম্পূর্ণ প্রোফাইল সফলভাবে অ্যাডমিন রিভিউতে সাবমিট হয়েছে!');
   });
 
@@ -1555,6 +1641,129 @@
   }
 
   document.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+
+<script>
+  // ==================== WIZARD LOGIC & DOM REORGANIZATION ====================
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Reorganize DOM Elements into Wizard Steps
+    const step2Placeholder = document.getElementById('step2-placeholder');
+    const step4Placeholder = document.getElementById('step4-placeholder');
+    const step5Placeholder = document.getElementById('step5-placeholder');
+
+    // Move Specialties & Languages into Step 2
+    const specialtiesPane = document.getElementById('specialtiesTab');
+    if (specialtiesPane && step2Placeholder) {
+      const cards = specialtiesPane.querySelectorAll('.dash-card');
+      // Except the save button
+      cards.forEach(card => step2Placeholder.appendChild(card));
+      specialtiesPane.remove(); // Remove old tab pane
+    }
+
+    // Move Samples into Step 4
+    const samplesPane = document.getElementById('samplesTab');
+    if (samplesPane && step4Placeholder) {
+      const samplesCard = samplesPane.querySelector('.dash-card');
+      if (samplesCard) step4Placeholder.appendChild(samplesCard);
+      
+      // Ensure Add Sample buttons do not submit form
+      const toggleSampleBtn = document.getElementById('toggleAddSampleBtn');
+      if (toggleSampleBtn) toggleSampleBtn.type = 'button';
+      const saveSampleBtn = document.getElementById('saveSampleBtn');
+      if (saveSampleBtn) saveSampleBtn.type = 'button';
+      const cancelSampleBtn = document.getElementById('cancelSampleBtn');
+      if (cancelSampleBtn) cancelSampleBtn.type = 'button';
+      
+      samplesPane.remove();
+    }
+
+    // Move Portfolio into Step 4
+    const portfolioPane = document.getElementById('portfolioTab');
+    if (portfolioPane && step4Placeholder) {
+      const portfolioCard = portfolioPane.querySelector('.dash-card');
+      if (portfolioCard) step4Placeholder.appendChild(portfolioCard);
+      
+      const togglePortBtn = document.getElementById('toggleAddPortfolioBtn');
+      if (togglePortBtn) togglePortBtn.type = 'button';
+      const savePortBtn = document.getElementById('savePortfolioBtn');
+      if (savePortBtn) savePortBtn.type = 'button';
+      const cancelPortBtn = document.getElementById('cancelPortfolioBtn');
+      if (cancelPortBtn) cancelPortBtn.type = 'button';
+      
+      portfolioPane.remove();
+    }
+
+    // Move Contact Info to Step 5
+    // WhatsApp and Phone are in Step 1 form rows
+    const whatsappInput = document.getElementById('profWhatsapp');
+    const phoneInput = document.getElementById('profPhone');
+    const emailInput = document.getElementById('profEmail');
+    
+    if (whatsappInput && phoneInput && emailInput && step5Placeholder) {
+      const contactCard = document.createElement('div');
+      contactCard.className = 'dash-card';
+      contactCard.innerHTML = `<div class="dash-card-title">Contact Information</div><div class="dash-card-sub">Your private contact details for administration and direct client booking</div>`;
+      
+      const row1 = whatsappInput.closest('.form-row');
+      const row2 = emailInput.closest('.form-col');
+      
+      if (row1) contactCard.appendChild(row1);
+      if (row2) contactCard.appendChild(row2);
+      
+      step5Placeholder.appendChild(contactCard);
+    }
+
+    // Move Social Links to Step 5
+    const socialPane = document.getElementById('socialTab');
+    if (socialPane && step5Placeholder) {
+      const socialCard = socialPane.querySelector('.dash-card');
+      if (socialCard) {
+        // Move the inputs out of the nested form since we are already inside #artistProfileForm
+        const socialForm = socialCard.querySelector('form');
+        if (socialForm) {
+          while (socialForm.firstChild) {
+            socialCard.appendChild(socialForm.firstChild);
+          }
+          const submitBtn = socialCard.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.remove(); // Remove duplicate submit button
+          socialForm.remove();
+        }
+        step5Placeholder.appendChild(socialCard);
+      }
+      socialPane.remove();
+    }
+    
+    // Hide old artist tabs navigation
+    const artistTabsNav = document.getElementById('artistTabs');
+    if (artistTabsNav) artistTabsNav.style.display = 'none';
+  });
+
+  // Wizard Navigation
+  window.goToStep = function(stepNum) {
+    // Hide all steps
+    document.querySelectorAll('.wizard-step-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.wizard-step-nav').forEach(el => {
+      el.classList.remove('active');
+      if (parseInt(el.dataset.step) < stepNum) {
+        el.classList.add('completed');
+      } else {
+        el.classList.remove('completed');
+      }
+    });
+    
+    // Show target step
+    const target = document.getElementById('step' + stepNum);
+    if (target) {
+      target.classList.add('active');
+    }
+    const targetNav = document.querySelector(`.wizard-step-nav[data-step="${stepNum}"]`);
+    if (targetNav) {
+      targetNav.classList.add('active');
+    }
+    
+    // Scroll to top of wizard safely
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 </script>
 
 </body>

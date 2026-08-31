@@ -202,145 +202,56 @@
     );
   }
 
-  const defaultPendingArtists = [
-    {
-      id: 'app_1',
-      name: 'Tanvir Ahmed',
-      email: 'tanvir.voice@gmail.com',
-      city: 'Dhaka, Bangladesh',
-      whatsapp: '+8801812345678',
-      rate: '৳1,800/min',
-      languages: ['Bengali (Standard)', 'English'],
-      categories: ['Commercial', 'Documentary', 'Dubbing'],
-      bio: 'Experienced TV & radio commercial voiceover artist with 6 years in advertising. Full home studio with Rode NT1 microphone.',
-      status: 'pending',
-      samples: [
-        { title: 'Telecom 4G Commercial Demo', duration: '0:28' },
-        { title: 'Nature Documentary Narration', duration: '0:30' },
-        { title: 'English Corporate Promo', duration: '0:25' }
-      ]
-    },
-    {
-      id: 'app_2',
-      name: 'Farhana Kabir',
-      email: 'farhana.k@yahoo.com',
-      city: 'Sylhet, Bangladesh',
-      whatsapp: '+8801723456789',
-      rate: '৳1,200/min',
-      languages: ['Bengali', 'Sylheti Dialect', 'English'],
-      categories: ['Audiobook', 'E-Learning'],
-      bio: 'Professional audiobook narrator and educational explainer artist. Fluent in both standard Dhakaiya Bangla and authentic Sylheti dialect.',
-      status: 'pending',
-      samples: [
-        { title: 'Novel Chapter 1 Excerpt', duration: '0:29' },
-        { title: 'Sylheti Cultural Story Demo', duration: '0:30' }
-      ]
-    }
-  ];
-
   let pendingArtists = [];
+  let liveArtists = [];
 
-  let liveArtists = [
-    {
-      id: 'maya',
-      name: 'Maya Okonkwo',
-      city: 'Lagos, Nigeria',
-      rate: '৳2,500/min',
-      languages: ['English (Neutral)', 'Yoruba'],
-      categories: ['Commercial', 'Narration'],
-      status: 'approved'
-    },
-    {
-      id: 'rafiq',
-      name: 'Rafiq Hasan',
-      city: 'Dhaka, Bangladesh',
-      rate: '৳1,500/min',
-      languages: ['Bengali (Native)', 'English'],
-      categories: ['Documentary', 'E-Learning'],
-      status: 'approved'
-    },
-    {
-      id: 'nusrat',
-      name: 'Nusrat Jahan',
-      city: 'Chittagong, Bangladesh',
-      rate: '৳1,400/min',
-      languages: ['Bengali', 'Chittagonian', 'English'],
-      categories: ['Commercial', 'Audiobook'],
-      status: 'approved'
-    }
-  ];
-
-  function loadPendingFromStorage() {
-    let list = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
+  async function fetchAdminData() {
+    if (!window._supabase) return;
     
-    // Fallback: If user submitted profile in dashboard and status is pending
-    const currentArtistStatus = localStorage.getItem('voicecast_artist_status');
-    const profileData = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
-    const avatar = localStorage.getItem('voicecast_profile_avatar') || profileData.avatar || '';
-    const samples = JSON.parse(localStorage.getItem('voicecast_artist_samples') || '[]');
-
-    if (profileData.name && (currentArtistStatus === 'pending' || !currentArtistStatus)) {
-      const exists = list.some(s => s.name === profileData.name || s.email === profileData.email);
-      if (!exists) {
-        list.unshift({
-          id: 'sub_artist_current',
-          name: profileData.name,
-          email: profileData.email || 'artist@voicecast.com',
-          city: profileData.loc || 'Dhaka, Bangladesh',
-          whatsapp: profileData.whatsapp || '+8801700000000',
-          phone: profileData.phone || profileData.whatsapp,
-          rate: `৳${profileData.rate || '1,500'} / ${profileData.pricingModel || 'minute'}`,
-          languages: ['Bengali (Standard)', 'English'],
-          categories: ['Commercial', 'Narration'],
-          bio: profileData.bio || profileData.shortBio || 'Professional voice talent application.',
-          tagline: profileData.tagline,
-          status: 'pending',
-          avatar: avatar,
-          samples: samples.length > 0 ? samples : [
-            { title: 'Commercial Voice Demo', duration: '0:28' }
-          ]
-        });
-      }
+    // Fetch pending artists
+    const { data: pendingData, error: pendingErr } = await window._supabase
+      .from('profiles')
+      .select('*, artist_details(*)')
+      .eq('role', 'artist')
+      .eq('status', 'pending');
+    
+    if (!pendingErr && pendingData) {
+      pendingArtists = pendingData;
     }
 
-    // Merge custom list with defaults
-    const combined = [...list];
-    defaultPendingArtists.forEach(def => {
-      if (!combined.some(c => c.id === def.id || c.email === def.email)) {
-        combined.push(def);
-      }
-    });
+    // Fetch approved artists
+    const { data: approvedData, error: approvedErr } = await window._supabase
+      .from('profiles')
+      .select('*, artist_details(*)')
+      .eq('role', 'artist')
+      .eq('status', 'approved');
+      
+    if (!approvedErr && approvedData) {
+      liveArtists = approvedData;
+    }
 
-    // Also load newly approved artists from storage
-    const approvedFromStorage = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
-    approvedFromStorage.forEach(app => {
-      if (!liveArtists.some(l => l.id === app.id || l.email === app.email)) {
-        liveArtists.unshift(app);
-      }
-    });
+    // Update total users count
+    const { count, error: countErr } = await window._supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+    
+    if (!countErr && count !== null) {
+      document.getElementById('statUsers').textContent = count;
+    } else {
+      document.getElementById('statUsers').textContent = pendingArtists.length + liveArtists.length;
+    }
 
-    pendingArtists = combined.filter(a => a.status === 'pending');
+    renderPendingQueue();
+    renderLiveArtists();
   }
 
   let activeRejectId = null;
 
-  // Web Audio Preview Tone
-  let adminAudioCtx = null;
-  function playSampleAudio(freq = 480) {
-    try {
-      if(!adminAudioCtx) adminAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if(adminAudioCtx.state === 'suspended') adminAudioCtx.resume();
-      const osc = adminAudioCtx.createOscillator();
-      const gain = adminAudioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, adminAudioCtx.currentTime);
-      gain.gain.setValueAtTime(0.09, adminAudioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, adminAudioCtx.currentTime + 1.2);
-      osc.connect(gain);
-      gain.connect(adminAudioCtx.destination);
-      osc.start();
-      osc.stop(adminAudioCtx.currentTime + 1.2);
-    } catch(e) {}
+  let adminAudio = new Audio();
+  function playSampleAudio(url) {
+    if (!url) return;
+    adminAudio.src = url;
+    adminAudio.play().catch(e => console.error("Audio play failed", e));
   }
 
   function showToast(msg) {
@@ -351,7 +262,6 @@
   }
 
   function renderPendingQueue() {
-    loadPendingFromStorage();
     const container = document.getElementById('pendingCardsContainer');
     document.getElementById('statPending').textContent = pendingArtists.length;
     document.getElementById('pendingTabCount').textContent = pendingArtists.length;
@@ -367,9 +277,18 @@
     }
 
     container.innerHTML = pendingArtists.map((a, idx) => {
-      const avatarHtml = a.avatar && a.avatar.length > 20 
-        ? `<img src="${escapeHTML(a.avatar)}" alt="${escapeHTML(a.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      const details = a.artist_details && a.artist_details.length > 0 ? a.artist_details[0] : (a.artist_details || {});
+      const avatarUrl = a.avatar_url || a.avatar || '';
+      const avatarHtml = avatarUrl.length > 20 
+        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(a.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
         : (a.name ? escapeHTML(a.name[0]).toUpperCase() : 'U');
+      const bio = details.bio || 'No bio provided';
+      const languages = details.languages || ['Bengali'];
+      const categories = details.categories || ['Commercial'];
+      const samples = details.samples || [];
+      const rate = details.rate || 'Negotiable';
+      const city = details.location || 'Bangladesh';
+      const whatsapp = details.whatsapp || '';
 
       return `
       <div class="review-card" id="card_${escapeHTML(a.id)}">
@@ -377,8 +296,8 @@
           <div class="artist-badge-info">
             <div class="artist-avatar" style="overflow:hidden;border:2px solid var(--purple);">${avatarHtml}</div>
             <div>
-              <div class="artist-name">${escapeHTML(a.name)} ${a.tagline ? `<span style="font-size:0.82rem;font-weight:400;color:var(--text-muted);">— "${escapeHTML(a.tagline)}"</span>` : ''}</div>
-              <div class="artist-meta">${escapeHTML(a.city) || 'Bangladesh'} · ${escapeHTML(a.email)} · WhatsApp: <a href="https://wa.me/${escapeHTML((a.whatsapp||'').replace(/[^0-9]/g,''))}" target="_blank" style="color:var(--purple);">${escapeHTML(a.whatsapp) || 'N/A'}</a> · Rate: ${escapeHTML(a.rate)}</div>
+              <div class="artist-name">${escapeHTML(a.name)}</div>
+              <div class="artist-meta">${escapeHTML(city)} · ${escapeHTML(a.email)} · WhatsApp: <a href="https://wa.me/${escapeHTML(whatsapp.replace(/[^0-9]/g,''))}" target="_blank" style="color:var(--purple);">${escapeHTML(whatsapp) || 'N/A'}</a> · Rate: ${escapeHTML(rate)}</div>
             </div>
           </div>
           <span class="status-badge status-pending">Pending Review ⏳</span>
@@ -387,22 +306,22 @@
         <div class="review-body">
           <div class="bio-box">
             <h4>Artist Bio &amp; Specialties</h4>
-            <p class="bio-text">${escapeHTML(a.bio || a.shortBio || 'No bio provided')}</p>
+            <p class="bio-text">${escapeHTML(bio)}</p>
             <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
-              ${(a.languages || ['Bengali']).map(l => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--purple);">${escapeHTML(l)}</span>`).join('')}
-              ${(a.categories || ['Commercial']).map(c => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(79,140,247,0.15);color:var(--blue);">${escapeHTML(c)}</span>`).join('')}
+              ${languages.map(l => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--purple);">${escapeHTML(l)}</span>`).join('')}
+              ${categories.map(c => `<span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:rgba(79,140,247,0.15);color:var(--blue);">${escapeHTML(c)}</span>`).join('')}
             </div>
           </div>
 
           <div class="samples-box">
-            <h4>Submitted Audio Samples (${(a.samples || []).length}/3)</h4>
-            ${(a.samples || []).map((s, sIdx) => `
+            <h4>Submitted Audio Samples (${samples.length}/3)</h4>
+            ${samples.map((s, sIdx) => `
               <div class="admin-sample">
                 <div>
-                  <div style="font-size:0.84rem;font-weight:500;">${escapeHTML(s.title)}</div>
-                  <div style="font-size:0.72rem;color:var(--text-faint);">Duration: ${escapeHTML(s.duration || '0:28')} · Max limit 0:30 ✓</div>
+                  <div style="font-size:0.84rem;font-weight:500;">${escapeHTML(s.title || 'Sample ' + (sIdx+1))}</div>
+                  <div style="font-size:0.72rem;color:var(--text-faint);">Max limit 0:30 ✓</div>
                 </div>
-                <button class="sample-play-btn" onclick="playSampleAudio(${350 + sIdx*70})" title="Play sample">
+                <button class="sample-play-btn" onclick="playSampleAudio('${escapeHTML(s.file_url || s.url || '')}')" title="Play sample">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
                 </button>
               </div>
@@ -424,9 +343,14 @@
     document.getElementById('statApproved').textContent = liveArtists.length;
     document.getElementById('liveTabCount').textContent = liveArtists.length;
     container.innerHTML = liveArtists.map(a => {
-      const avatarHtml = a.avatar && a.avatar.length > 20 
-        ? `<img src="${escapeHTML(a.avatar)}" alt="${escapeHTML(a.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      const details = a.artist_details && a.artist_details.length > 0 ? a.artist_details[0] : (a.artist_details || {});
+      const avatarUrl = a.avatar_url || a.avatar || '';
+      const avatarHtml = avatarUrl.length > 20 
+        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(a.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
         : (a.name ? escapeHTML(a.name[0]).toUpperCase() : 'U');
+      const rate = details.rate || 'Negotiable';
+      const city = details.location || 'Bangladesh';
+      const languages = details.languages || ['Bengali'];
 
       return `
       <div class="review-card">
@@ -435,12 +359,12 @@
             <div class="artist-avatar" style="overflow:hidden;">${avatarHtml}</div>
             <div>
               <div class="artist-name">${escapeHTML(a.name)}</div>
-              <div class="artist-meta">${escapeHTML(a.city) || 'Bangladesh'} · Rate: ${escapeHTML(a.rate)} · ${(a.languages || ['Bengali']).map(escapeHTML).join(', ')}</div>
+              <div class="artist-meta">${escapeHTML(city)} · Rate: ${escapeHTML(rate)} · ${languages.map(escapeHTML).join(', ')}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="status-badge status-approved">Live</span>
-            <a class="btn-view" href="profile.html?id=${escapeHTML(a.id || 'maya')}" target="_blank">View Live Profile</a>
+            <a class="btn-view" href="profile.html?id=${escapeHTML(a.id)}" target="_blank">View Live Profile</a>
             <button class="btn-reject" onclick="suspendArtist('${escapeHTML(a.id)}')">Suspend</button>
           </div>
         </div>
@@ -589,8 +513,7 @@
 
     // If tonmoymbm@gmail.com or an assigned Admin
     if (currentEmail === 'tonmoymbm@gmail.com' || adminUser || localStorage.getItem('voicecast_user_role') === 'admin') {
-      renderPendingQueue();
-      renderLiveArtists();
+      await fetchAdminData();
       renderReportedProfiles();
     } else {
       // Prompt admin login
