@@ -1339,6 +1339,7 @@
   // Save profile form with Full Completion Validation & Admin Queue Submission
   document.getElementById('finalSubmitBtn').addEventListener('click', async (e) => {
     e.preventDefault();
+    console.log('[SUBMIT] Button clicked');
 
     const name = document.getElementById('profFullName').value.trim();
     const tagline = document.getElementById('profTagline').value.trim();
@@ -1348,60 +1349,112 @@
     const bio = document.getElementById('profBio').value.trim();
     const rate = document.getElementById('profRate').value.trim();
 
-    // Required fields check (Full completion enforcement)
-    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio) { goToStep(1); alert('Please complete your Basic Info (Name, Tagline, Location, WhatsApp, Bio) before submitting.'); return; } if (!rate) { goToStep(3); alert('Please enter your Base Rate before submitting.'); return; } if (false) {
-      alert('⚠️ অনুগ্রহ করে প্রোফাইলের সকল আবশ্যক তথ্য পূরণ করুন (নাম, ট্যাগলাইন, লোকেশন, WhatsApp নম্বর, শর্ট ও বিস্তারিত বায়ো, এবং প্রাইসিং রেট)। সম্পূর্ণ তথ্য না দিলে প্রোফাইল সাবমিট করা যাবে না।');
+    console.log('[SUBMIT] Fields:', { name, tagline, loc, whatsapp, shortBio: shortBio.substring(0,20), bio: bio.substring(0,20), rate });
+
+    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio) {
+      goToStep(1);
+      alert('Please complete your Basic Info (Name, Tagline, Location, WhatsApp, Bio) before submitting.');
+      return;
+    }
+    if (!rate) {
+      goToStep(3);
+      alert('Please enter your Base Rate before submitting.');
       return;
     }
 
     if (artistSamples.length === 0) {
-      alert('⚠️ অনুগ্রহ করে Voice Samples ধাপে গিয়ে কমপক্ষে ১টি অডিও স্যাম্পল আপলোড করুন।');
+      alert('Please add at least 1 Voice Sample before submitting.');
       if (typeof goToStep === 'function') goToStep(4);
       return;
     }
 
     const fullSubmission = buildCompleteProfileSubmission('pending');
+    console.log('[SUBMIT] fullSubmission built');
 
-    // Sync with Supabase profile table
+    // Save to localStorage as backup
+    localStorage.setItem('voicecast_profile_data', JSON.stringify(fullSubmission));
+    localStorage.setItem('voicecast_pending_submissions', JSON.stringify([fullSubmission]));
+
     const db = window._supabase;
-    if (db) {
+    if (!db) {
+      alert('Supabase client not loaded. Profile saved locally only.');
+      console.error('[SUBMIT] window._supabase is null');
+    } else {
       try {
-        const { data } = await db.auth.getSession();
-        if (data && data.session && data.session.user) {
-          const user = data.session.user;
-          const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
-          const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
-          
-          await db.from('artist_details').upsert({
-            profile_id: user.id,
-            tagline: tagline,
-            short_bio: shortBio,
-            bio: bio,
-            languages: selectedLangs,
-            categories: selectedCats,
-            whatsapp: whatsapp,
-            phone: document.getElementById('profPhone').value.trim(),
-            city: loc,
-            rate: rate
-          });
+        console.log('[SUBMIT] Getting session...');
+        const { data: sessionData, error: sessionErr } = await db.auth.getSession();
 
-          await db.from('profiles').upsert({
-            id: user.id,
-            email: fullSubmission.email,
-            full_name: fullSubmission.name,
-            role: 'artist',
-            status: 'pending',
-            updated_at: new Date().toISOString()
-          });
+        if (sessionErr) {
+          alert('Session error: ' + sessionErr.message);
+          console.error('[SUBMIT] Session error:', sessionErr);
+          return;
         }
-      } catch (err) { alert('Database error. Please check console.'); console.error('Supabase error:', err); return; }
+
+        if (!sessionData || !sessionData.session || !sessionData.session.user) {
+          alert('You are not logged in. Please log in and try again.');
+          console.error('[SUBMIT] No session found:', sessionData);
+          return;
+        }
+
+        const user = sessionData.session.user;
+        console.log('[SUBMIT] User:', user.id, user.email);
+
+        const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
+        const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
+
+        // Step 1: Update profiles
+        console.log('[SUBMIT] Upserting profiles...');
+        const { error: profileErr } = await db.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          full_name: name,
+          role: 'artist',
+          status: 'pending',
+          updated_at: new Date().toISOString()
+        });
+
+        if (profileErr) {
+          alert('Profile error: ' + profileErr.message + '\nHint: Make sure "status" column exists in profiles table.');
+          console.error('[SUBMIT] profiles error:', profileErr);
+          return;
+        }
+        console.log('[SUBMIT] profiles OK');
+
+        // Step 2: Update artist_details
+        console.log('[SUBMIT] Upserting artist_details...');
+        const { error: detailsErr } = await db.from('artist_details').upsert({
+          profile_id: user.id,
+          tagline: tagline,
+          short_bio: shortBio,
+          bio: bio,
+          languages: selectedLangs,
+          categories: selectedCats,
+          whatsapp: whatsapp,
+          phone: document.getElementById('profPhone').value.trim(),
+          city: loc,
+          rate: rate
+        });
+
+        if (detailsErr) {
+          alert('Artist details error: ' + detailsErr.message + '\nHint: Make sure "artist_details" table exists in Supabase.');
+          console.error('[SUBMIT] artist_details error:', detailsErr);
+          return;
+        }
+        console.log('[SUBMIT] artist_details OK');
+
+      } catch (err) {
+        alert('Unexpected error: ' + err.message);
+        console.error('[SUBMIT] Unexpected:', err);
+        return;
+      }
     }
 
     artistApprovalStatus = 'pending';
     localStorage.setItem('voicecast_artist_status', 'pending');
     updateApprovalBanner();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast('✓ সম্পূর্ণ প্রোফাইল সফলভাবে অ্যাডমিন রিভিউতে সাবমিট হয়েছে!');
+    showToast('Profile submitted for admin review!');
+    alert('Profile submitted successfully! Pending admin approval.');
   });
 
   document.getElementById('saveSpecialtiesBtn').addEventListener('click', () => {
