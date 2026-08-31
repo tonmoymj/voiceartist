@@ -496,7 +496,7 @@
           <div id="step5-placeholder"></div>
           <div class="step-footer">
             <button type="button" class="btn-outline prev-step" onclick="goToStep(4)">Previous</button>
-            <button type="submit" class="btn-grad" id="finalSubmitBtn">Save &amp; Submit for Review</button>
+            <button type="button" class="btn-grad" id="finalSubmitBtn">Save &amp; Submit for Review</button>
           </div>
         </div>
 
@@ -1337,7 +1337,7 @@
   }
 
   // Save profile form with Full Completion Validation & Admin Queue Submission
-  document.getElementById('artistProfileForm').addEventListener('submit', async (e) => {
+  document.getElementById('finalSubmitBtn').addEventListener('click', async (e) => {
     e.preventDefault();
 
     const name = document.getElementById('profFullName').value.trim();
@@ -1769,6 +1769,7 @@
 
 </body>
 </html>
+
 
 
 
