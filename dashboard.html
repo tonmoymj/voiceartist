@@ -341,7 +341,7 @@
           <div class="form-row">
             <div class="form-col">
               <label>পূর্ণ নাম <span style="color:#EF4444;">*</span></label>
-              <input type="text" id="profFullName" placeholder="আপনার আসল বা স্টেজ নাম" required>
+              <input type="text" id="profFullName" placeholder="আপনার আসল বা স্টেজ নাম">
             </div>
             <div class="form-col">
               <label>ভয়েস টাইপ ট্যাগলাইন <span style="color:#EF4444;">*</span></label>
@@ -369,7 +369,7 @@
           <div class="form-row">
             <div class="form-col">
               <label>WhatsApp নম্বর (country code সহ) <span style="color:#EF4444;">*</span></label>
-              <input type="text" id="profWhatsapp" placeholder="e.g. 8801712345678" required>
+              <input type="text" id="profWhatsapp" placeholder="e.g. 8801712345678">
             </div>
             <div class="form-col">
               <label>ফোন নম্বর</label>
@@ -767,7 +767,7 @@
           <div class="form-row">
             <div class="form-col">
               <label>Project Title</label>
-              <input type="text" id="briefTitle" placeholder="e.g. 60-second Radio Commercial for Telecom Brand" required>
+              <input type="text" id="briefTitle" placeholder="e.g. 60-second Radio Commercial for Telecom Brand">
             </div>
             <div class="form-col">
               <label>Category</label>
@@ -1349,7 +1349,7 @@
     const rate = document.getElementById('profRate').value.trim();
 
     // Required fields check (Full completion enforcement)
-    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio || !rate) {
+    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio) { goToStep(1); alert('Please complete your Basic Info (Name, Tagline, Location, WhatsApp, Bio) before submitting.'); return; } if (!rate) { goToStep(3); alert('Please enter your Base Rate before submitting.'); return; } if (false) {
       alert('⚠️ অনুগ্রহ করে প্রোফাইলের সকল আবশ্যক তথ্য পূরণ করুন (নাম, ট্যাগলাইন, লোকেশন, WhatsApp নম্বর, শর্ট ও বিস্তারিত বায়ো, এবং প্রাইসিং রেট)। সম্পূর্ণ তথ্য না দিলে প্রোফাইল সাবমিট করা যাবে না।');
       return;
     }
@@ -1394,7 +1394,7 @@
             updated_at: new Date().toISOString()
           });
         }
-      } catch (err) {}
+      } catch (err) { alert('Database error. Please check console.'); console.error('Supabase error:', err); return; }
     }
 
     artistApprovalStatus = 'pending';
@@ -1769,3 +1769,6 @@
 
 </body>
 </html>
+
+
+
