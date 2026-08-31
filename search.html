@@ -15,33 +15,28 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="i18n.js"></script>
+<link rel="stylesheet" href="shared.css">
 <style>
-  :root{
-    --bg: #0A0A14; --bg-2: #100E1E; --surface: #15132A; --surface-2: #1B1836;
-    --border: #2A2745; --border-soft: #1F1C38;
-    --purple: #8B5CF6; --blue: #4F8CF7;
-    --text: #F3F1FA; --text-muted: #A9A5C4; --text-faint: #6E6A8F;
+  .load-more {
+    display: block;
+    width: 100%;
+    max-width: 240px;
+    margin: 32px auto 0;
+    padding: 12px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{ background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
-  a{color:inherit;}
-  :focus-visible{ outline:2px solid var(--purple); outline-offset:3px; border-radius:4px; }
-  .display{ font-family:'Space Grotesk', sans-serif; }
-  .container{ max-width:1180px; margin:0 auto; padding:0 24px; }
-
-  /* Nav (shared) */
-  .navbar{ position:sticky; top:0; z-index:40; backdrop-filter:blur(10px); background:rgba(10,10,20,0.8); border-bottom:1px solid var(--border-soft); }
-  .nav-inner{ max-width:1180px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
-  .brand{ display:flex; align-items:center; gap:8px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.1rem; text-decoration:none; }
-  .brand-mark{ width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 0 10px rgba(139,92,246,0.7); }
-  .nav-links{ display:flex; align-items:center; gap:26px; font-size:0.88rem; color:var(--text-muted); }
-  .nav-links a{ text-decoration:none; }
+  .load-more:hover {
+    border-color: var(--purple);
+    background: var(--surface-2);
+  }
   .nav-links a.active{ color:var(--text); }
-  .nav-cta{ display:flex; align-items:center; gap:12px; }
-  .lang-toggle{ font-size:0.76rem; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; background:transparent; }
-  .btn-outline{ border:1px solid var(--border); color:var(--text); font-size:0.84rem; padding:9px 16px; border-radius:8px; text-decoration:none; white-space:nowrap; }
-  .btn-grad{ background:linear-gradient(90deg,var(--purple),var(--blue)); color:#0B0A16; font-weight:600; font-size:0.84rem; padding:10px 16px; border-radius:8px; text-decoration:none; white-space:nowrap; border:none; cursor:pointer; }
-  @media (max-width:820px){ .nav-links{ display:none; } }
 
   /* Page header */
   .page-head{ padding:40px 0 24px; border-bottom:1px solid var(--border-soft); }
@@ -217,7 +212,7 @@
       <div class="filter-group">
         <div class="switch-row">
           <span>Available now only</span>
-          <div class="switch on" id="availSwitch"></div>
+          <button type="button" role="switch" aria-checked="true" id="availSwitch" class="switch on" aria-label="Available now only"></button>
         </div>
       </div>
     </aside>
@@ -326,7 +321,7 @@
             langs: a.artist_details?.languages || ['Bengali'],
             cats: a.artist_details?.categories || [],
             gender: a.artist_details?.gender || '',
-            rating: (a.reviews?.length > 0 ? (a.reviews.reduce((s,r)=>s+r.rating,0)/a.reviews.length).toFixed(1) : "5.0"),
+            rating: (a.reviews && a.reviews.length > 0 ? (a.reviews.reduce((s,r)=>s+(r.rating||0),0)/a.reviews.length).toFixed(1) : "5.0"),
             reviews: a.reviews?.length || 0,
             avail: a.is_available ?? true,
             seed: 12,
@@ -360,39 +355,51 @@
       return;
     }
 
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString().replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
     const savedArtistIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
     const toShow = list.slice(0, displayedCount);
     toShow.forEach(a => {
       const isSaved = savedArtistIds.includes(a.id);
       const card = document.createElement('div');
       card.className = 'artist-card';
+      const cleanAvatar = a.avatar && a.avatar.startsWith('http') ? encodeURI(a.avatar) : null;
+      const safeName = escapeHTML(a.name);
+      const safeLoc = escapeHTML(a.loc);
+      const safeRate = escapeHTML(a.rate);
+      const safeLangs = (a.langs || []).map(l => escapeHTML(l));
+      
       card.innerHTML = `
-        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${a.id}" aria-label="Save artist">
+        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${escapeHTML(a.id)}" aria-label="Save artist">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="${isSaved ? 'var(--pink)' : 'none'}" stroke="${isSaved ? 'var(--pink)' : 'currentColor'}" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c2 0 3.5 1.2 4.5 2.8C12 6.2 13.5 5 15.5 5 19 5 21.5 8.5 21.5 12.5 19 16.65 12 21 12 21z"/></svg>
         </button>
         <div class="artist-top">
           <div class="artist-photo-wrap">
-            <div class="artist-photo" style="overflow:hidden;">${a.avatar && a.avatar.length > 20 ? `<img src="${a.avatar}" alt="${a.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : a.name[0]}</div>
+            <div class="artist-photo" style="overflow:hidden;">${cleanAvatar ? `<img src="${cleanAvatar}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (safeName[0] || '?')}</div>
             ${a.avail ? '<span class="avail-dot"></span>' : ''}
           </div>
           <div>
-            <div class="artist-name">${a.name}</div>
-            <div class="artist-loc">${a.loc}</div>
+            <div class="artist-name">${safeName}</div>
+            <div class="artist-loc">${safeLoc}</div>
           </div>
         </div>
-        <div class="artist-langs">${a.langs.map(l=>`<span class="lang-chip">${l}</span>`).join('')}</div>
+        <div class="artist-langs">${safeLangs.map(l=>`<span class="lang-chip">${l}</span>`).join('')}</div>
         <div class="artist-waveform">
           <button class="mini-play" aria-label="Play sample">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
           </button>
-          <div class="mini-wave" data-seed="${a.seed}"></div>
+          <div class="mini-wave" data-seed="${escapeHTML(a.seed)}"></div>
         </div>
         <div class="artist-foot">
-          <span>★ ${a.rating}</span>
-          <span style="color:var(--text-muted)">${a.reviews} reviews</span>
-          ${a.rate ? `<strong style="color:var(--purple)">৳${a.rate}/min</strong>` : ''}
+          <span>★ ${escapeHTML(a.rating)}</span>
+          <span style="color:var(--text-muted)">${escapeHTML(a.reviews)} reviews</span>
+          ${a.rate ? `<strong style="color:var(--purple)">৳${safeRate}/min</strong>` : ''}
         </div>
-        <a class="view-profile" href="profile.html?id=${a.id}">View Profile</a>
+        <a class="view-profile" href="profile.html?id=${escapeHTML(a.id)}">View Profile</a>
       `;
       grid.appendChild(card);
     });
@@ -573,22 +580,7 @@
     });
   }
 
-  // Bilingual toggle (EN / বাং)
-  let currentLang = localStorage.getItem('vc_lang') || 'en';
-  function applyLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('vc_lang', lang);
-    const isBn = (lang === 'bn');
-    document.querySelectorAll('.lang-toggle').forEach(btn => {
-      btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
-    });
-  }
-  document.querySelectorAll('.lang-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      applyLanguage(currentLang === 'en' ? 'bn' : 'en');
-    });
-  });
-  applyLanguage(currentLang);
+
 
   async function initSearchPage() {
     await checkSearchAuth();

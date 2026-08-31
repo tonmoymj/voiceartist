@@ -377,6 +377,8 @@
       <button class="btn-primary" onclick="saveArtistModal()">Save Changes</button>
     </div>
   </div>
+</div>
+
 <!-- Add / Promote Admin Modal -->
 <div class="super-modal" id="adminModal">
   <div class="super-modal-content">
@@ -396,10 +398,51 @@
   </div>
 </div>
 
+<!-- Role Change Modal -->
+<div class="super-modal" id="roleModal">
+  <div class="super-modal-content">
+    <h3 class="display">Change User Role</h3>
+    <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:12px;" id="roleModalDesc"></p>
+    <select id="roleSelect">
+      <option value="Artist">Artist</option>
+      <option value="Client">Client</option>
+      <option value="Admin">Admin</option>
+    </select>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+      <button class="btn-action" onclick="closeRoleModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRoleModal()">Save Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="super-modal" id="confirmModal">
+  <div class="super-modal-content">
+    <h3 class="display" id="confirmModalTitle">Confirm Action</h3>
+    <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:12px;" id="confirmModalDesc"></p>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+      <button class="btn-action" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn-action danger" onclick="executeConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="superToast">Action successful!</div>
 
 <script>
   const SUPER_ADMIN_EMAIL = 'tonmoymbm@gmail.com';
+
+  function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>'"]/g, 
+      tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag));
+  }
 
   async function checkSuperAdminAuth() {
     const db = window._supabase;
@@ -423,19 +466,22 @@
       initSuperAdminData();
     } else if (user) {
       // Logged in as another user -> Access Denied
+      document.getElementById('superAdminApp').innerHTML = ''; // Clear sensitive content
       document.getElementById('guardScreen').style.display = 'block';
       document.getElementById('superAdminApp').style.display = 'none';
       document.getElementById('guardDesc').innerHTML = `
         <span style="color:var(--red);font-weight:700;display:block;margin-bottom:6px;">⛔ Access Denied</span>
-        You are currently signed in as <strong>${user.email}</strong>.<br>
+        You are currently signed in as <strong>${escapeHTML(user.email)}</strong>.<br>
         Only the Master Super Admin (<strong>${SUPER_ADMIN_EMAIL}</strong>) has access to this command center.
       `;
       document.getElementById('guardActions').innerHTML = `
         <button class="btn-primary" onclick="loginSuperAdminGoogle()">Switch to tonmoymbm@gmail.com</button>
         <a href="/" class="btn-action" style="padding:10px;text-align:center;">Return to Home</a>
       `;
+      setTimeout(() => window.location.replace('/'), 3000);
     } else {
       // Not logged in -> Prompt Super Admin Login
+      document.getElementById('superAdminApp').innerHTML = ''; // Clear sensitive content
       document.getElementById('guardScreen').style.display = 'block';
       document.getElementById('superAdminApp').style.display = 'none';
     }
@@ -572,16 +618,16 @@
       <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;">
-            ${a.avatar && a.avatar.length > 20 ? `<img src="${a.avatar}" style="width:100%;height:100%;object-fit:cover;">` : a.name[0]}
+            ${a.avatar && a.avatar.length > 20 ? `<img src="${escapeHTML(a.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : escapeHTML(a.name[0])}
           </div>
           <div>
-            <div style="font-weight:700;font-size:1rem;">${a.name}</div>
-            <div style="font-size:0.8rem;color:var(--text-faint);">${a.loc} · Rate: ৳${a.rate}/min · WhatsApp: ${a.phone} · ${a.samplesCount} Audio Samples</div>
+            <div style="font-weight:700;font-size:1rem;">${escapeHTML(a.name)}</div>
+            <div style="font-size:0.8rem;color:var(--text-faint);">${escapeHTML(a.loc)} · Rate: ৳${escapeHTML(String(a.rate))}/min · WhatsApp: ${escapeHTML(a.phone)} · ${escapeHTML(String(a.samplesCount))} Audio Samples</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn-action approve" onclick="superApproveArtist('${a.id}')">✓ Approve &amp; Make Live</button>
-          <button class="btn-action danger" onclick="superRejectArtist('${a.id}')">Reject</button>
+          <button class="btn-action approve" onclick="superApproveArtist('${escapeHTML(a.id)}')">✓ Approve &amp; Make Live</button>
+          <button class="btn-action danger" onclick="superRejectArtist('${escapeHTML(a.id)}')">Reject</button>
         </div>
       </div>
     `).join('');
@@ -591,20 +637,20 @@
     const tbody = document.getElementById('superArtistsTbody');
     tbody.innerHTML = masterArtists.map(a => `
       <tr>
-        <td><strong>${a.name}</strong></td>
-        <td>${a.loc}</td>
-        <td>৳${a.rate}/min</td>
-        <td><span class="badge ${a.status === 'live' ? 'badge-live' : 'badge-pending'}">${a.status}</span></td>
+        <td><strong>${escapeHTML(a.name)}</strong></td>
+        <td>${escapeHTML(a.loc)}</td>
+        <td>৳${escapeHTML(String(a.rate))}/min</td>
+        <td><span class="badge ${a.status === 'live' ? 'badge-live' : 'badge-pending'}">${escapeHTML(a.status)}</span></td>
         <td>
-          <button class="badge ${a.featured ? 'badge-featured' : 'badge-suspended'}" onclick="toggleFeatured('${a.id}')" style="cursor:pointer;border:none;">
+          <button class="badge ${a.featured ? 'badge-featured' : 'badge-suspended'}" onclick="toggleFeatured('${escapeHTML(a.id)}')" style="cursor:pointer;border:none;">
             ${a.featured ? '★ Featured' : 'Normal'}
           </button>
         </td>
         <td>
           <div style="display:flex;gap:6px;">
-            <button class="btn-action" onclick="openEditArtistModal('${a.id}')">Edit</button>
-            <a class="btn-action" href="profile?id=${a.id}" target="_blank">View</a>
-            <button class="btn-action danger" onclick="deleteArtistMaster('${a.id}')">Delete</button>
+            <button class="btn-action" onclick="openEditArtistModal('${escapeHTML(a.id)}')">Edit</button>
+            <a class="btn-action" href="profile?id=${escapeHTML(a.id)}" target="_blank">View</a>
+            <button class="btn-action danger" onclick="deleteArtistMaster('${escapeHTML(a.id)}')">Delete</button>
           </div>
         </td>
       </tr>
@@ -616,13 +662,13 @@
     tbody.innerHTML = masterUsers.map(u => `
       <tr>
         <td>
-          <div><strong>${u.name}</strong></div>
-          <div style="font-size:0.75rem;color:var(--text-faint);">${u.email}</div>
+          <div><strong>${escapeHTML(u.name)}</strong></div>
+          <div style="font-size:0.75rem;color:var(--text-faint);">${escapeHTML(u.email)}</div>
         </td>
-        <td><span class="badge ${u.role === 'Super Admin' ? 'badge-featured' : (u.role === 'Admin' ? 'badge-live' : 'badge-pending')}">${u.role}</span></td>
-        <td>${u.date}</td>
+        <td><span class="badge ${u.role === 'Super Admin' ? 'badge-featured' : (u.role === 'Admin' ? 'badge-live' : 'badge-pending')}">${escapeHTML(u.role)}</span></td>
+        <td>${escapeHTML(u.date)}</td>
         <td>
-          ${u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? '<span style="font-size:0.78rem;color:var(--gold);">Owner (Protected)</span>' : `<button class="btn-action" onclick="promoteUserRole('${u.email}')">Change Role</button>`}
+          ${u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? '<span style="font-size:0.78rem;color:var(--gold);">Owner (Protected)</span>' : `<button class="btn-action" onclick="promoteUserRole('${escapeHTML(u.email)}')">Change Role</button>`}
         </td>
       </tr>
     `).join('');
@@ -639,18 +685,18 @@
         <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:38px;height:38px;border-radius:50%;background:${isOwner ? 'linear-gradient(135deg,#EF4444,#B91C1C)' : 'linear-gradient(135deg,var(--purple),var(--blue))'};display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;font-size:0.85rem;">
-              ${a.name[0]}
+              ${escapeHTML(a.name[0])}
             </div>
             <div>
               <div style="font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
-                ${a.name}
-                <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${a.role}</span>
+                ${escapeHTML(a.name)}
+                <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${escapeHTML(a.role)}</span>
               </div>
-              <div style="font-size:0.78rem;color:var(--text-faint);">${a.email} · Appointed: ${a.date}</div>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${escapeHTML(a.email)} · Appointed: ${escapeHTML(a.date)}</div>
             </div>
           </div>
           <div>
-            ${isOwner ? '<span style="font-size:0.78rem;color:var(--gold);font-weight:600;">👑 Master Owner</span>' : `<button class="btn-action danger" onclick="revokeAdminRole('${a.email}')">Revoke Admin Access</button>`}
+            ${isOwner ? '<span style="font-size:0.78rem;color:var(--gold);font-weight:600;">👑 Master Owner</span>' : `<button class="btn-action danger" onclick="revokeAdminRole('${escapeHTML(a.email)}')">Revoke Admin Access</button>`}
           </div>
         </div>
       `;
@@ -697,7 +743,7 @@
   };
 
   window.revokeAdminRole = function(email) {
-    if(confirm(`Are you sure you want to revoke Admin rights for ${email}?`)) {
+    openConfirmModal('Revoke Admin Rights', `Are you sure you want to revoke Admin rights for ${email}?`, 'Revoke', () => {
       const user = masterUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
       if(user) {
         user.role = 'Client';
@@ -706,23 +752,39 @@
         renderUsersTable();
         showToast(`Admin rights revoked for ${email}`);
       }
-    }
+    });
+  };
+
+  let confirmCallback = null;
+  function openConfirmModal(title, desc, btnText, callback) {
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalDesc').textContent = desc;
+    document.querySelector('#confirmModal .btn-action.danger').textContent = btnText;
+    confirmCallback = callback;
+    document.getElementById('confirmModal').style.display = 'flex';
+  }
+  window.closeConfirmModal = function() {
+    document.getElementById('confirmModal').style.display = 'none';
+  };
+  window.executeConfirm = function() {
+    if(confirmCallback) confirmCallback();
+    closeConfirmModal();
   };
 
   function renderSamplesTable() {
     const tbody = document.getElementById('superSamplesTbody');
     tbody.innerHTML = masterSamples.map((s, idx) => `
       <tr>
-        <td><strong>${s.title}</strong></td>
-        <td>${s.artist}</td>
-        <td>${s.cat}</td>
-        <td>${s.dur} (Max 30s ✓)</td>
+        <td><strong>${escapeHTML(s.title)}</strong></td>
+        <td>${escapeHTML(s.artist)}</td>
+        <td>${escapeHTML(s.cat)}</td>
+        <td>${escapeHTML(s.dur)} (Max 30s ✓)</td>
         <td>
           <button class="audio-inline-play" onclick="playSuperAudio(${340 + idx*45})">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
           </button>
         </td>
-        <td><span class="badge ${s.status === 'Approved' ? 'badge-live' : 'badge-pending'}">${s.status}</span></td>
+        <td><span class="badge ${s.status === 'Approved' ? 'badge-live' : 'badge-pending'}">${escapeHTML(s.status)}</span></td>
         <td>
           ${s.status !== 'Approved' ? `<button class="btn-action approve" onclick="approveSample(${idx})">Approve</button>` : `<button class="btn-action danger" onclick="deleteSampleSuper(${idx})">Remove</button>`}
         </td>
@@ -775,11 +837,11 @@
   };
 
   window.deleteArtistMaster = function(id) {
-    if(confirm('Are you sure you want to permanently delete this artist from VoiceCast?')) {
+    openConfirmModal('Delete Artist', 'Are you sure you want to permanently delete this artist from VoiceCast?', 'Delete', () => {
       masterArtists = masterArtists.filter(a => a.id !== id);
       renderArtistsTable();
       showToast('Artist profile deleted');
-    }
+    });
   };
 
   window.approveSample = function(idx) {
@@ -794,16 +856,28 @@
     showToast('Audio sample removed');
   };
 
+  let roleUserEmail = null;
   window.promoteUserRole = function(email) {
     const user = masterUsers.find(u => u.email === email);
     if(!user) return;
-    const newRole = prompt(`Change role for ${user.email} (Artist, Client, Admin):`, user.role);
-    if(newRole) {
+    roleUserEmail = email;
+    document.getElementById('roleModalDesc').textContent = `Change role for ${user.email}:`;
+    document.getElementById('roleSelect').value = user.role;
+    document.getElementById('roleModal').style.display = 'flex';
+  };
+  window.closeRoleModal = function() {
+    document.getElementById('roleModal').style.display = 'none';
+  };
+  window.confirmRoleModal = function() {
+    const user = masterUsers.find(u => u.email === roleUserEmail);
+    const newRole = document.getElementById('roleSelect').value;
+    if(user && newRole) {
       user.role = newRole;
       renderUsersTable();
       renderAdmins();
       showToast(`User role updated to ${newRole}`);
     }
+    closeRoleModal();
   };
 
   // Modal Handlers

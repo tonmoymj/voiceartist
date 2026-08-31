@@ -22,17 +22,39 @@ document.addEventListener('DOMContentLoaded', async function () {
   const db = window._supabase;
   if (!db) return;
 
+  function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+      tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag])
+    );
+  }
+
   // Sync role if returning from OAuth
   async function syncUserRole(user) {
     if (!user) return;
     const pendingRole = localStorage.getItem('voicecast_pending_role');
+    
+    if (pendingRole) {
+      const allowedRoles = ['artist', 'client'];
+      if (!allowedRoles.includes(pendingRole)) {
+        localStorage.removeItem('voicecast_pending_role');
+        return;
+      }
+    }
+    
     const existingRole = user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
     const finalRole = pendingRole || existingRole;
 
     if (pendingRole) {
       try {
         await db.auth.updateUser({ data: { role: finalRole } });
-      } catch (e) {}
+      } catch (e) { console.error('Context:', e); }
       localStorage.setItem('voicecast_user_role', finalRole);
       localStorage.removeItem('voicecast_pending_role');
     }
@@ -45,18 +67,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         role: finalRole,
         updated_at: new Date().toISOString()
       });
-    } catch (e) {}
+    } catch (e) { console.error('Context:', e); }
     
     return finalRole;
   }
 
   // Clean URL hash if it contains OAuth tokens after login
   if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
-    try {
-      setTimeout(() => {
+    window._supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY' || event === 'TOKEN_REFRESHED') {
         window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
-      }, 350);
-    } catch (e) {}
+      }
+    });
   }
 
   async function updateNavbarUserUI(session) {
@@ -67,11 +89,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       const user = session.user;
       const role = await syncUserRole(user) || user.user_metadata?.role || localStorage.getItem('voicecast_user_role') || 'artist';
       const meta = user.user_metadata || {};
-      const name = meta.full_name || meta.name || user.email.split('@')[0] || 'User';
+      const name = escapeHTML(meta.full_name || meta.name || user.email.split('@')[0] || 'User');
       const initial = (name[0] || 'U').toUpperCase();
       const isSuperAdmin = (user.email && user.email.toLowerCase() === 'tonmoymbm@gmail.com');
       const roleLabel = isSuperAdmin ? 'Super Admin' : (role === 'client' ? 'Client' : 'Artist');
-      const superAdminNavBtn = isSuperAdmin ? '<a href="superadmin.html" style="background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.4);color:#EF4444;font-weight:700;font-size:0.82rem;padding:6px 12px;border-radius:8px;text-decoration:none;box-shadow:0 0 10px rgba(239,68,68,0.2);">👑 Super Admin</a>' : '';
+      const superAdminNavBtn = isSuperAdmin ? '<a href="superadmin" style="background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.4);color:#EF4444;font-weight:700;font-size:0.82rem;padding:6px 12px;border-radius:8px;text-decoration:none;box-shadow:0 0 10px rgba(239,68,68,0.2);">👑 Super Admin</a>' : '';
 
       // Desktop nav CTA update
       if (navCta) {
@@ -80,12 +102,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         navCta.innerHTML = `
           ${langHtml}
           ${superAdminNavBtn}
-          <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
+          <a href="dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 14px 5px 6px;text-decoration:none;transition:border-color 0.15s;">
             <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;color:#0B0A16;font-weight:700;font-size:0.75rem;">${initial}</div>
             <span style="font-size:0.84rem;color:var(--text);font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
             <span style="font-size:0.68rem;padding:2px 7px;border-radius:999px;background:rgba(139,92,246,0.18);color:var(--purple);font-weight:600;">${roleLabel}</span>
           </a>
-          <a class="btn-outline" href="dashboard.html" style="padding:7px 14px;font-size:0.82rem;">Dashboard</a>
+          <a class="btn-outline" href="dashboard" style="padding:7px 14px;font-size:0.82rem;">Dashboard</a>
           <button id="logoutBtn" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.82rem;padding:7px 12px;border-radius:8px;cursor:pointer;transition:border-color 0.15s,color 0.15s;">Log out</button>
         `;
         const logoutBtn = document.getElementById('logoutBtn');
@@ -107,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               <div style="font-size:0.92rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;">
                 ${name} <span style="font-size:0.68rem;padding:1px 6px;border-radius:999px;background:rgba(139,92,246,0.2);color:var(--purple);">${roleLabel}</span>
               </div>
-              <div style="font-size:0.75rem;color:var(--text-faint);">${user.email}</div>
+              <div style="font-size:0.75rem;color:var(--text-faint);">${escapeHTML(user.email)}</div>
             </div>
           </div>
           ${isSuperAdmin ? '<a class="btn-grad" href="superadmin" style="display:block;text-align:center;margin-bottom:8px;padding:10px;background:linear-gradient(90deg,#EF4444,#DC2626);color:#FFF;">👑 Open Super Admin Panel</a>' : ''}
@@ -127,8 +149,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       const newLangToggles = document.querySelectorAll('.lang-toggle');
       newLangToggles.forEach(btn => {
         btn.addEventListener('click', () => {
-          if (typeof applyLanguage === 'function') {
-            applyLanguage(currentLang === 'en' ? 'bn' : 'en');
+          if (typeof applyGlobalLanguage === 'function') {
+            applyGlobalLanguage(typeof currentVoiceCastLang !== 'undefined' && currentVoiceCastLang === 'en' ? 'bn' : 'en');
           }
         });
       });
@@ -141,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (data && data.session) {
       await updateNavbarUserUI(data.session);
     }
-  } catch (e) {}
+  } catch (e) { console.error('Context:', e); }
 
   // Subscribe to auth state events
   try {
@@ -150,5 +172,5 @@ document.addEventListener('DOMContentLoaded', async function () {
         await updateNavbarUserUI(session);
       }
     });
-  } catch (e) {}
+  } catch (e) { console.error('Context:', e); }
 });

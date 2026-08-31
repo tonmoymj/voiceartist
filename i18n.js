@@ -136,42 +136,54 @@ const VoiceCastTranslations = {
   }
 };
 
-let currentVoiceCastLang = localStorage.getItem('vc_lang') || 'en';
+window.VoiceCastI18n = {
+  currentLang: localStorage.getItem('vc_lang') || 'en',
+  t(key, params = {}) {
+    let text = (VoiceCastTranslations[this.currentLang] || VoiceCastTranslations.en)[key] || key;
+    Object.keys(params).forEach(p => { text = text.replace(`{${p}}`, params[p]); });
+    return text;
+  },
+  apply(lang) {
+    this.currentLang = lang;
+    localStorage.setItem('vc_lang', lang);
+    document.documentElement.lang = lang; // Accessibility fix
+    const isBn = (lang === 'bn');
 
-function applyGlobalLanguage(lang) {
-  currentVoiceCastLang = lang;
-  localStorage.setItem('vc_lang', lang);
-  const isBn = (lang === 'bn');
-  const dict = VoiceCastTranslations[lang] || VoiceCastTranslations.en;
+    // Update language toggle buttons
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+      btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
+    });
 
-  // Update language toggle buttons
-  document.querySelectorAll('.lang-toggle').forEach(btn => {
-    btn.textContent = isBn ? 'বাং | EN' : 'EN | বাং';
-  });
-
-  // Update data-i18n elements
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (dict[key]) {
-      el.textContent = dict[key];
-    }
-  });
-
-  // Update data-i18n-placeholder elements
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    if (dict[key]) {
-      el.setAttribute('placeholder', dict[key]);
-    }
-  });
-}
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const translation = this.t(key);
+      const textNode = el.querySelector('.i18n-text');
+      if (textNode) {
+        textNode.textContent = translation;
+      } else {
+        // If it contains SVGs/icons, this might wipe them if not careful, 
+        // but for now, just fallback to textContent if .i18n-text is missing
+        if(el.children.length === 0) el.textContent = translation;
+      }
+    });
+    // Handle placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      el.placeholder = this.t(el.getAttribute('data-i18n-placeholder'));
+    });
+  }
+};
+// keep the existing window.applyGlobalLanguage for backward compatibility:
+window.applyGlobalLanguage = (lang) => window.VoiceCastI18n.apply(lang);
+window.currentVoiceCastLang = window.VoiceCastI18n.currentLang;
 
 document.addEventListener('DOMContentLoaded', () => {
-  applyGlobalLanguage(currentVoiceCastLang);
+  window.VoiceCastI18n.apply(window.VoiceCastI18n.currentLang);
   document.querySelectorAll('.lang-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      applyGlobalLanguage(currentVoiceCastLang === 'en' ? 'bn' : 'en');
+      const newLang = window.VoiceCastI18n.currentLang === 'en' ? 'bn' : 'en';
+      window.VoiceCastI18n.apply(newLang);
+      window.currentVoiceCastLang = window.VoiceCastI18n.currentLang;
     });
   });
 });
