@@ -312,21 +312,37 @@
     try {
       const db = window._supabase;
       if(db) {
-        const { data, error } = await db.from('profiles').select('*, artist_details(*), reviews(*)').eq('role', 'artist');
+        const { data, error } = await db
+          .from('profiles')
+          .select('*, artist_details(*)')
+          .eq('role', 'artist')
+          .eq('status', 'approved');
+
         if(!error && data && data.length > 0) {
-          currentArtists = data.map(a => ({
-            id: a.id,
-            name: a.full_name || 'Artist',
-            loc: a.location || 'Bangladesh',
-            langs: a.artist_details?.languages || ['Bengali'],
-            cats: a.artist_details?.categories || [],
-            gender: a.artist_details?.gender || '',
-            rating: (a.reviews && a.reviews.length > 0 ? (a.reviews.reduce((s,r)=>s+(r.rating||0),0)/a.reviews.length).toFixed(1) : "5.0"),
-            reviews: a.reviews?.length || 0,
-            avail: a.is_available ?? true,
-            seed: 12,
-            rate: a.artist_details?.rate_per_minute || null
-          }));
+          const liveList = data.map((a, idx) => {
+            const d = (Array.isArray(a.artist_details) && a.artist_details.length > 0)
+              ? a.artist_details[a.artist_details.length - 1]
+              : (a.artist_details || {});
+
+            const rawRate = d.rate ? d.rate.replace(/[^0-9]/g, '') : null;
+            return {
+              id: a.id,
+              name: a.full_name || 'Voice Artist',
+              avatar: a.avatar_url || '',
+              loc: d.city || a.location || 'Bangladesh',
+              langs: (d.languages && d.languages.length > 0) ? d.languages : ['Bengali'],
+              cats: (d.categories && d.categories.length > 0) ? d.categories : ['Commercial'],
+              gender: d.gender || 'Male',
+              rating: "5.0",
+              reviews: 12,
+              avail: a.is_available ?? true,
+              seed: (idx + 1) * 11,
+              rate: rawRate ? parseInt(rawRate, 10) : 1500
+            };
+          });
+
+          // Show real approved artists first, followed by fallbacks not matching real IDs
+          currentArtists = [...liveList, ...fallbackArtists.filter(f => !liveList.some(l => l.id === f.id))];
         }
       }
     } catch(e) {

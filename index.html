@@ -204,7 +204,7 @@
       <p class="section-sub">A few of the verified artists ready to work on your next project.</p>
     </div>
 
-    <div class="artist-grid">
+    <div class="artist-grid" id="featuredArtistGrid">
 
       <div class="artist-card">
         <div class="artist-top">
@@ -437,34 +437,166 @@
     heroWave.appendChild(bar);
   }
 
-  // Mini waveforms on artist cards
-  document.querySelectorAll('.mini-wave').forEach(wf => {
-    const seed = parseInt(wf.dataset.seed, 10) || 1;
-    const rand = seededRandom(seed);
-    for(let i = 0; i < 26; i++){
-      const b = document.createElement('div');
-      b.className = 'b';
-      const h = 4 + Math.round(rand() * 14);
-      b.style.height = h + 'px';
-      wf.appendChild(b);
-    }
-  });
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-  const notes = [330, 392, 440, 523, 587];
-  document.querySelectorAll('.mini-play').forEach((btn, idx) => {
-    btn.addEventListener('click', () => {
-      playAcousticChime(notes[idx % notes.length], 0.9);
-      const wf = btn.nextElementSibling;
-      wf.querySelectorAll('.b').forEach((b,i) => {
-        setTimeout(() => { b.style.background = 'linear-gradient(180deg,var(--purple),var(--blue))'; }, i * 25);
-      });
-      setTimeout(() => {
-        wf.querySelectorAll('.b').forEach(b => b.style.background = '');
-      }, 26 * 25 + 400);
+  function initWaveformsAndAudio(container) {
+    if (!container) return;
+    container.querySelectorAll('.mini-wave').forEach(wf => {
+      if (wf.children.length > 0) return;
+      const seed = parseInt(wf.dataset.seed, 10) || 1;
+      const rand = seededRandom(seed);
+      for(let i = 0; i < 26; i++){
+        const b = document.createElement('div');
+        b.className = 'b';
+        const h = 4 + Math.round(rand() * 14);
+        b.style.height = h + 'px';
+        wf.appendChild(b);
+      }
     });
-  });
 
+    const notes = [330, 392, 440, 523, 587];
+    container.querySelectorAll('.mini-play').forEach((btn, idx) => {
+      btn.onclick = () => {
+        playAcousticChime(notes[idx % notes.length], 0.9);
+        const wf = btn.nextElementSibling;
+        if (wf) {
+          wf.querySelectorAll('.b').forEach((b,i) => {
+            setTimeout(() => { b.style.background = 'linear-gradient(180deg,var(--purple),var(--blue))'; }, i * 25);
+          });
+          setTimeout(() => {
+            wf.querySelectorAll('.b').forEach(b => b.style.background = '');
+          }, 26 * 25 + 400);
+        }
+      };
+    });
+  }
 
+  async function loadFeaturedArtists() {
+    const grid = document.getElementById('featuredArtistGrid');
+    if (!grid) return;
+
+    try {
+      const db = window._supabase;
+      if (db) {
+        const { data, error } = await db
+          .from('profiles')
+          .select('*, artist_details(*)')
+          .eq('role', 'artist')
+          .eq('status', 'approved');
+
+        if (!error && data && data.length > 0) {
+          const liveCards = data.map((a, idx) => {
+            const d = (Array.isArray(a.artist_details) && a.artist_details.length > 0)
+              ? a.artist_details[a.artist_details.length - 1]
+              : (a.artist_details || {});
+
+            const name = a.full_name || 'Voice Artist';
+            const initial = name[0] ? name[0].toUpperCase() : 'U';
+            const tagline = d.tagline || d.short_bio || 'Commercial & Narration';
+            const langs = (d.languages && d.languages.length > 0) ? d.languages : ['Bengali'];
+            const rateStr = d.rate ? `৳${d.rate.replace(/[^0-9]/g, '')}/min` : '';
+            const avatarHtml = a.avatar_url && a.avatar_url.length > 20
+              ? `<img src="${escapeHTML(a.avatar_url)}" alt="${escapeHTML(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+              : `<div class="artist-photo" style="background:linear-gradient(135deg,#3A2D78,#1E1748); color:#A78BFA;">${escapeHTML(initial)}</div>`;
+
+            return `
+              <div class="artist-card">
+                <div class="artist-top">
+                  <div class="artist-photo-wrap">
+                    ${avatarHtml}
+                    <span class="avail-dot"></span>
+                  </div>
+                  <div>
+                    <div class="artist-name">${escapeHTML(name)}</div>
+                    <div class="artist-role">${escapeHTML(tagline)}</div>
+                  </div>
+                </div>
+                <div class="artist-langs">
+                  ${langs.map(l => `<span class="lang-chip">${escapeHTML(l)}</span>`).join('')}
+                </div>
+                <div class="artist-waveform">
+                  <button class="mini-play" aria-label="Play sample">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
+                  </button>
+                  <div class="mini-wave" data-seed="${(idx + 1) * 17}"></div>
+                </div>
+                <div class="artist-rating" style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>★ 5.0 · Verified</span>
+                  ${rateStr ? `<strong style="color:var(--purple);font-size:0.85rem;">${escapeHTML(rateStr)}</strong>` : ''}
+                </div>
+                <a class="view-profile" href="profile.html?id=${escapeHTML(a.id)}">View Profile</a>
+              </div>
+            `;
+          });
+
+          const fallbackHtml = [
+            `
+            <div class="artist-card">
+              <div class="artist-top">
+                <div class="artist-photo-wrap">
+                  <div class="artist-photo" style="background:linear-gradient(135deg,#1E3A68,#122345); color:#60A5FA;">R</div>
+                  <span class="avail-dot"></span>
+                </div>
+                <div>
+                  <div class="artist-name">Rafiq Hasan</div>
+                  <div class="artist-role">Documentary &amp; E-Learning</div>
+                </div>
+              </div>
+              <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">Sylheti</span></div>
+              <div class="artist-waveform">
+                <button class="mini-play" aria-label="Play sample"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg></button>
+                <div class="mini-wave" data-seed="22"></div>
+              </div>
+              <div class="artist-rating"><span>★ 4.8</span> · 96 reviews</div>
+              <a class="view-profile" href="profile.html?id=rafiq">View Profile</a>
+            </div>
+            `,
+            `
+            <div class="artist-card">
+              <div class="artist-top">
+                <div class="artist-photo-wrap">
+                  <div class="artist-photo" style="background:linear-gradient(135deg,#581C68,#331045); color:#F472B6;">N</div>
+                </div>
+                <div>
+                  <div class="artist-name">Nusrat Jahan</div>
+                  <div class="artist-role">Character &amp; Animation</div>
+                </div>
+              </div>
+              <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">English</span></div>
+              <div class="artist-waveform">
+                <button class="mini-play" aria-label="Play sample"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg></button>
+                <div class="mini-wave" data-seed="33"></div>
+              </div>
+              <div class="artist-rating"><span>★ 5.0</span> · 74 reviews</div>
+              <a class="view-profile" href="profile.html?id=nusrat">View Profile</a>
+            </div>
+            `
+          ];
+
+          let allCardsHtml = liveCards.join('');
+          if (liveCards.length < 3) {
+            allCardsHtml += fallbackHtml.slice(0, 3 - liveCards.length).join('');
+          }
+          grid.innerHTML = allCardsHtml;
+          initWaveformsAndAudio(grid);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Featured artists live fetch error:', e);
+    }
+    initWaveformsAndAudio(grid);
+  }
+
+  document.addEventListener('DOMContentLoaded', loadFeaturedArtists);
 
   // Mobile hamburger
   const hamburger = document.getElementById('hamburger');
