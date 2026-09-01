@@ -443,14 +443,18 @@
     if (!artist) return;
 
     if (window._supabase) {
-      await window._supabase.from('profiles').update({ status: 'approved' }).eq('id', id);
+      const { error } = await window._supabase.from('profiles').update({ status: 'approved' }).eq('id', id);
+      if (error) {
+        alert('Approve failed: ' + error.message);
+        return;
+      }
     }
 
     pendingArtists = pendingArtists.filter(a => a.id !== id);
     liveArtists.unshift({ ...artist, status: 'approved' });
     renderPendingQueue();
     renderLiveArtists();
-    showToast(`✓ ${artist.name} is now approved and live!`);
+    showToast(`✅ ${artist.full_name || artist.name || 'Artist'} is now approved and live!`);
   };
 
   window.openRejectModal = function(id) {
@@ -500,40 +504,41 @@
   async function checkAdminAuth() {
     const db = window._supabase;
     let user = null;
-    console.log('[ADMIN AUTH] Starting auth check...');
-    console.log('[ADMIN AUTH] _supabase available:', !!db);
+    
+    // Admin emails list — add any email that should have admin access
+    const ADMIN_EMAILS = ['tonmoymbm@gmail.com', 'tnmymj@gmail.com'];
     
     if (db) {
       try {
         const { data } = await db.auth.getSession();
-        console.log('[ADMIN AUTH] Session data:', data);
         if (data && data.session) user = data.session.user;
       } catch (e) {
-        console.error('[ADMIN AUTH] Session error:', e);
+        console.error('[ADMIN] Session error:', e);
       }
     }
 
     const currentEmail = user ? user.email.toLowerCase() : '';
-    console.log('[ADMIN AUTH] Current email:', currentEmail);
-    console.log('[ADMIN AUTH] User object:', user);
-    
     const masterUsers = JSON.parse(localStorage.getItem('voicecast_master_users') || '[]');
-    console.log('[ADMIN AUTH] Master users from localStorage:', masterUsers);
-    
     const adminUser = masterUsers.find(u => u.email && u.email.toLowerCase() === currentEmail && (u.role === 'Admin' || u.role === 'Super Admin'));
     const userRole = localStorage.getItem('voicecast_user_role');
-    console.log('[ADMIN AUTH] Is tonmoymbm?', currentEmail === 'tonmoymbm@gmail.com');
-    console.log('[ADMIN AUTH] Is admin from master list?', !!adminUser);
-    console.log('[ADMIN AUTH] localStorage role:', userRole);
+    
+    // Also check database for admin role
+    let isDbAdmin = false;
+    if (db && user) {
+      try {
+        const { data: profileData } = await db.from('profiles').select('role').eq('id', user.id).single();
+        if (profileData && (profileData.role === 'admin' || profileData.role === 'super_admin')) {
+          isDbAdmin = true;
+        }
+      } catch(e) {}
+    }
 
-    // If tonmoymbm@gmail.com or an assigned Admin
-    if (currentEmail === 'tonmoymbm@gmail.com' || adminUser || userRole === 'admin') {
-      console.log('[ADMIN AUTH] ✅ Access granted! Fetching data...');
+    const isAllowed = ADMIN_EMAILS.includes(currentEmail) || adminUser || userRole === 'admin' || isDbAdmin;
+
+    if (isAllowed) {
       await fetchAdminData();
       renderReportedProfiles();
     } else {
-      console.log('[ADMIN AUTH] ❌ Access denied for:', currentEmail);
-      // Prompt admin login
       document.body.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;">
           <h2 class="display" style="font-size:2rem;margin-bottom:10px;">Unauthorized Access</h2>
