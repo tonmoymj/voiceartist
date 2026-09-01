@@ -287,7 +287,7 @@
       const categories = details.categories || ['Commercial'];
       const samples = details.samples || [];
       const rate = details.rate || 'Negotiable';
-      const city = details.location || 'Bangladesh';
+      const city = details.city || details.location || 'Bangladesh';
       const whatsapp = details.whatsapp || '';
 
       return `
@@ -349,7 +349,7 @@
         ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
         : ((a.full_name || a.name || 'Unknown Artist') ? escapeHTML((a.full_name || a.name || 'Unknown Artist')[0]).toUpperCase() : 'U');
       const rate = details.rate || 'Negotiable';
-      const city = details.location || 'Bangladesh';
+      const city = details.city || details.location || 'Bangladesh';
       const languages = details.languages || ['Bengali'];
 
       return `
@@ -500,27 +500,45 @@
   async function checkAdminAuth() {
     const db = window._supabase;
     let user = null;
+    console.log('[ADMIN AUTH] Starting auth check...');
+    console.log('[ADMIN AUTH] _supabase available:', !!db);
+    
     if (db) {
       try {
         const { data } = await db.auth.getSession();
+        console.log('[ADMIN AUTH] Session data:', data);
         if (data && data.session) user = data.session.user;
-      } catch (e) {}
+      } catch (e) {
+        console.error('[ADMIN AUTH] Session error:', e);
+      }
     }
 
     const currentEmail = user ? user.email.toLowerCase() : '';
+    console.log('[ADMIN AUTH] Current email:', currentEmail);
+    console.log('[ADMIN AUTH] User object:', user);
+    
     const masterUsers = JSON.parse(localStorage.getItem('voicecast_master_users') || '[]');
-    const adminUser = masterUsers.find(u => u.email.toLowerCase() === currentEmail && (u.role === 'Admin' || u.role === 'Super Admin'));
+    console.log('[ADMIN AUTH] Master users from localStorage:', masterUsers);
+    
+    const adminUser = masterUsers.find(u => u.email && u.email.toLowerCase() === currentEmail && (u.role === 'Admin' || u.role === 'Super Admin'));
+    const userRole = localStorage.getItem('voicecast_user_role');
+    console.log('[ADMIN AUTH] Is tonmoymbm?', currentEmail === 'tonmoymbm@gmail.com');
+    console.log('[ADMIN AUTH] Is admin from master list?', !!adminUser);
+    console.log('[ADMIN AUTH] localStorage role:', userRole);
 
     // If tonmoymbm@gmail.com or an assigned Admin
-    if (currentEmail === 'tonmoymbm@gmail.com' || adminUser || localStorage.getItem('voicecast_user_role') === 'admin') {
+    if (currentEmail === 'tonmoymbm@gmail.com' || adminUser || userRole === 'admin') {
+      console.log('[ADMIN AUTH] ✅ Access granted! Fetching data...');
       await fetchAdminData();
       renderReportedProfiles();
     } else {
+      console.log('[ADMIN AUTH] ❌ Access denied for:', currentEmail);
       // Prompt admin login
       document.body.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;">
           <h2 class="display" style="font-size:2rem;margin-bottom:10px;">Unauthorized Access</h2>
           <p style="color:var(--text-muted);margin-bottom:20px;">Admin privileges are required to view this dashboard.</p>
+          <p style="color:var(--text-faint);margin-bottom:10px;font-size:0.8rem;">Logged in as: ${currentEmail || 'Not logged in'}</p>
           <a href="signup.html" style="background:var(--purple);color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;text-decoration:none;">Go to Login</a>
         </div>
       `;

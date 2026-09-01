@@ -583,7 +583,7 @@
     }
 
     list.innerHTML = pendings.map(a => {
-      const d = detailsData.find(x => x.user_id === a.id) || {};
+      const d = detailsData.find(x => x.profile_id === a.id) || {};
       const rate = d.rate || d.rawRate || 1500;
       const phone = d.whatsapp || 'N/A';
       const loc = d.city || 'Bangladesh';
@@ -592,10 +592,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;">
-            ${a.avatar_url ? `<img src="${escapeHTML(a.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">` : (a.name ? escapeHTML(a.name[0]) : 'U')}
+            ${a.avatar_url ? `<img src="${escapeHTML(a.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">` : ((a.full_name || a.name || 'Unknown Artist') ? escapeHTML((a.full_name || a.name || 'Unknown Artist')[0]) : 'U')}
           </div>
           <div>
-            <div style="font-weight:700;font-size:1rem;">${escapeHTML(a.name)}</div>
+            <div style="font-weight:700;font-size:1rem;">${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}</div>
             <div style="font-size:0.8rem;color:var(--text-faint);">${escapeHTML(loc)} · Rate: ৳${escapeHTML(String(rate))}/min · WhatsApp: ${escapeHTML(phone)} · ${escapeHTML(String(samplesCount))} Audio Samples</div>
           </div>
         </div>
@@ -614,14 +614,14 @@
     const artists = usersData.filter(u => (u.role || '').toLowerCase() === 'artist' || ['live','approved','pending','suspended'].includes(u.status));
     
     tbody.innerHTML = artists.map(a => {
-      const d = detailsData.find(x => x.user_id === a.id) || {};
+      const d = detailsData.find(x => x.profile_id === a.id) || {};
       const rate = d.rate || 1500;
       const loc = d.city || 'Bangladesh';
       const featured = d.featured || false;
       const isLive = a.status === 'live' || a.status === 'approved';
       return `
       <tr>
-        <td><strong>${escapeHTML(a.name)}</strong></td>
+        <td><strong>${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}</strong></td>
         <td>${escapeHTML(loc)}</td>
         <td>৳${escapeHTML(String(rate))}/min</td>
         <td><span class="badge ${isLive ? 'badge-live' : 'badge-pending'}">${escapeHTML(a.status)}</span></td>
@@ -672,11 +672,11 @@
         <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:38px;height:38px;border-radius:50%;background:${isOwner ? 'linear-gradient(135deg,#EF4444,#B91C1C)' : 'linear-gradient(135deg,var(--purple),var(--blue))'};display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFF;font-size:0.85rem;">
-              ${escapeHTML((a.name||'A')[0])}
+              ${escapeHTML(((a.full_name || a.name || 'Unknown Artist')||'A')[0])}
             </div>
             <div>
               <div style="font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
-                ${escapeHTML(a.name || 'Admin')}
+                ${escapeHTML((a.full_name || a.name || 'Unknown Artist') || 'Admin')}
                 <span class="badge ${isOwner ? 'badge-featured' : 'badge-live'}">${escapeHTML(roleStr)}</span>
               </div>
               <div style="font-size:0.78rem;color:var(--text-faint);">${escapeHTML(a.email)} · Appointed: ${a.created_at ? escapeHTML(new Date(a.created_at).toLocaleDateString()) : 'N/A'}</div>
@@ -768,7 +768,7 @@
   };
 
   window.toggleFeatured = async function(id) {
-    const d = detailsData.find(x => x.user_id === id);
+    const d = detailsData.find(x => x.profile_id === id);
     if(d) {
       const newFeatured = !d.featured;
       if (window._supabase) {
@@ -816,10 +816,10 @@
   window.openEditArtistModal = function(id) {
     editingArtistId = id;
     const a = usersData.find(item => item.id === id);
-    const d = detailsData.find(x => x.user_id === id) || {};
+    const d = detailsData.find(x => x.profile_id === id) || {};
     if(!a) return;
-    document.getElementById('modalTitle').textContent = `Edit Artist: ${a.name}`;
-    document.getElementById('modalName').value = a.name || '';
+    document.getElementById('modalTitle').textContent = `Edit Artist: ${(a.full_name || a.name || 'Unknown Artist')}`;
+    document.getElementById('modalName').value = (a.full_name || a.name || 'Unknown Artist') || '';
     document.getElementById('modalLoc').value = d.city || '';
     document.getElementById('modalRate').value = d.rate || d.rawRate || 1500;
     document.getElementById('modalPhone').value = d.whatsapp || '';
@@ -850,7 +850,7 @@
 
     if(editingArtistId && window._supabase) {
        await window._supabase.from('profiles').update({ name }).eq('id', editingArtistId);
-       const d = detailsData.find(x => x.user_id === editingArtistId);
+       const d = detailsData.find(x => x.profile_id === editingArtistId);
        if(d) {
           await window._supabase.from('artist_details').update({ city: loc, rate, whatsapp: phone }).eq('user_id', editingArtistId);
        } else {
