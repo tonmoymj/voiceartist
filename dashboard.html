@@ -1651,47 +1651,60 @@
     renderArtistSamples();
     renderPortfolio();
 
-    // Pre-fill saved profile data
-    const savedProfile = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
-    if (savedProfile.name)         document.getElementById('profFullName').value      = savedProfile.name;
-    if (savedProfile.tagline)      document.getElementById('profTagline').value       = savedProfile.tagline;
-    if (savedProfile.gender)       document.getElementById('profGender').value        = savedProfile.gender;
-    if (savedProfile.loc)          document.getElementById('profLocation').value      = savedProfile.loc;
-    if (savedProfile.whatsapp)     document.getElementById('profWhatsapp').value      = savedProfile.whatsapp;
-    if (savedProfile.phone)        document.getElementById('profPhone').value         = savedProfile.phone;
-    if (savedProfile.email)        document.getElementById('profEmail').value         = savedProfile.email;
-    if (savedProfile.shortBio)     document.getElementById('profShortBio').value      = savedProfile.shortBio;
-    if (savedProfile.bio)          document.getElementById('profBio').value           = savedProfile.bio;
-    if (savedProfile.years)        document.getElementById('profYears').value         = savedProfile.years;
-    if (savedProfile.turnaround)   document.getElementById('profTurnaround').value    = savedProfile.turnaround;
-    if (savedProfile.pricingModel) document.getElementById('profPricingModel').value  = savedProfile.pricingModel;
-    if (savedProfile.rate)         document.getElementById('profRate').value          = savedProfile.rate;
-    if (savedProfile.pricingNote)  document.getElementById('profPricingNote').value   = savedProfile.pricingNote;
-    if (savedProfile.studio) {
-      const radio = document.querySelector(`input[name="studioSetup"][value="${savedProfile.studio}"]`);
-      if (radio) radio.checked = true;
+    // Fetch live Supabase profile & status
+    if (db && user) {
+      try {
+        const { data: liveProfile, error: liveErr } = await db
+          .from('profiles')
+          .select('*, artist_details(*)')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!liveErr && liveProfile) {
+          if (liveProfile.status) {
+            artistApprovalStatus = liveProfile.status;
+            localStorage.setItem('voicecast_artist_status', liveProfile.status);
+            updateApprovalBanner();
+          }
+
+          if (liveProfile.full_name) {
+            document.getElementById('dashName').textContent = liveProfile.full_name;
+            document.getElementById('profFullName').value = liveProfile.full_name;
+          }
+
+          const details = (Array.isArray(liveProfile.artist_details) && liveProfile.artist_details.length > 0)
+            ? liveProfile.artist_details[liveProfile.artist_details.length - 1]
+            : (liveProfile.artist_details || {});
+
+          if (details.tagline)   document.getElementById('profTagline').value   = details.tagline;
+          if (details.city)      document.getElementById('profLocation').value  = details.city;
+          if (details.whatsapp)  document.getElementById('profWhatsapp').value  = details.whatsapp;
+          if (details.phone)     document.getElementById('profPhone').value     = details.phone;
+          if (details.short_bio) document.getElementById('profShortBio').value  = details.short_bio;
+          if (details.bio)       document.getElementById('profBio').value       = details.bio;
+          if (details.rate)      document.getElementById('profRate').value      = details.rate.replace(/[^0-9]/g, '');
+
+          // Select Language Chips
+          if (details.languages && Array.isArray(details.languages)) {
+            document.querySelectorAll('#langChips .chip').forEach(chip => {
+              if (details.languages.includes(chip.dataset.val)) chip.classList.add('selected');
+            });
+          }
+
+          // Select Category Chips
+          if (details.categories && Array.isArray(details.categories)) {
+            document.querySelectorAll('#catChips .chip').forEach(chip => {
+              if (details.categories.includes(chip.dataset.val)) chip.classList.add('selected');
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Live profile fetch error:', err);
+      }
     }
 
-    setupCharCounter('profShortBio', 'shortBioCount', 120);
-    setupCharCounter('profBio', 'bioCount', 600);
-
-    // Pre-fill social links
-    const savedSocial = JSON.parse(localStorage.getItem('voicecast_social_data') || '{}');
-    if (savedSocial.facebook)  document.getElementById('socialFacebook').value  = savedSocial.facebook;
-    if (savedSocial.instagram) document.getElementById('socialInstagram').value = savedSocial.instagram;
-    if (savedSocial.linkedin)  document.getElementById('socialLinkedin').value  = savedSocial.linkedin;
-    if (savedSocial.youtube)   document.getElementById('socialYoutube').value   = savedSocial.youtube;
-    if (savedSocial.tiktok)    document.getElementById('socialTiktok').value    = savedSocial.tiktok;
-
-    // Pre-fill custom specialties
-    const savedCustom = JSON.parse(localStorage.getItem('voicecast_custom_specialties') || '{}');
-    if (savedCustom.lang1)   document.getElementById('customLang1').value   = savedCustom.lang1;
-    if (savedCustom.lang2)   document.getElementById('customLang2').value   = savedCustom.lang2;
-    if (savedCustom.accent1) document.getElementById('customAccent1').value = savedCustom.accent1;
-    if (savedCustom.accent2) document.getElementById('customAccent2').value = savedCustom.accent2;
-
     setDashboardRole(savedRole);
-
+    updateApprovalBanner();
   }
 
   document.addEventListener('DOMContentLoaded', initDashboard);

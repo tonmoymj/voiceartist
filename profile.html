@@ -598,6 +598,8 @@
     document.getElementById('authLockModal').classList.remove('open');
   }
 
+  let currentLoadedProfile = null;
+
   // Handle protected contact clicks
   function handleContactClick(type, e) {
     if (e) e.preventDefault();
@@ -607,10 +609,11 @@
     }
 
     // If logged in, proceed with the actual action
-    const currentArtist = profileFallback[activeArtistId] || profileFallback.maya;
+    const currentArtist = currentLoadedProfile || profileFallback[activeArtistId] || profileFallback.maya;
     if (type === 'whatsapp') {
+      const waNum = (currentArtist.whatsapp || currentArtist.phone || '').replace(/[^0-9]/g, '');
       const customMsg = encodeURIComponent(`Hello ${currentArtist.name}, I found your voice talent profile on VoiceCast and would like to discuss a project.`);
-      window.open(`https://wa.me/${currentArtist.whatsapp}?text=${customMsg}`, '_blank');
+      window.open(`https://wa.me/${waNum}?text=${customMsg}`, '_blank');
     } else if (type === 'call') {
       window.location.href = `tel:${currentArtist.phone || currentArtist.whatsapp}`;
     } else if (type === 'email') {
@@ -1038,7 +1041,8 @@
 
   // ── Profile Loader ────────────────────────────────────────────────────────────
   async function applyProfile(p) {
-    document.getElementById('artistName').textContent        = p.name;
+    currentLoadedProfile = p;
+    document.getElementById('artistName').textContent        = p.name || 'Voice Artist';
     if (p.avatar && p.avatar.length > 20) {
       document.getElementById('artistAvatar').innerHTML = `<img src="${escapeHTML(p.avatar)}" alt="${escapeHTML(p.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     } else {
@@ -1047,25 +1051,26 @@
     document.getElementById('artistTagline').textContent     = p.tagline ? `"${p.tagline}"` : '';
     document.getElementById('artistGenderBadge').textContent = p.gender || 'Voice Artist';
     document.getElementById('artistLoc').textContent         = p.loc || 'Bangladesh';
-    document.getElementById('artistShortBio').textContent    = p.shortBio || p.bio;
-    document.getElementById('artistBio').textContent         = p.bio;
-    document.getElementById('statYears').textContent         = p.years;
-    document.getElementById('statProjects').textContent      = p.projects;
-    document.getElementById('statReviews').textContent       = p.reviews;
-    document.getElementById('artistRating').innerHTML        = `<span class="stars">★★★★★</span> ${p.rating} (${p.reviews})`;
+    document.getElementById('artistShortBio').textContent    = p.shortBio || p.bio || 'Professional voice artist ready for recording projects.';
+    document.getElementById('artistBio').textContent         = p.bio || p.shortBio || 'Professional voice talent.';
+    document.getElementById('statYears').textContent         = p.years || '5+';
+    document.getElementById('statProjects').textContent      = p.projects || '50+';
+    document.getElementById('statReviews').textContent       = p.reviews || '12';
+    document.getElementById('artistRating').innerHTML        = `<span class="stars">★★★★★</span> ${p.rating || '5.0'} (${p.reviews || '12'})`;
 
+    const waNum = (p.whatsapp || p.phone || '').replace(/[^0-9]/g, '');
     const customMsg = encodeURIComponent(`Hello ${p.name}, I found your voice talent profile on VoiceCast and would like to discuss a project.`);
-    document.getElementById('whatsappBtn').href              = `https://wa.me/${p.whatsapp}?text=${customMsg}`;
+    document.getElementById('whatsappBtn').href              = `https://wa.me/${waNum}?text=${customMsg}`;
     document.getElementById('phoneBtn').href                 = `tel:${p.phone || p.whatsapp}`;
     document.getElementById('contactPhoneLink').href         = `tel:${p.phone || p.whatsapp}`;
 
-    const isLoggedIn = !!(window._supabase && await window._supabase.auth.getSession()).data?.session;
+    const isLoggedIn = !!(window._supabase && (await window._supabase.auth.getSession()).data?.session);
     if (!isLoggedIn) {
       document.getElementById('contactPhoneText').textContent = '+880 17••-•••••• (Login to view)';
       document.getElementById('contactEmailText').textContent = '••••••@••••••.com (Login to view)';
       document.getElementById('contactEmailLink').style.display = 'inline-flex';
     } else {
-      document.getElementById('contactPhoneText').textContent = p.phone || p.whatsapp;
+      document.getElementById('contactPhoneText').textContent = p.phone || p.whatsapp || 'Direct Contact';
       if (p.email) {
         document.getElementById('contactEmailLink').href         = `mailto:${p.email}`;
         document.getElementById('contactEmailText').textContent = p.email;
@@ -1078,6 +1083,8 @@
     // Availability
     if(!p.avail) {
       document.getElementById('availLine').innerHTML = '<span class="avail-dot" style="background:#6E6A8F;box-shadow:none;"></span>Not currently available';
+    } else {
+      document.getElementById('availLine').innerHTML = '<span class="avail-dot"></span>Available now · direct contact';
     }
 
     // Studio & Turnaround
@@ -1090,9 +1097,9 @@
     document.getElementById('pricingNote').textContent       = p.pricingNote ? `✓ ${p.pricingNote}` : '✓ Direct contact & booking';
 
     // Categories & Languages
-    document.getElementById('specialtiesList').innerHTML = (p.categories || []).map(c => `<span class="tag">${escapeHTML(c)}</span>`).join('');
-    document.getElementById('languagesList').innerHTML   = (p.langs || []).map(l => `<span class="tag lang">${escapeHTML(l)}</span>`).join('');
-    document.getElementById('accentsList').innerHTML     = (p.accents || []).map(a => `<span class="tag accent">${escapeHTML(a)}</span>`).join('');
+    document.getElementById('specialtiesList').innerHTML = (p.categories || []).map(c => `<span class="tag">${escapeHTML(c)}</span>`).join('') || '<span class="tag">Commercial</span>';
+    document.getElementById('languagesList').innerHTML   = (p.langs || []).map(l => `<span class="tag lang">${escapeHTML(l)}</span>`).join('') || '<span class="tag lang">Bengali</span>';
+    document.getElementById('accentsList').innerHTML     = (p.accents || []).map(a => `<span class="tag accent">${escapeHTML(a)}</span>`).join('') || '<span class="tag accent">Neutral Standard</span>';
 
     // Portfolio
     const portList = document.getElementById('portfolioList');
@@ -1138,71 +1145,109 @@
     }
     socRow.innerHTML = socHtml || '<span style="font-size:0.8rem;color:var(--text-faint);">No public social profiles linked</span>';
 
-    renderSamples(p.samples);
+    renderSamples(p.samples || []);
   }
 
   async function loadProfile() {
-    const artistId = (new URLSearchParams(window.location.search).get('id') || 'maya').toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    let artistId = urlParams.get('id');
 
-    // Check if we are viewing the local edited profile from dashboard
-    const localProfile = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
-    const localSocial = JSON.parse(localStorage.getItem('voicecast_social_data') || '{}');
-    const localPortfolio = JSON.parse(localStorage.getItem('voicecast_portfolio') || 'null');
-    const localCustom = JSON.parse(localStorage.getItem('voicecast_custom_specialties') || '{}');
-
-    // First apply fallback data
-    const fallback = profileFallback[artistId] || profileFallback.maya;
-    let mergedData = { ...fallback };
-
-    // Check if artist matches a saved submission in storage
-    const allStorageSubmissions = JSON.parse(localStorage.getItem('voicecast_pending_submissions') || '[]');
-    const allApprovedArtists = JSON.parse(localStorage.getItem('voicecast_approved_artists') || '[]');
-    const matchedArtist = [...allStorageSubmissions, ...allApprovedArtists].find(a => a.id === artistId);
-
-    if (matchedArtist) {
-      mergedData = {
-        ...mergedData,
-        ...matchedArtist,
-        pricingRate: matchedArtist.rate || (matchedArtist.rawRate ? `৳ ${matchedArtist.rawRate}` : 'Negotiable'),
-        langs: matchedArtist.languages || mergedData.langs,
-        cats: matchedArtist.categories || mergedData.categories,
-        samples: matchedArtist.samples && matchedArtist.samples.length > 0 ? matchedArtist.samples : mergedData.samples
-      };
+    const db = window._supabase;
+    let currentUser = null;
+    if (db) {
+      try {
+        const { data } = await db.auth.getSession();
+        if (data && data.session) currentUser = data.session.user;
+      } catch(e) {}
     }
 
-    // If viewing current user's profile preview (or default 'maya' with edited localStorage)
-    if (artistId === 'maya' || artistId === 'sub_artist_current' || artistId === 'sub_local_user') {
-      const savedAvatar = localStorage.getItem('voicecast_profile_avatar') || localProfile.avatar || '';
-      if (savedAvatar) mergedData.avatar = savedAvatar;
+    // If no artistId provided in URL, but user is logged in, use their user ID
+    if (!artistId && currentUser) {
+      artistId = currentUser.id;
+    } else if (!artistId) {
+      artistId = 'maya';
+    }
 
+    activeArtistId = artistId.toLowerCase();
+
+    // First check if it's a Supabase UUID (length > 20 or contains dashes)
+    if (db && (artistId.length > 20 || artistId.includes('-'))) {
+      try {
+        const { data, error } = await db
+          .from('profiles')
+          .select('*, artist_details(*)')
+          .eq('id', artistId)
+          .maybeSingle();
+
+        if (!error && data) {
+          const details = (Array.isArray(data.artist_details) && data.artist_details.length > 0)
+            ? data.artist_details[data.artist_details.length - 1] // latest details
+            : (data.artist_details || {});
+
+          const rawRate = details.rate || '2,000';
+          const formattedRate = rawRate.startsWith('৳') ? rawRate : `৳ ${rawRate}`;
+
+          const realProfile = {
+            name:         data.full_name || 'Voice Artist',
+            avatar:       data.avatar_url || '',
+            tagline:      details.tagline || 'Professional Voice Artist',
+            gender:       details.gender || 'Voice Artist',
+            loc:          details.city || data.location || 'Bangladesh',
+            rating:       '5.0',
+            reviews:      12,
+            years:        details.experience_years || '5+',
+            projects:     (details.projects_count || 50) + '+',
+            avail:        data.is_available ?? true,
+            phone:        details.phone || details.whatsapp || '',
+            whatsapp:     details.whatsapp || details.phone || '',
+            email:        data.email || '',
+            shortBio:     details.short_bio || details.bio || '',
+            bio:          details.bio || details.short_bio || '',
+            studio:       details.studio_setup || 'Professional Home Studio',
+            turnaround:   details.turnaround_time || '24–48 Hours',
+            pricingModel: details.pricing_model || 'per minute',
+            pricingRate:  formattedRate,
+            pricingNote:  details.pricing_note || 'আলোচনা সাপেক্ষ',
+            langs:        (details.languages && details.languages.length > 0) ? details.languages : ['Bengali', 'English'],
+            accents:      (details.accents && details.accents.length > 0) ? details.accents : ['Neutral Dhaka (প্রমিত)'],
+            categories:   (details.categories && details.categories.length > 0) ? details.categories : ['Commercial', 'Narration'],
+            portfolio:    details.portfolio || [
+              { title: "Voice Sample Demo Showcase", url: "https://voicecast.app" }
+            ],
+            social:       details.social || {},
+            samples:      details.samples && details.samples.length > 0 ? details.samples : [
+              { title: "Commercial Demo Track", duration: "0:30", seed: 21 },
+              { title: "Narration Voice Sample", duration: "0:25", seed: 35 }
+            ]
+          };
+
+          applyProfile(realProfile);
+          document.title = realProfile.name + ' — VoiceCast';
+          await checkAuthStatus();
+          updateFavoriteBtn();
+          return;
+        }
+      } catch(err) {
+        console.error('Supabase profile fetch error:', err);
+      }
+    }
+
+    // Fallback logic for static demos (maya, rafiq, nusrat, etc.)
+    const fallback = profileFallback[activeArtistId] || profileFallback.maya;
+    let mergedData = { ...fallback };
+
+    // Check localStorage fallback for previewing unsaved wizard data
+    const localProfile = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
+    if (activeArtistId === 'maya' || activeArtistId === 'sub_artist_current' || (currentUser && activeArtistId === currentUser.id)) {
       if (localProfile.name) {
         mergedData.name         = localProfile.name || fallback.name;
         mergedData.tagline      = localProfile.tagline || fallback.tagline;
-        mergedData.gender       = localProfile.gender || fallback.gender;
         mergedData.loc          = localProfile.loc || fallback.loc;
         mergedData.phone        = localProfile.phone || fallback.phone;
         mergedData.whatsapp     = localProfile.whatsapp || fallback.whatsapp;
-        mergedData.email        = localProfile.email || fallback.email;
         mergedData.shortBio     = localProfile.shortBio || fallback.shortBio;
         mergedData.bio          = localProfile.bio || fallback.bio;
-        mergedData.years        = localProfile.years || fallback.years;
-        mergedData.studio       = localProfile.studio || fallback.studio;
-        mergedData.turnaround   = localProfile.turnaround || fallback.turnaround;
-        mergedData.pricingModel = localProfile.pricingModel || fallback.pricingModel;
         mergedData.pricingRate  = localProfile.rate ? `৳ ${localProfile.rate}` : fallback.pricingRate;
-        mergedData.pricingNote  = localProfile.pricingNote || fallback.pricingNote;
-      }
-      if (localPortfolio) mergedData.portfolio = localPortfolio;
-      if (Object.keys(localSocial).length) mergedData.social = { ...mergedData.social, ...localSocial };
-      
-      // Merge custom languages & accents
-      if (localCustom.lang1 || localCustom.lang2) {
-        const extraLangs = [localCustom.lang1, localCustom.lang2].filter(Boolean);
-        mergedData.langs = [...new Set([...(mergedData.langs || []), ...extraLangs])];
-      }
-      if (localCustom.accent1 || localCustom.accent2) {
-        const extraAccents = [localCustom.accent1, localCustom.accent2].filter(Boolean);
-        mergedData.accents = [...new Set([...(mergedData.accents || []), ...extraAccents])];
       }
     }
 
@@ -1212,55 +1257,9 @@
     // Check authentication and update favorite state
     await checkAuthStatus();
     updateFavoriteBtn();
-
-    // Supabase real-time fetch fallback
-    try {
-      const db = window._supabase;
-      if(db && artistId && !Object.keys(profileFallback).includes(artistId)) {
-        const { data, error } = await db
-          .from('profiles')
-          .select('*, artist_details(*), voice_samples(*), reviews(*)')
-          .eq('id', artistId)
-          .single();
-
-        if(!error && data) {
-          const real = {
-            name:       data.full_name || fallback.name,
-            tagline:    data.artist_details?.tagline || fallback.tagline,
-            gender:     data.artist_details?.gender || fallback.gender,
-            loc:        data.location  || fallback.loc,
-            rating:     fallback.rating,
-            reviews:    data.reviews?.length || fallback.reviews,
-            years:      data.artist_details?.experience_years || fallback.years,
-            projects:   (data.artist_details?.projects_count  || fallback.projects) + '+',
-            avail:      data.is_available ?? fallback.avail,
-            phone:      data.phone || fallback.phone,
-            whatsapp:   data.whatsapp || fallback.whatsapp,
-            email:      data.email || fallback.email,
-            shortBio:   data.artist_details?.short_bio || fallback.shortBio,
-            bio:        data.bio      || fallback.bio,
-            studio:     data.artist_details?.studio_setup || fallback.studio,
-            turnaround: data.artist_details?.turnaround_time || fallback.turnaround,
-            pricingModel: data.artist_details?.pricing_model || fallback.pricingModel,
-            pricingRate:  data.artist_details?.rate ? `৳ ${data.artist_details.rate}` : fallback.pricingRate,
-            pricingNote:  data.artist_details?.pricing_note || fallback.pricingNote,
-            langs:      data.artist_details?.languages   || fallback.langs,
-            accents:    data.artist_details?.accents     || fallback.accents,
-            categories: data.artist_details?.categories || fallback.categories,
-            portfolio:  data.artist_details?.portfolio || fallback.portfolio,
-            social:     data.artist_details?.social || fallback.social,
-            samples:    (data.voice_samples || []).map((s, i) => ({
-              title: s.title || `Sample ${i+1}`, duration: s.duration || '0:30', seed: i * 13 + 7
-            })) || fallback.samples
-          };
-          applyProfile(real);
-          document.title = real.name + ' — VoiceCast';
-        }
-      }
-    } catch(err) {
-      console.log('Using fallback profile data', err);
-    }
   }
+
+  loadProfile();
 
   loadProfile();
 </script>
