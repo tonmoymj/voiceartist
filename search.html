@@ -104,8 +104,9 @@
   .save-btn.saved svg{ fill:#E879C9; }
 
   .artist-top{ display:flex; align-items:center; gap:13px; margin-bottom:14px; padding-right:30px; }
-  .artist-photo-wrap{ position:relative; flex-shrink:0; }
-  .artist-photo{ width:52px; height:52px; border-radius:50%; object-fit:cover; background:linear-gradient(160deg,#2C2850,#1B1836); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--purple); }
+  .artist-photo-wrap{ position:relative; flex-shrink:0; width:52px; height:52px; }
+  .artist-photo{ width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#3B2E7E,#1F194C); border:2px solid rgba(167,139,250,0.4); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.25rem; color:#A78BFA; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.35); }
+  .artist-photo img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:50%; }
   .avail-dot{ position:absolute; bottom:0; right:0; width:11px; height:11px; border-radius:50%; background:#4ADE80; border:2px solid var(--surface); }
   .artist-name{ font-weight:600; font-size:0.98rem; margin-bottom:2px; }
   .artist-loc{ font-size:0.78rem; color:var(--text-faint); }
@@ -318,10 +319,11 @@
               : (a.artist_details || {});
 
             const rawRate = d.rate ? d.rate.replace(/[^0-9]/g, '') : null;
+            const rawAvatar = a.avatar_url || d.avatar_url || a.avatar || d.profile_image || '';
             return {
               id: a.id,
               name: a.full_name || 'Voice Artist',
-              avatar: a.avatar_url || '',
+              avatar: rawAvatar,
               loc: d.city || a.location || 'Bangladesh',
               langs: (d.languages && d.languages.length > 0) ? d.languages : ['Bengali'],
               cats: (d.categories && d.categories.length > 0) ? d.categories : ['Commercial'],
@@ -369,14 +371,15 @@
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
       }[tag] || tag));
     }
-    const savedArtistIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '["maya","rafiq"]');
+    const savedArtistIds = JSON.parse(localStorage.getItem('voicecast_saved_artists') || '[]');
     const toShow = list.slice(0, displayedCount);
     toShow.forEach(a => {
       const isSaved = savedArtistIds.includes(a.id);
       const card = document.createElement('div');
       card.className = 'artist-card';
-      const cleanAvatar = a.avatar && a.avatar.startsWith('http') ? encodeURI(a.avatar) : null;
+      const cleanAvatar = (a.avatar && a.avatar.length > 20) ? a.avatar : null;
       const safeName = escapeHTML(a.name);
+      const safeInitial = safeName[0] ? safeName[0].toUpperCase() : 'U';
       const safeLoc = escapeHTML(a.loc);
       const safeRate = escapeHTML(a.rate);
       const safeLangs = (a.langs || []).map(l => escapeHTML(l));
@@ -387,7 +390,9 @@
         </button>
         <div class="artist-top">
           <div class="artist-photo-wrap">
-            <div class="artist-photo" style="overflow:hidden;">${cleanAvatar ? `<img src="${cleanAvatar}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (safeName[0] || '?')}</div>
+            <div class="artist-photo">
+              ${cleanAvatar ? `<img src="${cleanAvatar}" alt="${safeName}" onerror="this.style.display='none';this.parentElement.textContent='${safeInitial}';">` : `<span>${safeInitial}</span>`}
+            </div>
             ${a.avail ? '<span class="avail-dot"></span>' : ''}
           </div>
           <div>

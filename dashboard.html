@@ -1190,21 +1190,24 @@
         reader.readAsDataURL(file);
       }
 
-      compressImage(file, 300, 0.7, async (base64Img) => {
-        const db = window._supabase;
-        if (db) {
-          const { data } = await db.auth.getSession();
-          if (data && data.session && data.session.user) {
-            const user = data.session.user;
-            const response = await fetch(base64Img);
-            const blob = await response.blob();
-            await db.storage.from('avatars').upload(`${user.id}/avatar.jpg`, blob, { upsert: true });
-          }
-        }
+      compressImage(file, 280, 0.75, async (base64Img) => {
         try {
           localStorage.setItem('voicecast_profile_avatar', base64Img);
         } catch (e) {
           console.warn('Local storage full, cannot save avatar locally.');
+        }
+
+        const db = window._supabase;
+        if (db) {
+          try {
+            const { data } = await db.auth.getSession();
+            if (data && data.session && data.session.user) {
+              const user = data.session.user;
+              await db.from('profiles').update({ avatar_url: base64Img }).eq('id', user.id);
+            }
+          } catch (err) {
+            console.warn('Could not save avatar directly to Supabase:', err);
+          }
         }
         const name = document.getElementById('profFullName').value.trim() || 'User';
         setAvatarUI(base64Img, name[0].toUpperCase());
@@ -1401,17 +1404,28 @@
 
         const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
         const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
+        const savedAvatar = localStorage.getItem('voicecast_profile_avatar') || '';
 
         // Step 1: Update profiles
         console.log('[SUBMIT] Upserting profiles...');
-        const { error: profileErr } = await db.from('profiles').upsert({
+        let profilePayload = {
           id: user.id,
           email: user.email,
           full_name: name,
           role: 'artist',
           status: 'pending',
           updated_at: new Date().toISOString()
-        });
+        };
+        if (savedAvatar && savedAvatar.length > 20) {
+          profilePayload.avatar_url = savedAvatar;
+        }
+
+        let { error: profileErr } = await db.from('profiles').upsert(profilePayload);
+        if (profileErr && profileErr.message && profileErr.message.includes('avatar_url')) {
+          delete profilePayload.avatar_url;
+          const retryRes = await db.from('profiles').upsert(profilePayload);
+          profileErr = retryRes.error;
+        }
 
         if (profileErr) {
           alert('Profile error: ' + profileErr.message + '\nHint: Make sure "status" column exists in profiles table.');
@@ -1671,6 +1685,10 @@
             document.getElementById('dashName').textContent = liveProfile.full_name;
             document.getElementById('profFullName').value = liveProfile.full_name;
           }
+
+          const currentAvatar = liveProfile.avatar_url || localStorage.getItem('voicecast_profile_avatar') || '';
+          const initialLetter = liveProfile.full_name ? liveProfile.full_name[0].toUpperCase() : 'U';
+          setAvatarUI(currentAvatar, initialLetter);
 
           const details = (Array.isArray(liveProfile.artist_details) && liveProfile.artist_details.length > 0)
             ? liveProfile.artist_details[liveProfile.artist_details.length - 1]

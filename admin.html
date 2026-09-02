@@ -278,9 +278,9 @@
 
     container.innerHTML = pendingArtists.map((a, idx) => {
       const details = a.artist_details && a.artist_details.length > 0 ? a.artist_details[0] : (a.artist_details || {});
-      const avatarUrl = a.avatar_url || a.avatar || '';
+      const avatarUrl = a.avatar_url || a.avatar || details.avatar_url || details.profile_image || '';
       const avatarHtml = avatarUrl.length > 20 
-        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.display='none';this.parentElement.textContent='${escapeHTML(((a.full_name || a.name || 'U')[0] || 'U').toUpperCase())}';">`
         : ((a.full_name || a.name || 'Unknown Artist') ? escapeHTML((a.full_name || a.name || 'Unknown Artist')[0]).toUpperCase() : 'U');
       const bio = details.bio || 'No bio provided';
       const languages = details.languages || ['Bengali'];
@@ -344,9 +344,9 @@
     document.getElementById('liveTabCount').textContent = liveArtists.length;
     container.innerHTML = liveArtists.map(a => {
       const details = a.artist_details && a.artist_details.length > 0 ? a.artist_details[0] : (a.artist_details || {});
-      const avatarUrl = a.avatar_url || a.avatar || '';
+      const avatarUrl = a.avatar_url || a.avatar || details.avatar_url || details.profile_image || '';
       const avatarHtml = avatarUrl.length > 20 
-        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML((a.full_name || a.name || 'Unknown Artist'))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.display='none';this.parentElement.textContent='${escapeHTML(((a.full_name || a.name || 'U')[0] || 'U').toUpperCase())}';">`
         : ((a.full_name || a.name || 'Unknown Artist') ? escapeHTML((a.full_name || a.name || 'Unknown Artist')[0]).toUpperCase() : 'U');
       const rate = details.rate || 'Negotiable';
       const city = details.city || details.location || 'Bangladesh';

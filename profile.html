@@ -884,7 +884,7 @@
     currentLoadedProfile = p;
     document.getElementById('artistName').textContent        = p.name || 'Voice Artist';
     if (p.avatar && p.avatar.length > 20) {
-      document.getElementById('artistAvatar').innerHTML = `<img src="${escapeHTML(p.avatar)}" alt="${escapeHTML(p.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      document.getElementById('artistAvatar').innerHTML = `<img src="${escapeHTML(p.avatar)}" alt="${escapeHTML(p.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.display='none';this.parentElement.textContent='${escapeHTML(p.name ? p.name[0].toUpperCase() : 'U')}';">`;
     } else {
       document.getElementById('artistAvatar').textContent = p.name ? p.name[0].toUpperCase() : 'U';
     }
@@ -1031,7 +1031,7 @@
 
           const realProfile = {
             name:         data.full_name || 'Voice Artist',
-            avatar:       data.avatar_url || '',
+            avatar:       data.avatar_url || details.avatar_url || details.profile_image || '',
             tagline:      details.tagline || 'Professional Voice Artist',
             gender:       details.gender || 'Voice Artist',
             loc:          details.city || data.location || 'Bangladesh',
