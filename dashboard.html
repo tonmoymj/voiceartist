@@ -146,21 +146,48 @@
     .user-bar{ flex-direction:column; align-items:flex-start; }
     .radio-group{ flex-direction:column; }
   }
-  /* Wizard Stepper */
-  .wizard-stepper { display: flex; align-items: center; justify-content: space-between; margin: 0 0 30px; position: relative; }
-  .wizard-stepper::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--border); z-index: 1; }
-  .wizard-step-nav { position: relative; z-index: 2; background: var(--bg); padding: 0 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-faint); font-weight: 600; font-size: 0.85rem; }
-  .wizard-step-nav .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: all 0.3s; }
+  /* Professional Wizard Stepper & Progress */
+  .wizard-progress-wrap { margin-bottom: 24px; background: var(--bg-2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 22px; }
+  .wizard-progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; font-weight: 600; color: var(--text); }
+  .wizard-progress-header .pct { color: var(--purple); font-weight: 700; }
+  .wizard-progress-bar-bg { width: 100%; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .wizard-progress-bar-fill { height: 100%; width: 20%; background: linear-gradient(90deg, var(--purple), var(--blue)); border-radius: 999px; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .wizard-stepper { display: flex; align-items: center; justify-content: space-between; margin: 0 0 28px; position: relative; }
+  .wizard-stepper::before { content: ''; position: absolute; top: 18px; left: 20px; right: 20px; height: 2px; background: var(--border); z-index: 1; }
+  .wizard-step-nav { position: relative; z-index: 2; background: var(--bg); padding: 0 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-faint); font-weight: 600; font-size: 0.84rem; cursor: pointer; transition: all 0.2s ease; user-select: none; }
+  .wizard-step-nav .step-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700; transition: all 0.25s ease; }
   .wizard-step-nav.active { color: var(--purple); }
-  .wizard-step-nav.active .step-circle { background: rgba(139,92,246,0.18); border-color: var(--purple); color: var(--purple); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
+  .wizard-step-nav.active .step-circle { background: rgba(139,92,246,0.18); border-color: var(--purple); color: var(--purple); box-shadow: 0 0 14px rgba(139,92,246,0.35); transform: scale(1.08); }
   .wizard-step-nav.completed { color: var(--text); }
   .wizard-step-nav.completed .step-circle { background: var(--purple); border-color: var(--purple); color: #fff; }
-  
+
+  /* Input validation error states */
+  .input-invalid { border-color: #EF4444 !important; background: rgba(239,68,68,0.06) !important; box-shadow: 0 0 0 3px rgba(239,68,68,0.2) !important; animation: inputShake 0.25s ease; }
+  .chips-invalid { border: 1px solid #EF4444 !important; padding: 12px; border-radius: 12px; background: rgba(239,68,68,0.04); }
+  @keyframes inputShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+  .field-error-msg { display: none; color: #EF4444; font-size: 0.78rem; margin-top: 5px; font-weight: 500; align-items: center; gap: 5px; }
+  .field-error-msg.visible { display: flex; }
+
+  /* Step 5 Review Summary */
+  .review-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width:768px){ .review-summary-grid { grid-template-columns: 1fr; } }
+  .review-summary-item { background: var(--bg-2); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px; position: relative; }
+  .review-summary-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .review-summary-title { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+  .review-edit-btn { background: transparent; border: 1px solid rgba(139,92,246,0.3); border-radius: 6px; color: var(--purple); font-size: 0.76rem; cursor: pointer; font-weight: 500; padding: 3px 8px; transition: all 0.15s; }
+  .review-edit-btn:hover { background: rgba(139,92,246,0.15); border-color: var(--purple); }
+  .review-checklist { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .review-check-item { display: flex; align-items: center; gap: 12px; font-size: 0.88rem; color: var(--text-muted); background: var(--bg-2); border: 1px solid var(--border-soft); padding: 12px 16px; border-radius: 10px; transition: all 0.2s; }
+  .review-check-item.done { border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.06); color: var(--text); }
+  .review-check-item.done .chk-icon { color: var(--success); }
+  .review-check-item.warn { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.06); color: #FDE68A; }
+
   .wizard-step-content { display: none; animation: fadeIn 0.3s ease; }
   .wizard-step-content.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   
-  .step-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
+  .step-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
   .step-footer .btn-prev { margin-right: auto; }
 </style>
 </head>
@@ -273,26 +300,38 @@
     <div class="tab-pane active" id="profileTab">
       
       <!-- Wizard Stepper -->
+      <!-- Wizard Progress Bar -->
+      <div class="wizard-progress-wrap">
+        <div class="wizard-progress-header">
+          <span id="wizardStepLabel">ধাপ ১/৫: মূল পরিচিতি ও বায়ো (Basic Info)</span>
+          <span class="pct" id="wizardPctLabel">২০% সম্পন্ন</span>
+        </div>
+        <div class="wizard-progress-bar-bg">
+          <div class="wizard-progress-bar-fill" id="wizardProgressFill" style="width: 20%;"></div>
+        </div>
+      </div>
+
+      <!-- Wizard Stepper Nav -->
       <div class="wizard-stepper" id="artistStepper">
-        <div class="wizard-step-nav active" data-step="1">
+        <div class="wizard-step-nav active" data-step="1" onclick="handleStepNavClick(1)">
           <div class="step-circle">1</div>
-          Basic Info
+          <span>Basic Info</span>
         </div>
-        <div class="wizard-step-nav" data-step="2">
+        <div class="wizard-step-nav" data-step="2" onclick="handleStepNavClick(2)">
           <div class="step-circle">2</div>
-          Voice & Skills
+          <span>Voice & Skills</span>
         </div>
-        <div class="wizard-step-nav" data-step="3">
+        <div class="wizard-step-nav" data-step="3" onclick="handleStepNavClick(3)">
           <div class="step-circle">3</div>
-          Studio & Pricing
+          <span>Pricing & Studio</span>
         </div>
-        <div class="wizard-step-nav" data-step="4">
+        <div class="wizard-step-nav" data-step="4" onclick="handleStepNavClick(4)">
           <div class="step-circle">4</div>
-          Portfolio
+          <span>Audio Samples</span>
         </div>
-        <div class="wizard-step-nav" data-step="5">
+        <div class="wizard-step-nav" data-step="5" onclick="handleStepNavClick(5)">
           <div class="step-circle">5</div>
-          Review
+          <span>Review & Submit</span>
         </div>
       </div>
 
@@ -342,10 +381,12 @@
             <div class="form-col">
               <label>পূর্ণ নাম <span style="color:#EF4444;">*</span></label>
               <input type="text" id="profFullName" placeholder="আপনার আসল বা স্টেজ নাম">
+              <div class="field-error-msg" id="err_profFullName">⚠️ পূর্ণ নাম প্রদান করা আবশ্যক (ন্যূনতম ২ অক্ষর)</div>
             </div>
             <div class="form-col">
               <label>ভয়েস টাইপ ট্যাগলাইন <span style="color:#EF4444;">*</span></label>
               <input type="text" id="profTagline" placeholder="e.g. Deep, Warm — Corporate Narration">
+              <div class="field-error-msg" id="err_profTagline">⚠️ ভয়েস ট্যাগলাইন প্রদান করা আবশ্যক</div>
             </div>
           </div>
 
@@ -359,10 +400,12 @@
                 <option value="Child Voice">Child Voice (শিশু কণ্ঠ)</option>
                 <option value="Senior Voice">Senior Voice (বয়স্ক কণ্ঠ)</option>
               </select>
+              <div class="field-error-msg" id="err_profGender">⚠️ অনুগ্রহ করে জেন্ডার / কণ্ঠের ধরন সিলেক্ট করুন</div>
             </div>
             <div class="form-col">
-              <label>লোকেশন (শহর, জেলা)</label>
+              <label>লোকেশন (শহর, জেলা) <span style="color:#EF4444;">*</span></label>
               <input type="text" id="profLocation" placeholder="e.g. Dhaka, Bangladesh">
+              <div class="field-error-msg" id="err_profLocation">⚠️ আপনার শহর বা জেলার নাম লিখুন</div>
             </div>
           </div>
 
@@ -370,6 +413,7 @@
             <div class="form-col">
               <label>WhatsApp নম্বর (country code সহ) <span style="color:#EF4444;">*</span></label>
               <input type="text" id="profWhatsapp" placeholder="e.g. 8801712345678">
+              <div class="field-error-msg" id="err_profWhatsapp">⚠️ সঠিক WhatsApp নম্বর লিখুন (১১ ডিজিট)</div>
             </div>
             <div class="form-col">
               <label>ফোন নম্বর</label>
@@ -392,17 +436,19 @@
             <label>Short Bio — সার্চ কার্ডে দেখাবে <span style="color:#EF4444;">*</span> <span style="font-size:0.78rem;color:var(--text-faint);">সর্বোচ্চ ১২০ ক্যারেক্টার</span></label>
             <textarea id="profShortBio" style="min-height:70px;" maxlength="120" placeholder="e.g. 10 years experience. Commercial & audiobook specialist."></textarea>
             <div class="char-counter" id="shortBioCount">0/120</div>
+            <div class="field-error-msg" id="err_profShortBio">⚠️ শর্ট বায়ো প্রদান করুন (ন্যূনতম ১০ অক্ষর)</div>
           </div>
 
           <div class="form-col">
             <label>Detailed Bio — প্রোফাইল পেজে দেখাবে <span style="color:#EF4444;">*</span> <span style="font-size:0.78rem;color:var(--text-faint);">সর্বোচ্চ ৬০০ ক্যারেক্টার</span></label>
             <textarea id="profBio" maxlength="600" placeholder="আপনার ভয়েস স্টাইল, স্টুডিও সেটআপ, উল্লেখযোগ্য কাজের বিবরণ লিখুন..."></textarea>
             <div class="char-counter" id="bioCount">0/600</div>
+            <div class="field-error-msg" id="err_profBio">⚠️ বিস্তারিত বায়ো প্রদান করুন (ন্যূনতম ২৫ অক্ষর)</div>
           </div>
         </div>
 
         <div class="step-footer">
-          <button type="button" class="btn-grad next-step" onclick="goToStep(2)">Next Step</button>
+          <button type="button" class="btn-grad next-step" onclick="nextStep(1)">Next Step</button>
         </div>
         </div> <!-- End Step 1 -->
 
@@ -411,8 +457,8 @@
           <!-- Voice Categories, Languages, Accents will go here -->
           <div id="step2-placeholder"></div>
           <div class="step-footer">
-            <button type="button" class="btn-outline prev-step" onclick="goToStep(1)">Previous</button>
-            <button type="button" class="btn-grad next-step" onclick="goToStep(3)">Next Step</button>
+            <button type="button" class="btn-outline prev-step" onclick="prevStep(2)">Previous</button>
+            <button type="button" class="btn-grad next-step" onclick="nextStep(2)">Next Step</button>
           </div>
         </div>
 
@@ -429,6 +475,7 @@
             <div class="form-col">
               <label>অভিজ্ঞতা (বছর) <span style="color:#EF4444;">*</span></label>
               <input type="number" id="profYears" placeholder="e.g. 5" min="0" max="50">
+              <div class="field-error-msg" id="err_profYears">⚠️ আপনার অভিজ্ঞতার বছর লিখুন</div>
             </div>
             <div class="form-col">
               <label>টার্নঅ্যারাউন্ড টাইম</label>
@@ -468,6 +515,7 @@
             <div class="form-col">
               <label>রেট (৳ BDT) <span style="color:#EF4444;">*</span></label>
               <input type="text" id="profRate" placeholder="e.g. 1500">
+              <div class="field-error-msg" id="err_profRate">⚠️ আপনার বেস রেট (টাকা) লিখুন</div>
             </div>
           </div>
 
@@ -477,8 +525,8 @@
           </div>
         </div>
         <div class="step-footer">
-          <button type="button" class="btn-outline prev-step" onclick="goToStep(2)">Previous</button>
-          <button type="button" class="btn-grad next-step" onclick="goToStep(4)">Next Step</button>
+          <button type="button" class="btn-outline prev-step" onclick="nextStep(1)">Previous</button>
+          <button type="button" class="btn-grad next-step" onclick="nextStep(3)">Next Step</button>
         </div>
         </div> <!-- End Step 3 -->
 
@@ -486,8 +534,8 @@
         <div class="wizard-step-content" id="step4">
           <div id="step4-placeholder"></div>
           <div class="step-footer">
-            <button type="button" class="btn-outline prev-step" onclick="goToStep(3)">Previous</button>
-            <button type="button" class="btn-grad next-step" onclick="goToStep(5)">Next Step</button>
+            <button type="button" class="btn-outline prev-step" onclick="nextStep(2)">Previous</button>
+            <button type="button" class="btn-grad next-step" onclick="nextStep(4)">Next Step</button>
           </div>
         </div>
 
@@ -495,7 +543,7 @@
         <div class="wizard-step-content" id="step5">
           <div id="step5-placeholder"></div>
           <div class="step-footer">
-            <button type="button" class="btn-outline prev-step" onclick="goToStep(4)">Previous</button>
+            <button type="button" class="btn-outline prev-step" onclick="nextStep(3)">Previous</button>
             <button type="button" class="btn-grad" id="finalSubmitBtn">Save &amp; Submit for Review</button>
           </div>
         </div>
@@ -1354,20 +1402,20 @@
 
     console.log('[SUBMIT] Fields:', { name, tagline, loc, whatsapp, shortBio: shortBio.substring(0,20), bio: bio.substring(0,20), rate });
 
-    if (!name || !tagline || !loc || !whatsapp || !shortBio || !bio) {
+    if (!validateStep1()) {
       goToStep(1);
-      alert('Please complete your Basic Info (Name, Tagline, Location, WhatsApp, Bio) before submitting.');
       return;
     }
-    if (!rate) {
+    if (!validateStep2()) {
+      goToStep(2);
+      return;
+    }
+    if (!validateStep3()) {
       goToStep(3);
-      alert('Please enter your Base Rate before submitting.');
       return;
     }
-
-    if (artistSamples.length === 0) {
-      alert('Please add at least 1 Voice Sample before submitting.');
-      if (typeof goToStep === 'function') goToStep(4);
+    if (!validateStep4()) {
+      goToStep(4);
       return;
     }
 
@@ -1728,21 +1776,442 @@
   document.addEventListener('DOMContentLoaded', initDashboard);
 </script>
 
+
 <script>
-  // ==================== WIZARD LOGIC & DOM REORGANIZATION ====================
+  // ==================== COMPREHENSIVE PROFESSIONAL WIZARD & VALIDATION ENGINE ====================
+  let currentWizardStep = 1;
+  const TOTAL_STEPS = 5;
+
+  const STEP_LABELS = {
+    1: 'ধাপ ১/৫: মূল পরিচিতি ও বায়ো (Basic Info)',
+    2: 'ধাপ ২/৫: ভাষা ও ভয়েস ক্যাটাগরি (Voice & Skills)',
+    3: 'ধাপ ৩/৫: স্টুডিও সেটআপ ও প্রাইসিং (Pricing & Studio)',
+    4: 'ধাপ ৪/৫: অডিও স্যাম্পল ও পোর্টফোলিও (Audio Samples)',
+    5: 'ধাপ ৫/৫: চূড়ান্ত রিভিউ ও আবেদন (Review & Submit)'
+  };
+
+  function setFieldError(inputId, errorId, msg) {
+    const el = document.getElementById(inputId);
+    const errEl = document.getElementById(errorId);
+    if (el) el.classList.add('input-invalid');
+    if (errEl) {
+      if (msg) errEl.innerHTML = `⚠️ ${msg}`;
+      errEl.classList.add('visible');
+    }
+  }
+
+  function clearFieldError(inputId, errorId) {
+    const el = document.getElementById(inputId);
+    const errEl = document.getElementById(errorId);
+    if (el) el.classList.remove('input-invalid');
+    if (errEl) errEl.classList.remove('visible');
+  }
+
+  // Real-time error clearance on input
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Reorganize DOM Elements into Wizard Steps
+    const fieldConfigs = [
+      { input: 'profFullName', err: 'err_profFullName' },
+      { input: 'profTagline', err: 'err_profTagline' },
+      { input: 'profGender', err: 'err_profGender' },
+      { input: 'profLocation', err: 'err_profLocation' },
+      { input: 'profWhatsapp', err: 'err_profWhatsapp' },
+      { input: 'profShortBio', err: 'err_profShortBio' },
+      { input: 'profBio', err: 'err_profBio' },
+      { input: 'profYears', err: 'err_profYears' },
+      { input: 'profRate', err: 'err_profRate' }
+    ];
+
+    fieldConfigs.forEach(cfg => {
+      const el = document.getElementById(cfg.input);
+      if (el) {
+        ['input', 'change', 'blur'].forEach(evt => {
+          el.addEventListener(evt, () => clearFieldError(cfg.input, cfg.err));
+        });
+      }
+    });
+
+    document.querySelectorAll('#langChips .chip, #catChips .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        const langContainer = document.getElementById('langChips');
+        const catContainer = document.getElementById('catChips');
+        if (langContainer) langContainer.classList.remove('chips-invalid');
+        if (catContainer) catContainer.classList.remove('chips-invalid');
+      });
+    });
+  });
+
+  // Step 1 Validation
+  window.validateStep1 = function() {
+    let isValid = true;
+    let firstInvalid = null;
+
+    const name = (document.getElementById('profFullName')?.value || '').trim();
+    const tagline = (document.getElementById('profTagline')?.value || '').trim();
+    const gender = (document.getElementById('profGender')?.value || '').trim();
+    const loc = (document.getElementById('profLocation')?.value || '').trim();
+    const whatsapp = (document.getElementById('profWhatsapp')?.value || '').trim();
+    const shortBio = (document.getElementById('profShortBio')?.value || '').trim();
+    const bio = (document.getElementById('profBio')?.value || '').trim();
+
+    if (!name || name.length < 2) {
+      setFieldError('profFullName', 'err_profFullName', 'পূর্ণ নাম প্রদান করা আবশ্যক (কমপক্ষে ২ অক্ষর)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profFullName';
+    } else {
+      clearFieldError('profFullName', 'err_profFullName');
+    }
+
+    if (!tagline || tagline.length < 3) {
+      setFieldError('profTagline', 'err_profTagline', 'ভয়েস টাইপ ট্যাগলাইন লিখুন (যেমন: Deep, Warm Narration)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profTagline';
+    } else {
+      clearFieldError('profTagline', 'err_profTagline');
+    }
+
+    if (!gender) {
+      setFieldError('profGender', 'err_profGender', 'অনুগ্রহ করে কণ্ঠের ধরন / জেন্ডার সিলেক্ট করুন');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profGender';
+    } else {
+      clearFieldError('profGender', 'err_profGender');
+    }
+
+    if (!loc || loc.length < 2) {
+      setFieldError('profLocation', 'err_profLocation', 'আপনার শহর বা জেলার নাম লিখুন (যেমন: Dhaka, Bangladesh)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profLocation';
+    } else {
+      clearFieldError('profLocation', 'err_profLocation');
+    }
+
+    const cleanWa = whatsapp.replace(/[^0-9]/g, '');
+    if (!whatsapp || cleanWa.length < 10) {
+      setFieldError('profWhatsapp', 'err_profWhatsapp', 'সঠিক WhatsApp নম্বর লিখুন (কমপক্ষে ১০-১১ ডিজিট)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profWhatsapp';
+    } else {
+      clearFieldError('profWhatsapp', 'err_profWhatsapp');
+    }
+
+    if (!shortBio || shortBio.length < 10) {
+      setFieldError('profShortBio', 'err_profShortBio', 'শর্ট বায়ো লিখুন (কমপক্ষে ১০ অক্ষর)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profShortBio';
+    } else {
+      clearFieldError('profShortBio', 'err_profShortBio');
+    }
+
+    if (!bio || bio.length < 25) {
+      setFieldError('profBio', 'err_profBio', 'বিস্তারিত বায়ো লিখুন (কমপক্ষে ২৫ অক্ষর)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profBio';
+    } else {
+      clearFieldError('profBio', 'err_profBio');
+    }
+
+    if (!isValid && firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+      showToast('⚠️ ধাপ ১-এর লাল চিহ্নিত আবশ্যক তথ্যগুলো পূরণ করুন।');
+    }
+
+    return isValid;
+  };
+
+  // Step 2 Validation
+  window.validateStep2 = function() {
+    const selectedLangs = [...document.querySelectorAll('#langChips .chip.selected')];
+    const selectedCats = [...document.querySelectorAll('#catChips .chip.selected')];
+    let isValid = true;
+
+    const langGrid = document.getElementById('langChips');
+    const catGrid = document.getElementById('catChips');
+
+    if (selectedLangs.length === 0) {
+      if (langGrid) langGrid.classList.add('chips-invalid');
+      isValid = false;
+    } else {
+      if (langGrid) langGrid.classList.remove('chips-invalid');
+    }
+
+    if (selectedCats.length === 0) {
+      if (catGrid) catGrid.classList.add('chips-invalid');
+      isValid = false;
+    } else {
+      if (catGrid) catGrid.classList.remove('chips-invalid');
+    }
+
+    if (!isValid) {
+      showToast('⚠️ অনুগ্রহ করে অন্তত ১টি ভাষা এবং ১টি ভয়েস ক্যাটাগরি সিলেক্ট করুন।');
+    }
+
+    return isValid;
+  };
+
+  // Step 3 Validation
+  window.validateStep3 = function() {
+    let isValid = true;
+    let firstInvalid = null;
+
+    const years = (document.getElementById('profYears')?.value || '').trim();
+    const rate = (document.getElementById('profRate')?.value || '').trim().replace(/[^0-9]/g, '');
+
+    if (years === '' || parseInt(years, 10) < 0) {
+      setFieldError('profYears', 'err_profYears', 'অভিজ্ঞতার বছর লিখুন (০ বা তার বেশি)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profYears';
+    } else {
+      clearFieldError('profYears', 'err_profYears');
+    }
+
+    if (!rate || parseInt(rate, 10) <= 0) {
+      setFieldError('profRate', 'err_profRate', 'সঠিক বেস রেট (টাকা) লিখুন (যেমন: 1500)');
+      isValid = false;
+      if (!firstInvalid) firstInvalid = 'profRate';
+    } else {
+      clearFieldError('profRate', 'err_profRate');
+    }
+
+    if (!isValid && firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+      showToast('⚠️ ধাপ ৩-এর আবশ্যক তথ্যগুলো (অভিজ্ঞতা ও রেট) পূরণ করুন।');
+    }
+
+    return isValid;
+  };
+
+  // Step 4 Validation
+  window.validateStep4 = function() {
+    if (!artistSamples || artistSamples.length === 0) {
+      showToast('⚠️ ক্লায়েন্টদের জন্য অন্তত ১টি ভয়েস স্যাম্পল (অডিও ডেমো) যোগ করতে হবে।');
+      const addBox = document.getElementById('addSampleBox');
+      if (addBox) addBox.style.display = 'block';
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+      return false;
+    }
+    return true;
+  };
+
+  // Step Navigation Controls
+  window.nextStep = function(fromStep) {
+    if (fromStep === 1 && !validateStep1()) return;
+    if (fromStep === 2 && !validateStep2()) return;
+    if (fromStep === 3 && !validateStep3()) return;
+    if (fromStep === 4 && !validateStep4()) return;
+
+    goToStep(fromStep + 1);
+  };
+
+  window.prevStep = function(fromStep) {
+    goToStep(Math.max(1, fromStep - 1));
+  };
+
+  window.handleStepNavClick = function(targetStep) {
+    if (targetStep <= currentWizardStep) {
+      goToStep(targetStep);
+      return;
+    }
+
+    // Validate sequentially up to targetStep - 1
+    if (targetStep > 1 && !validateStep1()) return;
+    if (targetStep > 2 && !validateStep2()) return;
+    if (targetStep > 3 && !validateStep3()) return;
+    if (targetStep > 4 && !validateStep4()) return;
+
+    goToStep(targetStep);
+  };
+
+  window.goToStep = function(stepNum) {
+    currentWizardStep = stepNum;
+
+    // Update Step Contents
+    document.querySelectorAll('.wizard-step-content').forEach(el => el.classList.remove('active'));
+    const targetContent = document.getElementById('step' + stepNum);
+    if (targetContent) targetContent.classList.add('active');
+
+    // Update Stepper Nav
+    document.querySelectorAll('.wizard-step-nav').forEach(el => {
+      const s = parseInt(el.dataset.step, 10);
+      el.classList.remove('active');
+      if (s < stepNum) {
+        el.classList.add('completed');
+      } else {
+        el.classList.remove('completed');
+      }
+      if (s === stepNum) el.classList.add('active');
+    });
+
+    // Update Progress Bar
+    const pct = Math.round((stepNum / TOTAL_STEPS) * 100);
+    const progressFill = document.getElementById('wizardProgressFill');
+    const pctLabel = document.getElementById('wizardPctLabel');
+    const stepLabel = document.getElementById('wizardStepLabel');
+
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (pctLabel) pctLabel.textContent = `${pct}% সম্পন্ন`;
+    if (stepLabel) stepLabel.textContent = STEP_LABELS[stepNum] || `ধাপ ${stepNum}/${TOTAL_STEPS}`;
+
+    // If step 5, render live review summary
+    if (stepNum === 5) {
+      renderStep5Review();
+    }
+
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
+  // Render Step 5 Review Summary
+  window.renderStep5Review = function() {
+    const placeholder = document.getElementById('step5-placeholder');
+    if (!placeholder) return;
+
+    const name = document.getElementById('profFullName')?.value || 'N/A';
+    const tagline = document.getElementById('profTagline')?.value || 'N/A';
+    const gender = document.getElementById('profGender')?.value || 'N/A';
+    const loc = document.getElementById('profLocation')?.value || 'N/A';
+    const whatsapp = document.getElementById('profWhatsapp')?.value || 'N/A';
+    const rate = document.getElementById('profRate')?.value || 'N/A';
+    const rateModel = document.getElementById('profPricingModel')?.value || 'per minute';
+    const years = document.getElementById('profYears')?.value || 'N/A';
+    const studio = document.querySelector('input[name="studioSetup"]:checked')?.value || 'Home Studio';
+    
+    const langs = [...document.querySelectorAll('#langChips .chip.selected')].map(c => c.dataset.val);
+    const cats = [...document.querySelectorAll('#catChips .chip.selected')].map(c => c.dataset.val);
+
+    const isStep1Ok = !!(name && tagline && gender && loc && whatsapp);
+    const isStep2Ok = langs.length > 0 && cats.length > 0;
+    const isStep3Ok = !!(years && rate);
+    const isStep4Ok = artistSamples && artistSamples.length > 0;
+
+    let reviewHtml = `
+      <div class="dash-card">
+        <div class="dash-card-title">
+          <span>📋 Profile Completion Checklist</span>
+          <span style="font-size:0.82rem;font-weight:600;color:var(--purple);">${isStep1Ok && isStep2Ok && isStep3Ok && isStep4Ok ? '✓ Ready for Verification' : 'Incomplete Fields'}</span>
+        </div>
+        <div class="dash-card-sub">সবগুলো তথ্য ভালোভাবে মিলিয়ে নিন। সাবমিট করার পর এটি অ্যাডমিন প্যানেলে রিভিউয়ের জন্য চলে যাবে।</div>
+
+        <div class="review-checklist">
+          <div class="review-check-item ${isStep1Ok ? 'done' : 'warn'}">
+            <span class="chk-icon">${isStep1Ok ? '✓' : '⚠️'}</span>
+            <div style="flex:1;">
+              <strong>ধাপ ১: মূল পরিচিতি ও বায়ো</strong>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${name} · ${tagline} · ${loc}</div>
+            </div>
+            <button type="button" class="review-edit-btn" onclick="goToStep(1)">Edit</button>
+          </div>
+
+          <div class="review-check-item ${isStep2Ok ? 'done' : 'warn'}">
+            <span class="chk-icon">${isStep2Ok ? '✓' : '⚠️'}</span>
+            <div style="flex:1;">
+              <strong>ধাপ ২: ভাষা ও ক্যাটাগরি</strong>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${langs.join(', ') || 'None selected'} · ${cats.join(', ') || 'None selected'}</div>
+            </div>
+            <button type="button" class="review-edit-btn" onclick="goToStep(2)">Edit</button>
+          </div>
+
+          <div class="review-check-item ${isStep3Ok ? 'done' : 'warn'}">
+            <span class="chk-icon">${isStep3Ok ? '✓' : '⚠️'}</span>
+            <div style="flex:1;">
+              <strong>ধাপ ৩: স্টুডিও সেটআপ ও প্রাইসিং</strong>
+              <div style="font-size:0.78rem;color:var(--text-faint);">রেট: ৳${rate} (${rateModel}) · অভিজ্ঞতা: ${years} বছর · ${studio}</div>
+            </div>
+            <button type="button" class="review-edit-btn" onclick="goToStep(3)">Edit</button>
+          </div>
+
+          <div class="review-check-item ${isStep4Ok ? 'done' : 'warn'}">
+            <span class="chk-icon">${isStep4Ok ? '✓' : '⚠️'}</span>
+            <div style="flex:1;">
+              <strong>ধাপ ৪: অডিও স্যাম্পল ও পোর্টফোলিও</strong>
+              <div style="font-size:0.78rem;color:var(--text-faint);">${artistSamples.length} টি ভয়েস স্যাম্পল আপলোড করা হয়েছে</div>
+            </div>
+            <button type="button" class="review-edit-btn" onclick="goToStep(4)">Edit</button>
+          </div>
+        </div>
+
+        <div class="review-summary-grid">
+          <div class="review-summary-item">
+            <div class="review-summary-item-head">
+              <span class="review-summary-title">👤 Personal & Voice Profile</span>
+              <button type="button" class="review-edit-btn" onclick="goToStep(1)">Edit</button>
+            </div>
+            <div style="font-weight:600;font-size:1.05rem;color:var(--text);margin-bottom:4px;">${escapeHTML(name)}</div>
+            <div style="font-size:0.84rem;color:var(--purple);margin-bottom:8px;">"${escapeHTML(tagline)}"</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);">${escapeHTML(gender)} · ${escapeHTML(loc)}</div>
+          </div>
+
+          <div class="review-summary-item">
+            <div class="review-summary-item-head">
+              <span class="review-summary-title">💰 Pricing & Studio</span>
+              <button type="button" class="review-edit-btn" onclick="goToStep(3)">Edit</button>
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:var(--purple);margin-bottom:4px;">৳ ${escapeHTML(rate)} <span style="font-size:0.8rem;color:var(--text-muted);">/ ${escapeHTML(rateModel)}</span></div>
+            <div style="font-size:0.82rem;color:var(--text-muted);">${escapeHTML(studio)} · Turnaround: ${escapeHTML(document.getElementById('profTurnaround')?.value || '24–48 Hours')}</div>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    placeholder.innerHTML = reviewHtml;
+  };
+
+  // Client Settings Form Submission
+  const clientForm = document.getElementById('clientSettingsForm');
+  if (clientForm) {
+    clientForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const comp = document.getElementById('clientCompany')?.value.trim();
+      const person = document.getElementById('clientContactPerson')?.value.trim();
+      const phone = document.getElementById('clientPhone')?.value.trim();
+
+      if (!person || !phone) {
+        alert('Please fill out your Contact Person Name and Phone Number.');
+        return;
+      }
+
+      const db = window._supabase;
+      if (db) {
+        try {
+          const { data } = await db.auth.getSession();
+          if (data?.session?.user) {
+            await db.from('profiles').upsert({
+              id: data.session.user.id,
+              full_name: person,
+              role: 'client',
+              whatsapp: phone,
+              location: comp,
+              updated_at: new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.warn('Could not save client profile to Supabase:', err);
+        }
+      }
+
+      localStorage.setItem('voicecast_client_settings', JSON.stringify({ company: comp, person: person, phone: phone }));
+      showToast('✓ Client settings saved successfully!');
+    });
+  }
+
+  // Escape HTML Helper
+  function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString().replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag] || tag));
+  }
+
+  // DOM Reorganization on load
+  document.addEventListener('DOMContentLoaded', () => {
     const step2Placeholder = document.getElementById('step2-placeholder');
     const step4Placeholder = document.getElementById('step4-placeholder');
-    const step5Placeholder = document.getElementById('step5-placeholder');
 
     // Move Specialties & Languages into Step 2
     const specialtiesPane = document.getElementById('specialtiesTab');
     if (specialtiesPane && step2Placeholder) {
       const cards = specialtiesPane.querySelectorAll('.dash-card');
-      // Except the save button
       cards.forEach(card => step2Placeholder.appendChild(card));
-      specialtiesPane.remove(); // Remove old tab pane
+      specialtiesPane.remove();
     }
 
     // Move Samples into Step 4
@@ -1751,7 +2220,6 @@
       const samplesCard = samplesPane.querySelector('.dash-card');
       if (samplesCard) step4Placeholder.appendChild(samplesCard);
       
-      // Ensure Add Sample buttons do not submit form
       const toggleSampleBtn = document.getElementById('toggleAddSampleBtn');
       if (toggleSampleBtn) toggleSampleBtn.type = 'button';
       const saveSampleBtn = document.getElementById('saveSampleBtn');
@@ -1778,77 +2246,13 @@
       portfolioPane.remove();
     }
 
-    // Move Contact Info to Step 5
-    // WhatsApp and Phone are in Step 1 form rows
-    const whatsappInput = document.getElementById('profWhatsapp');
-    const phoneInput = document.getElementById('profPhone');
-    const emailInput = document.getElementById('profEmail');
-    
-    if (whatsappInput && phoneInput && emailInput && step5Placeholder) {
-      const contactCard = document.createElement('div');
-      contactCard.className = 'dash-card';
-      contactCard.innerHTML = `<div class="dash-card-title">Contact Information</div><div class="dash-card-sub">Your private contact details for administration and direct client booking</div>`;
-      
-      const row1 = whatsappInput.closest('.form-row');
-      const row2 = emailInput.closest('.form-col');
-      
-      if (row1) contactCard.appendChild(row1);
-      if (row2) contactCard.appendChild(row2);
-      
-      step5Placeholder.appendChild(contactCard);
-    }
-
-    // Move Social Links to Step 5
-    const socialPane = document.getElementById('socialTab');
-    if (socialPane && step5Placeholder) {
-      const socialCard = socialPane.querySelector('.dash-card');
-      if (socialCard) {
-        // Move the inputs out of the nested form since we are already inside #artistProfileForm
-        const socialForm = socialCard.querySelector('form');
-        if (socialForm) {
-          while (socialForm.firstChild) {
-            socialCard.appendChild(socialForm.firstChild);
-          }
-          const submitBtn = socialCard.querySelector('button[type="submit"]');
-          if (submitBtn) submitBtn.remove(); // Remove duplicate submit button
-          socialForm.remove();
-        }
-        step5Placeholder.appendChild(socialCard);
-      }
-      socialPane.remove();
-    }
-    
     // Hide old artist tabs navigation
     const artistTabsNav = document.getElementById('artistTabs');
     if (artistTabsNav) artistTabsNav.style.display = 'none';
-  });
 
-  // Wizard Navigation
-  window.goToStep = function(stepNum) {
-    // Hide all steps
-    document.querySelectorAll('.wizard-step-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.wizard-step-nav').forEach(el => {
-      el.classList.remove('active');
-      if (parseInt(el.dataset.step) < stepNum) {
-        el.classList.add('completed');
-      } else {
-        el.classList.remove('completed');
-      }
-    });
-    
-    // Show target step
-    const target = document.getElementById('step' + stepNum);
-    if (target) {
-      target.classList.add('active');
-    }
-    const targetNav = document.querySelector(`.wizard-step-nav[data-step="${stepNum}"]`);
-    if (targetNav) {
-      targetNav.classList.add('active');
-    }
-    
-    // Scroll to top of wizard safely
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    // Initialize Stepper
+    goToStep(1);
+  });
 </script>
 
 </body>
