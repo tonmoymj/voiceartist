@@ -205,72 +205,7 @@
     </div>
 
     <div class="artist-grid" id="featuredArtistGrid">
-
-      <div class="artist-card">
-        <div class="artist-top">
-          <div class="artist-photo-wrap">
-            <div class="artist-photo" style="background:linear-gradient(135deg,#3A2D78,#1E1748); color:#A78BFA;">M</div>
-            <span class="avail-dot"></span>
-          </div>
-          <div>
-            <div class="artist-name">Maya Okonkwo</div>
-            <div class="artist-role">Commercial &amp; Narration</div>
-          </div>
-        </div>
-        <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">English</span></div>
-        <div class="artist-waveform">
-          <button class="mini-play" aria-label="Play sample">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
-          </button>
-          <div class="mini-wave" data-seed="11"></div>
-        </div>
-        <div class="artist-rating"><span>★ 4.9</span> · 128 reviews</div>
-        <a class="view-profile" href="profile.html?id=maya">View Profile</a>
-      </div>
-
-      <div class="artist-card">
-        <div class="artist-top">
-          <div class="artist-photo-wrap">
-            <div class="artist-photo" style="background:linear-gradient(135deg,#1E3A68,#122345); color:#60A5FA;">R</div>
-            <span class="avail-dot"></span>
-          </div>
-          <div>
-            <div class="artist-name">Rafiq Hasan</div>
-            <div class="artist-role">Documentary &amp; E-Learning</div>
-          </div>
-        </div>
-        <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">Sylheti</span></div>
-        <div class="artist-waveform">
-          <button class="mini-play" aria-label="Play sample">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
-          </button>
-          <div class="mini-wave" data-seed="22"></div>
-        </div>
-        <div class="artist-rating"><span>★ 4.8</span> · 96 reviews</div>
-        <a class="view-profile" href="profile.html?id=rafiq">View Profile</a>
-      </div>
-
-      <div class="artist-card">
-        <div class="artist-top">
-          <div class="artist-photo-wrap">
-            <div class="artist-photo" style="background:linear-gradient(135deg,#581C68,#331045); color:#F472B6;">N</div>
-          </div>
-          <div>
-            <div class="artist-name">Nusrat Jahan</div>
-            <div class="artist-role">Character &amp; Animation</div>
-          </div>
-        </div>
-        <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">English</span></div>
-        <div class="artist-waveform">
-          <button class="mini-play" aria-label="Play sample">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
-          </button>
-          <div class="mini-wave" data-seed="33"></div>
-        </div>
-        <div class="artist-rating"><span>★ 5.0</span> · 74 reviews</div>
-        <a class="view-profile" href="profile.html?id=nusrat">View Profile</a>
-      </div>
-
+      <p style="text-align:center;color:#999;grid-column:1/-1;">Loading artists...</p>
     </div>
 
     <a class="section-link" href="search.html">See all artists →</a>
@@ -537,55 +472,7 @@
             `;
           });
 
-          const fallbackHtml = [
-            `
-            <div class="artist-card">
-              <div class="artist-top">
-                <div class="artist-photo-wrap">
-                  <div class="artist-photo" style="background:linear-gradient(135deg,#1E3A68,#122345); color:#60A5FA;">R</div>
-                  <span class="avail-dot"></span>
-                </div>
-                <div>
-                  <div class="artist-name">Rafiq Hasan</div>
-                  <div class="artist-role">Documentary &amp; E-Learning</div>
-                </div>
-              </div>
-              <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">Sylheti</span></div>
-              <div class="artist-waveform">
-                <button class="mini-play" aria-label="Play sample"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg></button>
-                <div class="mini-wave" data-seed="22"></div>
-              </div>
-              <div class="artist-rating"><span>★ 4.8</span> · 96 reviews</div>
-              <a class="view-profile" href="profile.html?id=rafiq">View Profile</a>
-            </div>
-            `,
-            `
-            <div class="artist-card">
-              <div class="artist-top">
-                <div class="artist-photo-wrap">
-                  <div class="artist-photo" style="background:linear-gradient(135deg,#581C68,#331045); color:#F472B6;">N</div>
-                </div>
-                <div>
-                  <div class="artist-name">Nusrat Jahan</div>
-                  <div class="artist-role">Character &amp; Animation</div>
-                </div>
-              </div>
-              <div class="artist-langs"><span class="lang-chip">Bengali</span><span class="lang-chip">English</span></div>
-              <div class="artist-waveform">
-                <button class="mini-play" aria-label="Play sample"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg></button>
-                <div class="mini-wave" data-seed="33"></div>
-              </div>
-              <div class="artist-rating"><span>★ 5.0</span> · 74 reviews</div>
-              <a class="view-profile" href="profile.html?id=nusrat">View Profile</a>
-            </div>
-            `
-          ];
-
-          let allCardsHtml = liveCards.join('');
-          if (liveCards.length < 3) {
-            allCardsHtml += fallbackHtml.slice(0, 3 - liveCards.length).join('');
-          }
-          grid.innerHTML = allCardsHtml;
+          grid.innerHTML = liveCards.join('');
           initWaveformsAndAudio(grid);
           return;
         }

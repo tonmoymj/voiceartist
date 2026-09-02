@@ -295,17 +295,10 @@
     document.getElementById('authLockModal').classList.remove('open');
   }
 
-  const fallbackArtists = [
-    { id:"maya",    name:"Maya Okonkwo",    loc:"Lagos, Nigeria",          langs:["Bengali","English"],          cats:["Commercial","Audiobook","E-Learning"],             gender:"Female", rating:"4.9", reviews:128, avail:true,  seed:11, rate:1500 },
-    { id:"rafiq",   name:"Rafiq Hasan",     loc:"Dhaka, Bangladesh",       langs:["Bengali","Sylheti"],           cats:["Documentary","E-Learning","IVR / Phone Systems"],  gender:"Male",   rating:"4.8", reviews:96,  avail:true,  seed:22, rate:1200 },
-    { id:"nusrat",  name:"Nusrat Jahan",    loc:"Chattogram, Bangladesh",  langs:["Bengali","English"],          cats:["Character / Animation","Commercial"],              gender:"Female", rating:"5.0", reviews:74,  avail:false, seed:33, rate:2000 },
-    { id:"tanvir",  name:"Tanvir Ahmed",    loc:"Sylhet, Bangladesh",      langs:["Bengali"],                    cats:["Commercial","Audiobook"],                          gender:"Male",   rating:"4.7", reviews:52,  avail:true,  seed:44, rate:1000 },
-    { id:"farhana", name:"Farhana Islam",   loc:"Dhaka, Bangladesh",       langs:["Bengali","English"],          cats:["Commercial","E-Learning","Audiobook"],             gender:"Female", rating:"4.9", reviews:110, avail:true,  seed:55, rate:1800 },
-    { id:"carlos",  name:"Carlos Reyes",    loc:"Madrid, Spain",           langs:["English","Bengali"],          cats:["Commercial","Dubbing"],                            gender:"Male",   rating:"4.6", reviews:41,  avail:false, seed:66, rate:1500 },
-  ];
+  const fallbackArtists = [];
 
   const PAGE_SIZE = 6;
-  let currentArtists = [...fallbackArtists];
+  let currentArtists = [];
   let displayedCount = PAGE_SIZE;
 
   async function loadArtistsFromSupabase() {
@@ -341,8 +334,7 @@
             };
           });
 
-          // Show real approved artists first, followed by fallbacks not matching real IDs
-          currentArtists = [...liveList, ...fallbackArtists.filter(f => !liveList.some(l => l.id === f.id))];
+          currentArtists = liveList;
         }
       }
     } catch(e) {

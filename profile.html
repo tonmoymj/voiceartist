@@ -609,7 +609,8 @@
     }
 
     // If logged in, proceed with the actual action
-    const currentArtist = currentLoadedProfile || profileFallback[activeArtistId] || profileFallback.maya;
+    const currentArtist = currentLoadedProfile;
+    if (!currentArtist) return;
     if (type === 'whatsapp') {
       const waNum = (currentArtist.whatsapp || currentArtist.phone || '').replace(/[^0-9]/g, '');
       const customMsg = encodeURIComponent(`Hello ${currentArtist.name}, I found your voice talent profile on VoiceCast and would like to discuss a project.`);
@@ -654,168 +655,7 @@
   }
 
 
-  // ── Complete fallback profile database ───────────────────────────────────────
-  const profileFallback = {
-    maya: {
-      name: "Maya Okonkwo",
-      tagline: "Warm, Expressive — Commercial & Audiobook",
-      gender: "Female Voice",
-      loc: "Dhaka, Bangladesh",
-      rating: "4.9", reviews: 128,
-      years: 15, projects: "340+",
-      avail: true,
-      phone: "01700000001",
-      whatsapp: "8801700000001",
-      email: "maya.voice@example.com",
-      shortBio: "১৫ বছরের অভিজ্ঞতা। ব্র্যান্ড টিভি বিজ্ঞাপন ও অডিওবুক বিশেষজ্ঞ।",
-      bio: "Fifteen years behind the mic, moving between warm audiobook narration and sharp, punchy commercial reads. Equipped with broadcast-grade acoustic treated home studio.",
-      langs: ["Bengali", "English"],
-      accents: ["Neutral Dhaka (প্রমিত)", "Standard British"],
-      categories: ["Commercial", "Audiobook", "E-Learning", "Corporate Narration"],
-      studio: "Professional Studio",
-      turnaround: "24–48 Hours",
-      pricingModel: "per minute",
-      pricingRate: "৳ 2,500",
-      pricingNote: "বড় প্রজেক্টে বিশেষ ডিসকাউন্ট প্রযোজ্য",
-      portfolio: [
-        { title: "Grameenphone TVC — 2024", url: "https://youtube.com" },
-        { title: "Robi Audiobook Narration Excerpt", url: "https://soundcloud.com" },
-        { title: "Aarong Heritage Commercial", url: "https://youtube.com" }
-      ],
-      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", linkedin: "https://linkedin.com", youtube: "https://youtube.com" },
-      samples: [
-        { title: "Commercial Demo — FMCG Brand", duration: "0:28", seed: 11 },
-        { title: "Audiobook Chapter Excerpt", duration: "0:30", seed: 22 },
-        { title: "E-Learning Module Intro", duration: "0:24", seed: 33 }
-      ]
-    },
-    rafiq: {
-      name: "Rafiq Hasan",
-      tagline: "Calm, Authoritative — Documentary & E-Learning",
-      gender: "Male Voice",
-      loc: "Dhaka, Bangladesh",
-      rating: "4.8", reviews: 96,
-      years: 8, projects: "210+",
-      avail: true,
-      phone: "01700000002",
-      whatsapp: "8801700000002",
-      email: "rafiq.hasan@example.com",
-      shortBio: "৮ বছরের অভিজ্ঞতা। তথ্যচিত্র ও কর্পোরেট ট্রেনিং মডিউল বিশেষজ্ঞ।",
-      bio: "Documentary and e-learning specialist with a calm, authoritative voice that builds trust with every word.",
-      langs: ["Bengali", "Sylheti"],
-      accents: ["Neutral Dhaka (প্রমিত)", "সিলেটি টান"],
-      categories: ["Documentary", "E-Learning", "IVR / Phone Systems"],
-      studio: "Professional Studio",
-      turnaround: "48–72 Hours",
-      pricingModel: "per project",
-      pricingRate: "৳ 5,000+",
-      pricingNote: "স্ক্রিপ্ট পর্যালোচনার পর ফাইনাল কোট দেওয়া হয়",
-      portfolio: [
-        { title: "BTV Documentary — Heritage Series", url: "https://youtube.com" },
-        { title: "Corporate E-Learning System", url: "https://soundcloud.com" }
-      ],
-      social: { facebook: "https://facebook.com", linkedin: "https://linkedin.com" },
-      samples: [
-        { title: "Documentary Narration — Heritage Series", duration: "0:30", seed: 44 },
-        { title: "Corporate E-Learning Module", duration: "0:25", seed: 55 },
-        { title: "IVR System Demo", duration: "0:18", seed: 66 }
-      ]
-    },
-    nusrat: {
-      name: "Nusrat Jahan",
-      tagline: "Playful & Dramatic — Animation & Character Dubbing",
-      gender: "Female Voice",
-      loc: "Chattogram, Bangladesh",
-      rating: "5.0", reviews: 74,
-      years: 6, projects: "180+",
-      avail: false,
-      phone: "01700000003",
-      whatsapp: "8801700000003",
-      email: "nusrat.dub@example.com",
-      shortBio: "৬ বছরের অভিজ্ঞতা। অ্যানিমেশন ও ক্যারেক্টার ভয়েস বিশেষজ্ঞ।",
-      bio: "Character voice specialist with an incredible range — from playful animation to serious drama. Perfect for cartoon and game dubbing.",
-      langs: ["Bengali", "English"],
-      accents: ["চাটগাঁইয়া (Chittagong)", "Neutral Dhaka"],
-      categories: ["Character / Animation", "Commercial", "Dubbing"],
-      studio: "Home Studio",
-      turnaround: "24–48 Hours",
-      pricingModel: "per minute",
-      pricingRate: "৳ 3,000",
-      pricingNote: "ক্যারেক্টার ভ্যারিয়েশন অনুযায়ী রেট প্রযোজ্য",
-      portfolio: [
-        { title: "Meena Cartoon — Special Episode", url: "https://youtube.com" },
-        { title: "Kids Rhyme Animation Series", url: "https://youtube.com" }
-      ],
-      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", youtube: "https://youtube.com" },
-      samples: [
-        { title: "Animation Character — Kids Show", duration: "0:20", seed: 77 },
-        { title: "Dramatic Reading — Fiction", duration: "0:28", seed: 88 },
-        { title: "Commercial — Fashion Brand", duration: "0:22", seed: 99 }
-      ]
-    },
-    tanvir: {
-      name: "Tanvir Ahmed",
-      tagline: "Deep, Resonant — Radio & Commercial Ads",
-      gender: "Male Voice",
-      loc: "Sylhet, Bangladesh",
-      rating: "4.7", reviews: 52,
-      years: 5, projects: "130+",
-      avail: true,
-      phone: "01700000004",
-      whatsapp: "8801700000004",
-      email: "tanvir.voice@example.com",
-      shortBio: "৫ বছরের অভিজ্ঞতা। গম্ভীর কণ্ঠ, রেডিও ও ডিজিটাল বিজ্ঞাপনে পারদর্শী।",
-      bio: "Deep, resonant voice perfect for commercials and audiobooks. Clean neutral Bangla accent with home broadcast studio.",
-      langs: ["Bengali"],
-      accents: ["Neutral Dhaka (প্রমিত)"],
-      categories: ["Commercial", "Audiobook"],
-      studio: "Home Studio",
-      turnaround: "24 Hours",
-      pricingModel: "per minute",
-      pricingRate: "৳ 1,800",
-      pricingNote: "নূন্যতম বুকিং ৫ মিনিট",
-      portfolio: [
-        { title: "Robi Telecom Radio Commercial", url: "https://youtube.com" }
-      ],
-      social: { facebook: "https://facebook.com" },
-      samples: [
-        { title: "Radio Commercial — Telecom Brand", duration: "0:26", seed: 12 },
-        { title: "Audiobook — Travel Memoir", duration: "0:29", seed: 24 }
-      ]
-    },
-    farhana: {
-      name: "Farhana Islam",
-      tagline: "Warm & Versatile — E-Learning & Commercial",
-      gender: "Female Voice",
-      loc: "Dhaka, Bangladesh",
-      rating: "4.9", reviews: 110,
-      years: 10, projects: "280+",
-      avail: true,
-      phone: "01700000005",
-      whatsapp: "8801700000005",
-      email: "farhana.vo@example.com",
-      shortBio: "১০ বছরের অভিজ্ঞতা। দ্বিভাষিক (বাংলা ও ইংরেজি) ভয়েস আর্টিস্ট।",
-      bio: "Warm and versatile voice artist with experience across e-learning, commercial, and audiobook projects for both Bangla and English audiences.",
-      langs: ["Bengali", "English"],
-      accents: ["Neutral Dhaka", "American English"],
-      categories: ["Commercial", "E-Learning", "Audiobook"],
-      studio: "Professional Studio",
-      turnaround: "24–48 Hours",
-      pricingModel: "per word",
-      pricingRate: "৳ 0.50 / word",
-      pricingNote: "নূন্যতম অর্ডার: ৫০০ শব্দ",
-      portfolio: [
-        { title: "BRAC E-Learning Series — 2024", url: "https://youtube.com" },
-        { title: "Square Food TV Commercial", url: "https://youtube.com" }
-      ],
-      social: { facebook: "https://facebook.com", instagram: "https://instagram.com", linkedin: "https://linkedin.com", youtube: "https://youtube.com" },
-      samples: [
-        { title: "E-Learning — Training Module", duration: "0:28", seed: 36 },
-        { title: "Commercial — Food Brand", duration: "0:25", seed: 48 },
-        { title: "Audiobook — Literary Fiction", duration: "0:30", seed: 60 }
-      ]
-    }
-  };
+  const profileFallback = {};
 
   // ── Advanced Voice Sample Player (SoundCloud / WaveSurfer Style) ───────────────
   let currentlyPlaying = null;
@@ -989,7 +829,7 @@
 
     if (currentlyPlaying !== idx) {
       if (currentlyPlaying !== null) pauseSample(currentlyPlaying);
-      const currentArtist = profileFallback[activeArtistId] || profileFallback.maya;
+      const currentArtist = currentLoadedProfile || {};
       playSample(idx, (currentArtist.samples || [])[idx]);
     }
   }
@@ -1165,7 +1005,9 @@
     if (!artistId && currentUser) {
       artistId = currentUser.id;
     } else if (!artistId) {
-      artistId = 'maya';
+      document.getElementById('artistName').textContent = 'Profile Not Found';
+      document.getElementById('artistTagline').textContent = 'No artist ID specified.';
+      return;
     }
 
     activeArtistId = artistId.toLowerCase();
@@ -1232,34 +1074,12 @@
       }
     }
 
-    // Fallback logic for static demos (maya, rafiq, nusrat, etc.)
-    const fallback = profileFallback[activeArtistId] || profileFallback.maya;
-    let mergedData = { ...fallback };
-
-    // Check localStorage fallback for previewing unsaved wizard data
-    const localProfile = JSON.parse(localStorage.getItem('voicecast_profile_data') || '{}');
-    if (activeArtistId === 'maya' || activeArtistId === 'sub_artist_current' || (currentUser && activeArtistId === currentUser.id)) {
-      if (localProfile.name) {
-        mergedData.name         = localProfile.name || fallback.name;
-        mergedData.tagline      = localProfile.tagline || fallback.tagline;
-        mergedData.loc          = localProfile.loc || fallback.loc;
-        mergedData.phone        = localProfile.phone || fallback.phone;
-        mergedData.whatsapp     = localProfile.whatsapp || fallback.whatsapp;
-        mergedData.shortBio     = localProfile.shortBio || fallback.shortBio;
-        mergedData.bio          = localProfile.bio || fallback.bio;
-        mergedData.pricingRate  = localProfile.rate ? `৳ ${localProfile.rate}` : fallback.pricingRate;
-      }
-    }
-
-    applyProfile(mergedData);
-    document.title = mergedData.name + ' — VoiceCast';
-    
-    // Check authentication and update favorite state
+    // Profile not found in Supabase
+    document.getElementById('artistName').textContent = 'Profile Not Found';
+    document.getElementById('artistTagline').textContent = 'This artist profile could not be loaded.';
     await checkAuthStatus();
     updateFavoriteBtn();
   }
-
-  loadProfile();
 
   loadProfile();
 </script>
