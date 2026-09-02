@@ -873,6 +873,20 @@
               <label>Billing Phone / WhatsApp</label>
               <input type="text" id="clientPhone" placeholder="+8801700000000">
             </div>
+            <div class="form-col">
+              <label>Company Website</label>
+              <input type="url" id="clientWebsite" placeholder="https://yourbrand.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label>LinkedIn / Facebook Page</label>
+              <input type="url" id="clientSocial" placeholder="https://linkedin.com/company/yourbrand">
+            </div>
+            <div class="form-col">
+              <label>Preferred Industry / Field</label>
+              <input type="text" id="clientIndustry" placeholder="e.g. Advertising, YouTube, Tech">
+            </div>
           </div>
           <button type="submit" class="btn-grad" style="padding:12px 26px;">Save Client Settings</button>
         </form>
@@ -1750,6 +1764,26 @@
           if (details.bio)       document.getElementById('profBio').value       = details.bio;
           if (details.rate)      document.getElementById('profRate').value      = details.rate.replace(/[^0-9]/g, '');
 
+          // Pre-fill social links
+          const savedSocial = JSON.parse(localStorage.getItem('voicecast_social_data') || '{}');
+          const liveSocial = details.social || savedSocial;
+          if (liveSocial) {
+            if (liveSocial.facebook && document.getElementById('socialFacebook'))   document.getElementById('socialFacebook').value  = liveSocial.facebook;
+            if (liveSocial.instagram && document.getElementById('socialInstagram')) document.getElementById('socialInstagram').value = liveSocial.instagram;
+            if (liveSocial.linkedin && document.getElementById('socialLinkedin'))   document.getElementById('socialLinkedin').value  = liveSocial.linkedin;
+            if (liveSocial.youtube && document.getElementById('socialYoutube'))     document.getElementById('socialYoutube').value   = liveSocial.youtube;
+            if (liveSocial.tiktok && document.getElementById('socialTiktok'))       document.getElementById('socialTiktok').value    = liveSocial.tiktok;
+          }
+
+          // Pre-fill client settings
+          const savedClient = JSON.parse(localStorage.getItem('voicecast_client_settings') || '{}');
+          if (savedClient.company && document.getElementById('clientCompany')) document.getElementById('clientCompany').value = savedClient.company;
+          if (savedClient.person && document.getElementById('clientContactPerson')) document.getElementById('clientContactPerson').value = savedClient.person;
+          if (savedClient.phone && document.getElementById('clientPhone')) document.getElementById('clientPhone').value = savedClient.phone;
+          if (savedClient.website && document.getElementById('clientWebsite')) document.getElementById('clientWebsite').value = savedClient.website;
+          if (savedClient.social && document.getElementById('clientSocial')) document.getElementById('clientSocial').value = savedClient.social;
+          if (savedClient.industry && document.getElementById('clientIndustry')) document.getElementById('clientIndustry').value = savedClient.industry;
+
           // Select Language Chips
           if (details.languages && Array.isArray(details.languages)) {
             document.querySelectorAll('#langChips .chip').forEach(chip => {
@@ -2244,6 +2278,25 @@
       if (cancelPortBtn) cancelPortBtn.type = 'button';
       
       portfolioPane.remove();
+    }
+
+    // Move Social Links into Step 4
+    const socialPane = document.getElementById('socialTab');
+    if (socialPane && step4Placeholder) {
+      const socialCard = socialPane.querySelector('.dash-card');
+      if (socialCard) {
+        const socialForm = socialCard.querySelector('form');
+        if (socialForm) {
+          while (socialForm.firstChild) {
+            socialCard.appendChild(socialForm.firstChild);
+          }
+          const submitBtn = socialCard.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.remove();
+          socialForm.remove();
+        }
+        step4Placeholder.appendChild(socialCard);
+      }
+      socialPane.remove();
     }
 
     // Hide old artist tabs navigation
